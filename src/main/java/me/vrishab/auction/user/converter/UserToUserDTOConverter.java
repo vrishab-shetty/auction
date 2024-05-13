@@ -21,8 +21,7 @@ public class UserToUserDTOConverter implements Converter<User, UserDTO> {
                 source.getDescription(),
                 source.getEmail(),
                 source.getContact(),
-                source.getWishList().stream().map(Item::getId).collect(Collectors.toList()),
-                source.getAuctions().stream().map(Auction::getId).collect(Collectors.toList())
+                source.isEnabled()
         );
     }
 }
