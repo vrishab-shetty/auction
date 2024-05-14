@@ -2,16 +2,14 @@ package me.vrishab.auction.auction;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import lombok.*;
 import me.vrishab.auction.item.Item;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.springframework.format.annotation.DateTimeFormat.ISO;
@@ -50,12 +48,12 @@ public class Auction implements Serializable {
     private Double initialPrice;
 
     @NonNull
-    @Column(nullable = false)
+    @Setter(AccessLevel.NONE)
     private Double currentBid;
 
     @OneToMany(orphanRemoval = true, cascade = {CascadeType.ALL})
     @JoinColumn(name = "auctionId", nullable = false)
-    private List<Item> items;
+    private Set<Item> items = new HashSet<>();
 
     @Email(regexp = "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}",
             flags = Pattern.Flag.CASE_INSENSITIVE,
