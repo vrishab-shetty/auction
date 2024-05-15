@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,5 +23,9 @@ public class ItemService {
                 .orElseThrow(
                         () -> new ItemNotFoundException(itemId)
                 );
+    }
+
+    public List<Item> findAll() {
+        return this.itemRepo.findAll();
     }
 }

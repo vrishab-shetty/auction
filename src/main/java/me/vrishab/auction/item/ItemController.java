@@ -23,4 +23,9 @@ public class ItemController {
         Item item = this.itemService.findById(itemId);
         return new Result(true, "Find one Success", item);
     }
+
+    @GetMapping("/items")
+    public Result findAllItems() {
+        return new Result(true, "Find all items", itemService.findAll());
+    }
 }

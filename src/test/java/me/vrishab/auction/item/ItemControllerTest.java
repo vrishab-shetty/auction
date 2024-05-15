@@ -1,5 +1,6 @@
 package me.vrishab.auction.item;
 
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -103,5 +104,18 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.message").value("Could not find item with Id " + testItemId))
                 .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testFindAllItems() throws Exception {
+
+        // Given
+        given(itemService.findAll()).willReturn(items);
+
+        // When and Then
+        this.mockMvc.perform(get("/api/v1/items").accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Find all items"))
+                .andExpect(jsonPath("$.data").value(Matchers.hasSize(items.size())));
     }
 }
