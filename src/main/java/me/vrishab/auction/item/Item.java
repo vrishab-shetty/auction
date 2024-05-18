@@ -9,7 +9,9 @@ import lombok.NoArgsConstructor;
 import lombok.NonNull;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Data
@@ -29,7 +31,7 @@ public class Item implements Serializable {
     @NonNull
     private String location;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> imageUrls = new HashSet<>();
 
     private String legitimacyProof;
@@ -37,7 +39,7 @@ public class Item implements Serializable {
     private String extras;
 
     @NonNull
-    @Column(insertable=false, updatable=false, nullable = false)
+    @Column(insertable = false, updatable = false, nullable = false)
     private UUID auctionId;
 
     @NonNull
