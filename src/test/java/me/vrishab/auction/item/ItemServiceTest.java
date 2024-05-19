@@ -8,11 +8,16 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -31,43 +36,22 @@ class ItemServiceTest {
 
     @BeforeEach
     void setUp() {
-        items = new ArrayList<>();
+        this.items = new ArrayList<>();
 
-        Item item1 = new Item();
-        item1.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a3"));
-        item1.setName("Nail");
-        item1.setDescription("A tool used for nailing two wooden piece");
-        item1.setLocation("NEU, Boston, MA");
-        item1.setImageUrls(Set.of("<images>"));
-        item1.setExtras(null);
-        item1.setLegitimacyProof("Proof");
-        item1.setAuctionId(UUID.fromString("c4838b19-9c96-45e0-abd7-c77d91af22b2"));
-        item1.setSeller("vr@domain.tld");
-        this.items.add(item1);
+        for (int i = 0; i < 10; i++) {
+            Item item = new Item();
+            item.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a" + i));
+            item.setName("Item " + i + (i % 2 == 0 ? " (special)" : ""));
+            item.setDescription("Description " + i);
+            item.setLocation(i % 3 == 1 ? "MA" : "CA");
+            item.setImageUrls(Set.of("<images>"));
+            item.setExtras(null);
+            item.setAuctionId(UUID.fromString("c4838b19-9c96-45e0-abd7-c77d91af22b" + i % 2));
+            item.setLegitimacyProof("Proof");
+            item.setSeller("vr@domain.tld");
+            this.items.add(item);
+        }
 
-        Item item2 = new Item();
-        item2.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a2"));
-        item2.setName("Hammer");
-        item2.setDescription("A tool used for driving nails or breaking objects by striking.");
-        item2.setLocation("NEU, Boston, MA");
-        item2.setImageUrls(Set.of("<images>"));
-        item2.setExtras(null);
-        item2.setLegitimacyProof("Proof");
-        item2.setAuctionId(UUID.fromString("c4838b19-9c96-45e0-abd7-c77d91af22b2"));
-        item2.setSeller("vr@domain.tld");
-        this.items.add(item2);
-
-        Item item3 = new Item();
-        item3.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"));
-        item3.setName("Computer");
-        item3.setDescription("Electronic device");
-        item3.setLocation("Amazon, San Fans, CA");
-        item3.setImageUrls(Set.of("<images>"));
-        item3.setExtras(null);
-        item3.setLegitimacyProof("Proof");
-        item3.setAuctionId(UUID.fromString("c4838b19-9c96-45e0-abd7-c77d91af22b1"));
-        item3.setSeller("vr@domain.tld");
-        this.items.add(item3);
     }
 
     @AfterEach
@@ -77,20 +61,7 @@ class ItemServiceTest {
     @Test
     void testFindByIdSuccess() {
         // Given. Input and targets. Define the behavior of Mock object
-        /*
-            "id": "e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a3",
-            "name": "Hammer",
-            "description": "A tool used for driving nails or breaking objects by striking.",
-            "location": "NEU, Boston, MA",
-            "images": [
-              "<images>"
-            ],
-            "legitimacyProof": "proof",
-            "extras": null,
-            "auctionId": "c4838b19-9c96-45e0-abd7-c77d91af22b2",
-            "seller": "vr@domain.tld"
-        * */
-        Item item = items.get(0);
+        Item item = items.get(3);
 
         given(repository.findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a3"))).willReturn(Optional.of(item));
 
@@ -140,5 +111,179 @@ class ItemServiceTest {
         // Then
         assertThat(returnedItems.size()).isEqualTo(this.items.size());
         verify(repository, times(1)).findAll();
+    }
+
+    @Test
+    void testFindAllPaginationSuccess() {
+
+        // Given
+        int page = 2, size = 3;
+        Pageable pageable = PageRequest.of(page - 1, size);
+        given(repository.findAll(pageable))
+                .willReturn(new PageImpl<>(
+                        items.subList((page - 1) * size, Math.min(page * size, items.size() - 1))
+                ));
+
+        // When
+        Page<Item> returnedItemPage = service.findAllPagination(page, size);
+
+        // Then
+        assertAll(
+                () -> assertThat(returnedItemPage.getSize()).isEqualTo(3),
+                () -> assertThat(returnedItemPage.getContent().get(0).getId()).isEqualTo(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a3"))
+        );
+        verify(repository, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void testFindAllPaginationBadRequest() {
+
+        // Given
+        int page = -1, size = -1;
+
+        // When
+        Throwable thrown = catchThrowable(() -> {
+            Page<Item> returnedItemPage = service.findAllPagination(page, size);
+        });
+
+        // Then
+        assertThat(thrown).isInstanceOf(ItemBadRequestException.class).hasMessage("Page number and size must be positive");
+
+    }
+
+    @Test
+    void testSearchAllByNameSuccess() {
+
+        // Given
+        String name = "special";
+        given(repository.findAllByNameLikeIgnoreCase("%" + name + "%", Pageable.unpaged())).willReturn(new PageImpl<>(
+                items.stream().filter(item -> item.getName().contains(name)).toList()
+        ));
+
+        // When
+        List<Item> returnedItems = service.searchAllByName(name);
+
+        // Then
+        assertAll(
+                () -> assertThat(returnedItems.get(1).getName()).isEqualTo("Item 2 (special)"),
+                () -> assertThat(returnedItems.get(0).getName()).isEqualTo("Item 0 (special)")
+        );
+
+        verify(repository, times(1)).findAllByNameLikeIgnoreCase("%" + name + "%", Pageable.unpaged());
+
+    }
+
+    @Test
+    void testSearchAllByNamePaginationSuccess() {
+
+        // Given
+        String name = "special";
+        int page = 1, size = 3;
+        Pageable pageable = PageRequest.of(page - 1, size);
+        List<Item> filterItems = items
+                .stream().filter(item -> item.getName().contains(name))
+                .toList();
+
+        given(repository.findAllByNameLikeIgnoreCase("%" + name + "%", pageable))
+                .willReturn(new PageImpl<>(
+                        filterItems.subList((page - 1) * size, Math.min(page * size, filterItems.size())),
+                        pageable, filterItems.size()
+                ));
+
+        // When
+        Page<Item> returnedItems = service.searchAllByName(name, page, size);
+
+        // Then
+        assertAll(
+                () -> assertThat(returnedItems.getSize()).isEqualTo(size),
+                () -> assertThat(returnedItems.getContent().get(0).getName()).isEqualTo("Item 0 (special)")
+        );
+
+        verify(repository, times(1)).findAllByNameLikeIgnoreCase("%" + name + "%", pageable);
+    }
+
+    @Test
+    void testSearchAllByNamePaginationBadRequest() {
+        // Given
+        String name = "special";
+        int page = -1, size = 3;
+
+        // When
+        Throwable thrown = catchThrowable(() -> {
+            Page<Item> returnedItems = service.searchAllByName(name, page, size);
+        });
+
+
+        // Then
+        assertThat(thrown).isInstanceOf(ItemBadRequestException.class).hasMessage("Page number and size must be positive");
+
+    }
+
+    @Test
+    void testFindAllByLocationSuccess() {
+
+        // Given
+        String location = "MA";
+        Pageable pageable = Pageable.unpaged();
+        List<Item> filterItems = items
+                .stream().filter(item -> item.getLocation().contains(location))
+                .toList();
+        given(repository.findAllByLocation(location, pageable))
+                .willReturn(new PageImpl<>(filterItems, pageable, filterItems.size()));
+
+        // When
+        List<Item> returnedItems = service.findAllByLocation(location);
+
+        // Then
+        assertAll(
+                () -> assertThat(returnedItems.size()).isEqualTo(filterItems.size()),
+                () -> assertThat(returnedItems.stream()).allMatch(item -> item.getLocation().equals(location))
+        );
+
+
+        verify(repository, times(1)).findAllByLocation(location, pageable);
+    }
+
+    @Test
+    void testFindAllByLocationPaginationSuccess() {
+        // Given
+        String location = "CA";
+        int page = 1, size = 3;
+        Pageable pageable = PageRequest.of(page - 1, size);
+        List<Item> filterItems = items
+                .stream().filter(item -> item.getLocation().contains(location))
+                .toList();
+        given(repository.findAllByLocation(location, pageable))
+                .willReturn(new PageImpl<>(filterItems.subList((page - 1) * size, Math.min(page * size, filterItems.size())),
+                        pageable, filterItems.size()));
+
+        // When
+        Page<Item> returnedItems = service.findAllByLocation(location, page, size);
+
+        // Then
+        assertAll(
+                () -> assertThat(returnedItems.getSize()).isEqualTo(size),
+                () -> assertThat(returnedItems.getContent().size()).isEqualTo(Math.min(size, filterItems.size())),
+                () -> assertThat(returnedItems.stream()).allMatch(item -> item.getLocation().equals(location))
+        );
+
+
+        verify(repository, times(1)).findAllByLocation(location, pageable);
+    }
+
+    @Test
+    void testFindAllByLocationPaginationBadRequest() {
+        // Given
+        String location = "CA";
+        int page = 1, size = -3;
+
+        // When
+        Throwable thrown = catchThrowable(() -> {
+            Page<Item> returnedItems = service.findAllByLocation(location, page, size);
+        });
+
+        // Then
+        assertThat(thrown).isInstanceOf(ItemBadRequestException.class).hasMessage("Page number and size must be positive");
+
     }
 }
