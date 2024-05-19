@@ -1,5 +1,6 @@
 package me.vrishab.auction.system.exception;
 
+import me.vrishab.auction.item.ItemBadRequestException;
 import me.vrishab.auction.item.ItemNotFoundException;
 import me.vrishab.auction.system.Result;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,12 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(ItemNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result handleItemNotFoundException(ItemNotFoundException ex) {
+        return new Result(false, ex.getMessage());
+    }
+
+    @ExceptionHandler(ItemBadRequestException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result handleItemBadRequestException(ItemBadRequestException ex) {
         return new Result(false, ex.getMessage());
     }
 }
