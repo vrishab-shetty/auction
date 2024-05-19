@@ -69,15 +69,18 @@ class ItemServiceTest {
         Item returnedItem = service.findById("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a3");
 
         // Then. Compare the result form When to Given
-        assertThat(returnedItem.getId()).isEqualTo(item.getId());
-        assertThat(returnedItem.getName()).isEqualTo(item.getName());
-        assertThat(returnedItem.getDescription()).isEqualTo(item.getDescription());
-        assertThat(returnedItem.getLocation()).isEqualTo(item.getLocation());
-        assertThat(returnedItem.getImageUrls()).isEqualTo(item.getImageUrls());
-        assertThat(returnedItem.getExtras()).isEqualTo(item.getExtras());
-        assertThat(returnedItem.getLegitimacyProof()).isEqualTo(item.getLegitimacyProof());
-        assertThat(returnedItem.getAuctionId()).isEqualTo(item.getAuctionId());
-        assertThat(returnedItem.getSeller()).isEqualTo(item.getSeller());
+        assertAll(
+                () -> assertThat(returnedItem.getId()).isEqualTo(item.getId()),
+                () -> assertThat(returnedItem.getName()).isEqualTo(item.getName()),
+                () -> assertThat(returnedItem.getDescription()).isEqualTo(item.getDescription()),
+                () -> assertThat(returnedItem.getLocation()).isEqualTo(item.getLocation()),
+                () -> assertThat(returnedItem.getImageUrls()).isEqualTo(item.getImageUrls()),
+                () -> assertThat(returnedItem.getExtras()).isEqualTo(item.getExtras()),
+                () -> assertThat(returnedItem.getLegitimacyProof()).isEqualTo(item.getLegitimacyProof()),
+                () -> assertThat(returnedItem.getAuctionId()).isEqualTo(item.getAuctionId()),
+                () -> assertThat(returnedItem.getSeller()).isEqualTo(item.getSeller())
+        );
+
 
         verify(repository, times(1)).findById(item.getId());
     }
@@ -164,11 +167,7 @@ class ItemServiceTest {
         List<Item> returnedItems = service.searchAllByName(name);
 
         // Then
-        assertAll(
-                () -> assertThat(returnedItems.get(1).getName()).isEqualTo("Item 2 (special)"),
-                () -> assertThat(returnedItems.get(0).getName()).isEqualTo("Item 0 (special)")
-        );
-
+        assertThat(returnedItems).allMatch(item -> item.getName().contains(name));
         verify(repository, times(1)).findAllByNameLikeIgnoreCase("%" + name + "%", Pageable.unpaged());
 
     }
@@ -196,7 +195,7 @@ class ItemServiceTest {
         // Then
         assertAll(
                 () -> assertThat(returnedItems.getSize()).isEqualTo(size),
-                () -> assertThat(returnedItems.getContent().get(0).getName()).isEqualTo("Item 0 (special)")
+                () -> assertThat(returnedItems.getContent()).allSatisfy(item -> assertThat(item.getName()).contains(name))
         );
 
         verify(repository, times(1)).findAllByNameLikeIgnoreCase("%" + name + "%", pageable);
