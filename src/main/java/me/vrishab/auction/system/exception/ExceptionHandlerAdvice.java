@@ -3,6 +3,7 @@ package me.vrishab.auction.system.exception;
 import me.vrishab.auction.item.ItemBadRequestException;
 import me.vrishab.auction.item.ItemNotFoundException;
 import me.vrishab.auction.system.Result;
+import me.vrishab.auction.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -20,6 +21,12 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(ItemBadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleItemBadRequestException(ItemBadRequestException ex) {
+        return new Result(false, ex.getMessage());
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result handleItemNotFoundException(UserNotFoundException ex) {
         return new Result(false, ex.getMessage());
     }
 }
