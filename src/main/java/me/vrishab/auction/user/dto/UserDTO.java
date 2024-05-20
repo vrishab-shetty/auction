@@ -2,7 +2,6 @@ package me.vrishab.auction.user.dto;
 
 import lombok.NonNull;
 
-import java.util.List;
 import java.util.UUID;
 
 public record UserDTO(
@@ -11,7 +10,7 @@ public record UserDTO(
         String name,
         String description,
         @NonNull
-        String email,
+        String username,
         @NonNull
         String contact,
         @NonNull

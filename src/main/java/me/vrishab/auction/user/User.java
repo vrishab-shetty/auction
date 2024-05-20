@@ -1,10 +1,7 @@
 package me.vrishab.auction.user;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
 import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.item.Item;
@@ -25,23 +22,36 @@ public class User implements Serializable {
     private UUID id;
 
     @NotBlank(message = "name is required")
+    @Size(
+            min = 2, max = 25,
+            message = "minimum 2 character and maximum 25 characters."
+    )
     private String name;
 
+    @NotNull
+    @Size(
+            min = 2, max = 255,
+            message = "minimum 2 character and maximum 255 characters."
+    )
     private String description;
 
     @NotBlank(message = "password is required")
+    @Size(
+            min = 8, max = 64,
+            message = "minimum 8 character and maximum 64 characters"
+    )
     private String password;
 
-    private boolean enabled;
+    @NotNull
+    private boolean enabled = true;
 
     @NotBlank(message = "email is required")
     @Email(regexp = "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}",
             flags = Pattern.Flag.CASE_INSENSITIVE,
             message = "Please provide a valid email address")
-
     private String email;
 
-    @NotBlank(message = "contact detail is required")
+    @NotBlank(message = "contact info is required")
     @Size(min = 10, max = 10, message = "Please provide a valid phone number")
     private String contact;
 
@@ -73,7 +83,7 @@ public class User implements Serializable {
         this.wishList.remove(item);
     }
 
-    public void addAuctions(@NonNull Auction auction) {
+    public void addAuction(@NonNull Auction auction) {
         this.auctions.add(auction);
     }
 

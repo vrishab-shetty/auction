@@ -2,7 +2,10 @@ package me.vrishab.auction.auction;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import me.vrishab.auction.item.Item;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -25,30 +28,28 @@ public class Auction implements Serializable {
 
     @NotBlank(message = "name is required")
     @Size(
-            min = 2,
-            max = 255,
-            message = "minimum 2 character and maximum 255 characters."
+            min = 2, max = 25,
+            message = "minimum 2 character and maximum 25 characters."
     )
     private String name;
 
-    @NotNull(message = "Please provide a start date")
+    @NotNull(message = "start date is required")
     @Future(message = "Please provide a future date")
     @DateTimeFormat(iso = ISO.DATE_TIME)
-    @NonNull
     private Date startTime;
 
-    @NotNull(message = "Please provide a end date")
+    @NotNull(message = "end date is required")
     @Future(message = "Please provide a future date")
     @DateTimeFormat(iso = ISO.DATE_TIME)
-    @NonNull
     private Date endTime;
 
-    @NotNull(message = "Please provide a initial price")
-    @NonNull
-    private Double initialPrice;
+    @NotNull(message = "initial price is required")
+    @Positive(message = "Please provide a valid price")
+    private Double initialPrice = 0.0;
 
-    @NonNull
+    @NotNull
     @Setter(AccessLevel.NONE)
+    @Positive(message = "Please provide a valid price")
     private Double currentBid;
 
     @OneToMany(orphanRemoval = true, cascade = {CascadeType.ALL})
