@@ -1,12 +1,10 @@
 package me.vrishab.auction.item;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -22,13 +20,21 @@ public class Item implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NonNull
+    @NotBlank(message = "name is required")
+    @Size(
+            min = 2, max = 25,
+            message = "minimum 2 character and maximum 25 characters."
+    )
     private String name;
 
-    @NonNull
+    @NotBlank(message = "description is required")
+    @Size(
+            min = 2, max = 255,
+            message = "minimum 2 character and maximum 255 characters."
+    )
     private String description;
 
-    @NonNull
+    @NotBlank(message = "location is required")
     private String location;
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -38,11 +44,11 @@ public class Item implements Serializable {
 
     private String extras;
 
-    @NonNull
+    @NotNull
     @Column(insertable = false, updatable = false, nullable = false)
     private UUID auctionId;
 
-    @NonNull
+    @NotNull
     @Email(regexp = "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}",
             flags = Pattern.Flag.CASE_INSENSITIVE,
             message = "Please provide a valid email address")
