@@ -44,7 +44,6 @@ public class Item implements Serializable {
 
     private String extras;
 
-    @NotNull
     @Column(insertable = false, updatable = false, nullable = false)
     private UUID auctionId;
 

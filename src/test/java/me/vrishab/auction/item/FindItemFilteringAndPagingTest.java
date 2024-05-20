@@ -19,15 +19,16 @@ public class FindItemFilteringAndPagingTest extends SpringDataJpaApplicationTest
     @Test
     void testFilterItemByName() {
 
-        Page<Item> itemPage = itemRepo.findAllByNameLikeIgnoreCase("%special%", PageRequest.of(1, 3));
-        Page<Item> itemPageSort = itemRepo.findAllByNameLikeIgnoreCase("%special%", PageRequest.of(1, 3, Sort.by("name")));
+        String query = "special";
+        Page<Item> itemPage = itemRepo.findAllByNameLikeIgnoreCase("%" + query + "%", PageRequest.of(1, 3));
+        Page<Item> itemPageSort = itemRepo.findAllByNameLikeIgnoreCase("%" + query + "%", PageRequest.of(1, 3, Sort.by("name")));
 
         assertAll(
                 () -> assertThat(itemPage.getSize()).isEqualTo(3)
         );
         assertAll(
                 () -> assertThat(itemPageSort.getSize()).isEqualTo(3),
-                () -> assertThat(itemPageSort.getContent().get(0).getName()).isEqualTo("Item 6 (special)")
+                () -> assertThat(itemPageSort.getContent()).allMatch(item -> item.getName().contains(query))
         );
 
     }

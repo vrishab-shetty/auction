@@ -44,12 +44,11 @@ public class Auction implements Serializable {
     private Date endTime;
 
     @NotNull(message = "initial price is required")
-    @Positive(message = "Please provide a valid price")
-    private Double initialPrice = 0.0;
+    @PositiveOrZero(message = "Please provide a valid price")
+    private Double initialPrice;
 
-    @NotNull
     @Setter(AccessLevel.NONE)
-    @Positive(message = "Please provide a valid price")
+    @PositiveOrZero(message = "Please provide a valid price")
     private Double currentBid;
 
     @OneToMany(orphanRemoval = true, cascade = {CascadeType.ALL})

@@ -5,6 +5,7 @@ import lombok.NonNull;
 import java.util.UUID;
 
 public record UserDTO(
+        @NonNull
         UUID id,
         @NonNull
         String name,
