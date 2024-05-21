@@ -1,5 +1,7 @@
 package me.vrishab.auction.user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import me.vrishab.auction.user.dto.UserEditableDTO;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,6 +19,7 @@ import java.util.UUID;
 
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
@@ -28,6 +31,9 @@ class UserControllerTest {
 
     @Autowired
     MockMvc mockMvc;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     List<User> users;
 
@@ -111,6 +117,43 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("Find all users"))
                 .andExpect(jsonPath("$.data.size()").value(10));
 
+    }
+
+    @Test
+    void testAddUserSuccess() throws Exception {
+
+        // Given
+        UserEditableDTO userEditableDTO = new UserEditableDTO(
+                "Name",
+                "Password",
+                "Description",
+                "name@domain.tld",
+                "1234567890",
+                true
+        );
+
+        String userJson = this.objectMapper.writeValueAsString(userEditableDTO);
+
+        User savedUser = new User();
+        savedUser.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        savedUser.setName("Name");
+        savedUser.setPassword("Password");
+        savedUser.setDescription("Description");
+        savedUser.setEmail("name@domain.tld");
+        savedUser.setContact("1234567890");
+        savedUser.setEnabled(true);
+
+        given(service.save(Mockito.any(User.class))).willReturn(savedUser);
+
+        // When and then
+        this.mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Add a user"))
+                .andExpect(jsonPath("$.data.id").value("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
+                .andExpect(jsonPath("$.data.username").value("name@domain.tld"));
     }
 
 }

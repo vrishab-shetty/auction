@@ -1,18 +1,17 @@
 package me.vrishab.auction.user.converter;
 
 
-
 import lombok.NonNull;
 import me.vrishab.auction.user.User;
-import me.vrishab.auction.user.dto.UserCreationDTO;
+import me.vrishab.auction.user.dto.UserEditableDTO;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UserCreationToUserConverter implements Converter<UserCreationDTO, User> {
+public class UserCreationToUserConverter implements Converter<UserEditableDTO, User> {
 
     @Override
-    public User convert(@NonNull UserCreationDTO source) {
+    public @NonNull User convert(@NonNull UserEditableDTO source) {
 
         User user = new User();
         user.setName(source.name());
@@ -20,7 +19,7 @@ public class UserCreationToUserConverter implements Converter<UserCreationDTO, U
         user.setEmail(source.email());
         user.setContact(source.contact());
         user.setPassword(source.password());
-        user.setEnabled(true);
+        user.setEnabled(source.enabled() == null || source.enabled());
 
         return user;
     }

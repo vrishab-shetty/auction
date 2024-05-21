@@ -1,7 +1,6 @@
 package me.vrishab.auction.user;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.*;
 import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.item.Item;
@@ -21,38 +20,17 @@ public class User implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotBlank(message = "name is required")
-    @Size(
-            min = 2, max = 25,
-            message = "minimum 2 character and maximum 25 characters."
-    )
     private String name;
 
-    @NotNull
-    @Size(
-            min = 2, max = 255,
-            message = "minimum 2 character and maximum 255 characters."
-    )
     private String description;
 
-    @NotBlank(message = "password is required")
-    @Size(
-            min = 8, max = 64,
-            message = "minimum 8 character and maximum 64 characters"
-    )
     private String password;
 
-    @NotNull
-    private boolean enabled = true;
+    private Boolean enabled;
 
-    @NotBlank(message = "email is required")
-    @Email(regexp = "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}",
-            flags = Pattern.Flag.CASE_INSENSITIVE,
-            message = "Please provide a valid email address")
+    @Column(unique = true)
     private String email;
 
-    @NotBlank(message = "contact info is required")
-    @Size(min = 10, max = 10, message = "Please provide a valid phone number")
     private String contact;
 
     @ManyToMany

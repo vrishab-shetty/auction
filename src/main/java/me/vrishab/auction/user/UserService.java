@@ -21,4 +21,13 @@ public class UserService {
     public List<User> findAll() {
         return userRepo.findAll();
     }
+
+    public User save(User newUser) {
+        String email = newUser.getEmail();
+        boolean exists = this.userRepo.existsByEmail(email);
+
+        if(!exists) return this.userRepo.save(newUser);
+
+        throw new UserEmailAlreadyExistException(email);
+    }
 }

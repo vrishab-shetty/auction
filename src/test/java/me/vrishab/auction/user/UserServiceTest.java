@@ -123,4 +123,36 @@ class UserServiceTest {
         verify(repository, times(1)).findAll();
 
     }
+
+    @Test
+    void testSaveUserSuccess() {
+
+        // Given
+        User newUser = users.get(5);
+
+        given(repository.save(newUser)).willReturn(newUser);
+
+        // When
+        User savedUser = service.save(newUser);
+
+        // Then
+        assertThat(savedUser.getId().toString()).isEqualTo("9a540a1e-b599-4cec-aeb1-6396eb8fa275");
+        verify(repository, times(1)).save(newUser);
+    }
+
+    @Test
+    void testSaveUserBadRequestEmail() {
+
+        // Given
+        User newUser = users.get(0);
+        given(repository.existsByEmail(Mockito.anyString())).willReturn(true);
+
+        // When
+        Throwable thrown = catchThrowable(() -> {
+            service.save(newUser);
+        });
+
+        // Then
+        assertThat(thrown).isInstanceOf(UserEmailAlreadyExistException.class).hasMessage("The email name0@domain.tld already exist");
+    }
 }
