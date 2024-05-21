@@ -102,7 +102,7 @@ class ItemControllerTest {
     void testFindAllItemsPaginationSuccess() throws Exception {
 
         // Given
-        int page = 0, size = 4;
+        int page = 1, size = 4;
         given(itemService.findAllPagination(page, size)).willReturn(new PageImpl<>(
                 items.subList(page * size, (page + 1) * size)
         ));
