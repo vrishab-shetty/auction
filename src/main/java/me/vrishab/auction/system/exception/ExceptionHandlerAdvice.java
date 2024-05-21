@@ -1,6 +1,7 @@
 package me.vrishab.auction.system.exception;
 
-import me.vrishab.auction.item.ItemBadRequestException;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import me.vrishab.auction.item.ItemNotFoundException;
 import me.vrishab.auction.system.Result;
 import me.vrishab.auction.user.UserEmailAlreadyExistException;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
@@ -23,12 +25,6 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(ItemNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result handleItemNotFoundException(ItemNotFoundException ex) {
-        return new Result(false, ex.getMessage());
-    }
-
-    @ExceptionHandler(ItemBadRequestException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Result handleItemBadRequestException(ItemBadRequestException ex) {
         return new Result(false, ex.getMessage());
     }
 
@@ -57,4 +53,19 @@ public class ExceptionHandlerAdvice {
     public Result handleDuplicateEmailRequest(UserEmailAlreadyExistException ex) {
         return new Result(false, ex.getMessage());
     }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result handleConstraintViolationException(ConstraintViolationException ex) {
+        Map<String, String> errors = new HashMap<>();
+        Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
+        for (ConstraintViolation<?> violation : violations) {
+            String[] parts = violation.getPropertyPath().toString().split("\\.");
+            String fieldName = parts[parts.length - 1];  // Get the last part of the path
+            String errorMessage = violation.getMessage();
+            errors.put(fieldName, errorMessage);
+        }
+        return new Result(false, "Provided arguments are invalid, see data for details", errors);
+    }
+
 }

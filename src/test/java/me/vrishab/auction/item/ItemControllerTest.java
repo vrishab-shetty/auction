@@ -4,7 +4,6 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -117,25 +116,6 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all items"))
                 .andExpect(jsonPath("$.data").value(Matchers.hasSize(size)));
-    }
-
-    @Test
-    void testFindAllItemsPaginationBadRequest() throws Exception {
-
-        // Given
-        int page = -1, size = -1;
-        String errorMessage = "Page number and size must be positive";
-        given(itemService.findAllPagination(Mockito.anyInt(), Mockito.anyInt())).willThrow(new ItemBadRequestException(errorMessage));
-
-        // When and Then
-        this.mockMvc.perform(get("/api/v1/items")
-                        .param("pageNum", String.valueOf(page))
-                        .param("pageSize", String.valueOf(size))
-                        .accept(MediaType.APPLICATION_JSON)
-                )
-                .andExpect(jsonPath("$.flag").value(false))
-                .andExpect(jsonPath("$.message").value(errorMessage))
-                .andExpect(jsonPath("$.data").isEmpty());
     }
 
     @Test

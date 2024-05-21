@@ -1,13 +1,16 @@
 package me.vrishab.auction.item;
 
+import jakarta.validation.constraints.Positive;
 import me.vrishab.auction.system.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/v1")
 public class ItemController {
 
@@ -26,16 +29,18 @@ public class ItemController {
 
     @GetMapping("/items")
     public Result findAllItems(
-            @RequestParam(required = false, name = "pageNum") Integer page,
-            @RequestParam(required = false, name = "pageSize") Integer size,
+            @Positive(message = "Please provide positive value")
+            @RequestParam(required = false) Integer pageNum,
+            @Positive(message = "Please provide positive value")
+            @RequestParam(required = false) Integer pageSize,
             @RequestParam(required = false, name = "query") String name,
             @RequestParam(required = false, name = "location") String location
     ) {
-        if (page != null && size != null) {
+        if (pageNum != null && pageSize != null) {
             Page<Item> items;
-            if (name != null) items = itemService.searchAllByName(name, page, size);
-            else if (location != null) items = itemService.findAllByLocation(location, page, size);
-            else items = itemService.findAllPagination(page, size);
+            if (name != null) items = itemService.searchAllByName(name, pageNum, pageSize);
+            else if (location != null) items = itemService.findAllByLocation(location, pageNum, pageSize);
+            else items = itemService.findAllPagination(pageNum, pageSize);
             return new Result(true, "Find all items", items.get());
         } else if (name != null) {
             List<Item> items = itemService.searchAllByName(name);
