@@ -33,8 +33,7 @@ public class ItemService {
     }
 
     public Page<Item> findAllPagination(int page, int size) {
-        if (page > 0 && size > 0) return this.itemRepo.findAll(PageRequest.of(page - 1, size));
-        else throw new ItemBadRequestException("Page number and size must be positive");
+        return this.itemRepo.findAll(PageRequest.of(page - 1, size));
     }
 
     public List<Item> searchAllByName(String query) {
@@ -42,9 +41,7 @@ public class ItemService {
     }
 
     public Page<Item> searchAllByName(String query, int page, int size) {
-        if (page > 0 && size > 0)
-            return this.itemRepo.findAllByNameLikeIgnoreCase("%" + query + "%", PageRequest.of(page - 1, size));
-        else throw new ItemBadRequestException("Page number and size must be positive");
+        return this.itemRepo.findAllByNameLikeIgnoreCase("%" + query + "%", PageRequest.of(page - 1, size));
     }
 
     public List<Item> findAllByLocation(String location) {
@@ -52,7 +49,6 @@ public class ItemService {
     }
 
     public Page<Item> findAllByLocation(String location, int page, int size) {
-        if (page > 0 && size > 0) return this.itemRepo.findAllByLocation(location, PageRequest.of(page - 1, size));
-        else throw new ItemBadRequestException("Page number and size must be positive");
+        return this.itemRepo.findAllByLocation(location, PageRequest.of(page - 1, size));
     }
 }

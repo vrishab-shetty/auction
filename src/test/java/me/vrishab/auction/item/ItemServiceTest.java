@@ -138,21 +138,6 @@ class ItemServiceTest {
         verify(repository, times(1)).findAll(pageable);
     }
 
-    @Test
-    void testFindAllPaginationBadRequest() {
-
-        // Given
-        int page = -1, size = -1;
-
-        // When
-        Throwable thrown = catchThrowable(() -> {
-            Page<Item> returnedItemPage = service.findAllPagination(page, size);
-        });
-
-        // Then
-        assertThat(thrown).isInstanceOf(ItemBadRequestException.class).hasMessage("Page number and size must be positive");
-
-    }
 
     @Test
     void testSearchAllByNameSuccess() {
@@ -199,23 +184,6 @@ class ItemServiceTest {
         );
 
         verify(repository, times(1)).findAllByNameLikeIgnoreCase("%" + name + "%", pageable);
-    }
-
-    @Test
-    void testSearchAllByNamePaginationBadRequest() {
-        // Given
-        String name = "special";
-        int page = -1, size = 3;
-
-        // When
-        Throwable thrown = catchThrowable(() -> {
-            Page<Item> returnedItems = service.searchAllByName(name, page, size);
-        });
-
-
-        // Then
-        assertThat(thrown).isInstanceOf(ItemBadRequestException.class).hasMessage("Page number and size must be positive");
-
     }
 
     @Test
@@ -270,19 +238,4 @@ class ItemServiceTest {
         verify(repository, times(1)).findAllByLocation(location, pageable);
     }
 
-    @Test
-    void testFindAllByLocationPaginationBadRequest() {
-        // Given
-        String location = "CA";
-        int page = 1, size = -3;
-
-        // When
-        Throwable thrown = catchThrowable(() -> {
-            Page<Item> returnedItems = service.findAllByLocation(location, page, size);
-        });
-
-        // Then
-        assertThat(thrown).isInstanceOf(ItemBadRequestException.class).hasMessage("Page number and size must be positive");
-
-    }
 }
