@@ -17,9 +17,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
@@ -156,4 +158,123 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data.username").value("name@domain.tld"));
     }
 
+    @Test
+    void testAddUserUsernameAlreadyExist() throws Exception {
+
+        // Given
+        UserEditableDTO userEditableDTO = new UserEditableDTO(
+                "Name",
+                "Password",
+                "Description",
+                "name@domain.tld",
+                "1234567890",
+                true
+        );
+
+        String userJson = this.objectMapper.writeValueAsString(userEditableDTO);
+
+        given(service.save(Mockito.any(User.class))).willThrow(new UserEmailAlreadyExistException("name@domain.tld"));
+
+        // When and then
+        this.mockMvc.perform(post("/api/v1/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("The email name@domain.tld already exist"))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testUpdateUserSuccess() throws Exception {
+
+        // Given
+        UserEditableDTO userEditableDTO = new UserEditableDTO(
+                "New Name",
+                "Password",
+                "New Description",
+                "name@domain.tld",
+                "1234567890",
+                false
+        );
+
+        String json = this.objectMapper.writeValueAsString(userEditableDTO);
+
+        User updatedUser = new User();
+        updatedUser.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        updatedUser.setName("New Name");
+        updatedUser.setPassword("Password");
+        updatedUser.setDescription("New Description");
+        updatedUser.setEmail("name@domain.tld");
+        updatedUser.setContact("1234567890");
+        updatedUser.setEnabled(false);
+
+        given(this.service.update(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), Mockito.any(User.class))).willReturn(updatedUser);
+        // When and then
+
+        this.mockMvc.perform(put("/api/v1/user/9a540a1e-b599-4cec-aeb1-6396eb8fa271")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Update a user"))
+                .andExpect(jsonPath("$.data.id").value("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
+                .andExpect(jsonPath("$.data.name").value("New Name"))
+                .andExpect(jsonPath("$.data.description").value("New Description"));
+    }
+
+    @Test
+    void testUpdateUserNotFound() throws Exception {
+        UserEditableDTO userEditableDTO = new UserEditableDTO(
+                "New Name",
+                "Password",
+                "New Description",
+                "name@domain.tld",
+                "1234567890",
+                false
+        );
+
+        String json = this.objectMapper.writeValueAsString(userEditableDTO);
+
+
+        given(this.service.update(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), Mockito.any(User.class)))
+                .willThrow(new UserNotFoundException(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271")));
+        // When and then
+
+        this.mockMvc.perform(put("/api/v1/user/9a540a1e-b599-4cec-aeb1-6396eb8fa271")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("Could find user with Id 9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testDeleteUserSuccess() throws Exception {
+
+        // Given
+        doNothing().when(this.service).delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        // When and then
+
+        this.mockMvc.perform(delete("/api/v1/user/9a540a1e-b599-4cec-aeb1-6396eb8fa271")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Delete a user"))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testDeleteUserNotFound() throws Exception {
+
+        // Given
+        doThrow(new UserNotFoundException(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).when(this.service).delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        // When and then
+
+        this.mockMvc.perform(delete("/api/v1/user/9a540a1e-b599-4cec-aeb1-6396eb8fa271")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("Could find user with Id 9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
 }

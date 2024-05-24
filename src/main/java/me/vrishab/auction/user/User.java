@@ -40,7 +40,7 @@ public class User implements Serializable {
     @Getter(AccessLevel.NONE)
     private Set<Item> wishList = new HashSet<>();
 
-    @OneToMany
+    @OneToMany(cascade = {CascadeType.ALL})
     @JoinColumn(name = "ownerId")
     @Getter(AccessLevel.NONE)
     private Set<Auction> auctions = new HashSet<>();
