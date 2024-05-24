@@ -17,9 +17,9 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -154,5 +154,103 @@ class UserServiceTest {
 
         // Then
         assertThat(thrown).isInstanceOf(UserEmailAlreadyExistException.class).hasMessage("The email name0@domain.tld already exist");
+    }
+
+    @Test
+    void testUpdateUserSuccess() {
+
+        // Given
+        User oldUser = new User();
+        oldUser.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        oldUser.setName("Name");
+        oldUser.setPassword("Password");
+        oldUser.setDescription("Description");
+        oldUser.setEmail("name@domain.tld");
+        oldUser.setContact("1234567890");
+        oldUser.setEnabled(true);
+
+        User update = new User();
+        update.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        update.setName("New Name");
+        update.setPassword("New Password");
+        update.setDescription("New Description");
+        update.setEmail("name@domain.tld");
+        update.setContact("1234567890");
+        update.setEnabled(true);
+
+        given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(oldUser));
+        given(repository.save(update)).willReturn(update);
+
+        // When
+        User updatedUser = service.update("9a540a1e-b599-4cec-aeb1-6396eb8fa271", update);
+
+        // Then
+        assertAll(
+                () -> assertThat(updatedUser.getId()).isEqualTo(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271")),
+                () -> assertThat(updatedUser.getName()).isEqualTo("New Name"),
+                () -> assertThat(updatedUser.getDescription()).isEqualTo("New Description")
+        );
+        verify(repository, times(1)).save(update);
+        verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+    }
+
+    @Test
+    void testUpdateUserNotFound() {
+
+        // Given
+        User update = new User();
+        update.setName("New Name");
+        update.setPassword("New Password");
+        update.setDescription("New Description");
+        update.setEmail("name@domain.tld");
+        update.setContact("1234567890");
+        update.setEnabled(true);
+
+        given(repository.findById(Mockito.any(UUID.class))).willReturn(Optional.empty());
+
+        // When
+        assertThrows(UserNotFoundException.class, () -> {
+            service.update("9a540a1e-b599-4cec-aeb1-6396eb8fa271", update);
+        });
+
+        // Then
+        verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+    }
+
+    @Test
+    void testDeleteUserSuccess() {
+
+        // Given
+        User user = new User();
+        user.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        user.setName("New Name");
+        user.setPassword("New Password");
+        user.setDescription("New Description");
+        user.setEmail("name@domain.tld");
+        user.setContact("1234567890");
+        user.setEnabled(true);
+
+        given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(user));
+        doNothing().when(repository).deleteById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+
+        // When
+        service.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+
+        // Then
+        verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        verify(repository, times(1)).deleteById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+    }
+
+    @Test
+    void testDeleteUserNotFound() {
+
+        // Given
+        given(repository.findById(Mockito.any(UUID.class))).willReturn(Optional.empty());
+
+        // When
+        assertThrows(UserNotFoundException.class, () -> service.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+
+        // Then
+        verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
     }
 }

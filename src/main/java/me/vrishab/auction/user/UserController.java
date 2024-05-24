@@ -39,10 +39,24 @@ public class UserController {
     }
 
     @PostMapping("/users")
-    public Result addUser(@Valid @RequestBody UserEditableDTO userEditableDTO) {
-        User newUser = this.userCreationToUserConverter.convert(userEditableDTO);
+    public Result addUser(@Valid @RequestBody UserEditableDTO newUserDTO) {
+        User newUser = this.userCreationToUserConverter.convert(newUserDTO);
         User savedUser = this.userService.save(newUser);
         UserDTO savedUserDto = this.userToUserDTOConverter.convert(savedUser);
         return new Result(true, "Add a user", savedUserDto);
+    }
+
+    @PutMapping("/user/{userId}")
+    public Result updateUser(@PathVariable String userId, @Valid @RequestBody UserEditableDTO updateDTO) {
+        User update = this.userCreationToUserConverter.convert(updateDTO);
+        User updatedUser = this.userService.update(userId, update);
+        UserDTO updatedUserDto = this.userToUserDTOConverter.convert(updatedUser);
+        return new Result(true, "Update a user", updatedUserDto);
+    }
+
+    @DeleteMapping("/user/{userId}")
+    public Result deleteUser(@PathVariable String userId) {
+        this.userService.delete(userId);
+        return new Result(true, "Delete a user");
     }
 }
