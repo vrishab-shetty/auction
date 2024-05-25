@@ -1,22 +1,26 @@
 spring:
-    application:
-      name: auction
-    datasource:
-      generate-unique-name: false
-      name: auction
-    jpa:
-      properties:
-        hibernate:
-          auto_quote_keyword: true
-    security:
-      user:
-        name: user
-        password: user
+  application:
+    name: auction
+  datasource:
+    generate-unique-name: false
+    name: auction
+  jpa:
+    properties:
+      hibernate:
+        auto_quote_keyword: true
+  security:
+    user:
+      name: user
+      password: user
 #      show-sql: true
 
 api:
   endpoint:
     base-url: /api/v1
-
+logging:
+  level:
+    org:
+      springframework:
+        security: INFO
 
 
