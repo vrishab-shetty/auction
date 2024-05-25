@@ -19,7 +19,7 @@ public class UserCreationToUserConverter implements Converter<UserEditableDTO, U
         user.setEmail(source.email());
         user.setContact(source.contact());
         user.setPassword(source.password());
-        user.setEnabled(source.enabled() == null || source.enabled());
+        user.setEnabled(true);
 
         return user;
     }

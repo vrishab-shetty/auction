@@ -28,7 +28,6 @@ public record UserEditableDTO(
         String email,
         @NotBlank(message = "contact info is required")
         @Size(min = 10, max = 10, message = "Please provide a valid phone number")
-        String contact,
-        Boolean enabled
+        String contact
 ) {
 }
