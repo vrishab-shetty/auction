@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @Validated
-@RequestMapping("/api/v1")
+@RequestMapping("${api.endpoint.base-url}")
 public class ItemController {
 
     private final ItemService itemService;
