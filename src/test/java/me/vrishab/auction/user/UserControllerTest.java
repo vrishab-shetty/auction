@@ -130,8 +130,7 @@ class UserControllerTest {
                 "Password",
                 "Description",
                 "name@domain.tld",
-                "1234567890",
-                true
+                "1234567890"
         );
 
         String userJson = this.objectMapper.writeValueAsString(userEditableDTO);
@@ -167,8 +166,7 @@ class UserControllerTest {
                 "Password",
                 "Description",
                 "name@domain.tld",
-                "1234567890",
-                true
+                "1234567890"
         );
 
         String userJson = this.objectMapper.writeValueAsString(userEditableDTO);
@@ -194,8 +192,7 @@ class UserControllerTest {
                 "Password",
                 "New Description",
                 "name@domain.tld",
-                "1234567890",
-                false
+                "1234567890"
         );
 
         String json = this.objectMapper.writeValueAsString(userEditableDTO);
@@ -230,8 +227,7 @@ class UserControllerTest {
                 "Password",
                 "New Description",
                 "name@domain.tld",
-                "1234567890",
-                false
+                "1234567890"
         );
 
         String json = this.objectMapper.writeValueAsString(userEditableDTO);

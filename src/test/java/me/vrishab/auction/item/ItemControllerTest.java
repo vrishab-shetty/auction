@@ -1,5 +1,6 @@
 package me.vrishab.auction.item;
 
+import me.vrishab.auction.system.PageRequestParams;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -8,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -89,7 +89,8 @@ class ItemControllerTest {
     void testFindAllItems() throws Exception {
 
         // Given
-        given(itemService.findAll()).willReturn(items);
+        given(itemService.findAll(null, null, new PageRequestParams(null, null)))
+                .willReturn(this.items);
 
         // When and Then
         this.mockMvc.perform(get("/api/v1/items").accept(MediaType.APPLICATION_JSON))
@@ -103,9 +104,10 @@ class ItemControllerTest {
 
         // Given
         int page = 1, size = 4;
-        given(itemService.findAllPagination(page, size)).willReturn(new PageImpl<>(
-                items.subList(page * size, (page + 1) * size)
-        ));
+        given(itemService.findAll(null, null, new PageRequestParams(page, size)))
+                .willReturn(
+                        items.subList(page * size, (page + 1) * size)
+                );
 
         // When and Then
         this.mockMvc.perform(get("/api/v1/items")
@@ -123,9 +125,11 @@ class ItemControllerTest {
 
         // Given
         String name = "special";
-
-        given(itemService.searchAllByName(name))
-                .willReturn(items.stream().filter(item -> item.getName().contains(name)).toList());
+        List<Item> filterItems = items.stream().filter(item -> item.getName().contains(name)).toList();
+        given(itemService.findAll(name, null, new PageRequestParams(null, null)))
+                .willReturn(
+                        filterItems
+                );
 
         // When and Then
         this.mockMvc.perform(get("/api/v1/items")
@@ -133,7 +137,7 @@ class ItemControllerTest {
                         .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(jsonPath("$.flag").value(true))
-                .andExpect(jsonPath("$.message").value("Find all items with name containing " + name))
+                .andExpect(jsonPath("$.message").value("Find all items"))
                 .andExpect(jsonPath("$.data").value(Matchers.hasSize(5)))
                 .andExpect(jsonPath("$.data[*].name").value(Matchers.everyItem(Matchers.containsString(name))));
     }
@@ -144,8 +148,11 @@ class ItemControllerTest {
         // Given
         String location = "MA";
 
-        given(itemService.findAllByLocation(location))
-                .willReturn(items.stream().filter(item -> item.getLocation().contains(location)).toList());
+        List<Item> filterItems = items.stream().filter(item -> item.getLocation().contains(location)).toList();
+        given(itemService.findAll(null, location, new PageRequestParams(null, null)))
+                .willReturn(
+                        filterItems
+                );
 
         // When and Then
         this.mockMvc.perform(get("/api/v1/items")
@@ -153,11 +160,24 @@ class ItemControllerTest {
                         .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(jsonPath("$.flag").value(true))
-                .andExpect(jsonPath("$.message").value("Find all items with location " + location))
+                .andExpect(jsonPath("$.message").value("Find all items"))
                 .andExpect(jsonPath("$.data").value(Matchers.hasSize(3)))
                 .andExpect(jsonPath("$.data[*].location").value(Matchers.everyItem(Matchers.equalTo(location))));
 
     }
 
+    @Test
+    void testFindAllItemPaginationFailure() throws Exception {
+        given(itemService.findAll(null, null, new PageRequestParams(null, null)))
+                .willReturn(this.items);
+
+        // When and Then
+        this.mockMvc.perform(get("/api/v1/items")
+                        .param("pageNum", "3")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("Provided arguments are invalid, see data for details"))
+                .andExpect(jsonPath("$.data").isNotEmpty());
+    }
 
 }

@@ -1,18 +1,21 @@
 package me.vrishab.auction.item;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.util.List;
-
+import static me.vrishab.auction.item.ItemSpecification.ItemFilterParams;
+import static me.vrishab.auction.item.ItemSpecification.filterSpecification;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class FindItemFilteringAndPagingTest extends SpringDataJpaApplicationTests {
 
+    private static final Logger log = LoggerFactory.getLogger(FindItemFilteringAndPagingTest.class);
     @Autowired
     private ItemRepository itemRepo;
 
@@ -20,14 +23,20 @@ public class FindItemFilteringAndPagingTest extends SpringDataJpaApplicationTest
     void testFilterItemByName() {
 
         String query = "special";
-        Page<Item> itemPage = itemRepo.findAllByNameLikeIgnoreCase("%" + query + "%", PageRequest.of(1, 3));
-        Page<Item> itemPageSort = itemRepo.findAllByNameLikeIgnoreCase("%" + query + "%", PageRequest.of(1, 3, Sort.by("name")));
+        ItemFilterParams filter = new ItemFilterParams(query, null);
+        Page<Item> itemPage = itemRepo.findAll(filterSpecification(filter), PageRequest.of(1, 3));
+        Page<Item> itemPageSort = itemRepo.findAll(filterSpecification(filter), PageRequest.of(1, 3, Sort.by("name")));
 
+
+        log.debug("list: ", itemPage.getContent().toArray());
         assertAll(
-                () -> assertThat(itemPage.getSize()).isEqualTo(3)
+                () -> assertThat(itemPage.getSize()).isEqualTo(3),
+                () -> assertThat(itemPage.getTotalElements()).isEqualTo(5),
+                () -> assertThat(itemPage.get()).allMatch(item -> item.getName().contains(query))
         );
         assertAll(
                 () -> assertThat(itemPageSort.getSize()).isEqualTo(3),
+                () -> assertThat(itemPageSort.getTotalElements()).isEqualTo(5),
                 () -> assertThat(itemPageSort.getContent()).allMatch(item -> item.getName().contains(query))
         );
 
@@ -37,12 +46,36 @@ public class FindItemFilteringAndPagingTest extends SpringDataJpaApplicationTest
     @Test
     void testFilterItemByLocation() {
 
-        Page<Item> itemPage = itemRepo.findAllByLocation("Location 1", PageRequest.of(0, 3));
+        String location = "MA";
+        ItemFilterParams filter = new ItemFilterParams(null, location);
 
-        List<Item> items = itemPage.getContent();
+        Page<Item> itemPage = itemRepo.findAll(filterSpecification(filter), PageRequest.of(0, 3));
+
         assertAll(
-                () -> assertThat(items.size()).isEqualTo(1),
-                () -> assertThat(items.get(0).getLocation()).isEqualTo("Location 1")
+                () -> assertThat(itemPage.getSize()).isEqualTo(3)
+        );
+        assertAll(
+                () -> assertThat(itemPage.getTotalElements()).isEqualTo(3),
+                () -> assertThat(itemPage.get()).allMatch(item -> item.getLocation().equals(location))
+        );
+    }
+
+    @Test
+    void testFilterItemByNameAndLocation() {
+        String query = "special";
+        String location = "CA";
+
+        ItemFilterParams filter = new ItemFilterParams(query, location);
+
+        Page<Item> itemPage = itemRepo.findAll(filterSpecification(filter), PageRequest.of(0, 3));
+
+        assertAll(
+                () -> assertThat(itemPage.getSize()).isEqualTo(3)
+        );
+        assertAll(
+                () -> assertThat(itemPage.getTotalElements()).isEqualTo(4),
+                () -> assertThat(itemPage.get()).allMatch(item -> item.getLocation().equals(location)),
+                () -> assertThat(itemPage.get()).allMatch(item -> item.getName().contains(query))
         );
     }
 }

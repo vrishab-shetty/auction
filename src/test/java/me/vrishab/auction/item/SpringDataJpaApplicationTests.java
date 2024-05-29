@@ -8,7 +8,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -39,11 +42,11 @@ abstract class SpringDataJpaApplicationTests {
     private static Set<Item> generateItems() {
         Set<Item> items = new HashSet<>();
 
-        for(int i=0; i<10; i++) {
+        for (int i = 0; i < 10; i++) {
             Item item = new Item();
-            item.setName("Item "+i + (i%2 == 0 ? " (special)": ""));
-            item.setDescription("Description "+i);
-            item.setLocation("Location "+i);
+            item.setName("Item " + i + (i % 2 == 0 ? " (special)" : ""));
+            item.setDescription("Description " + i);
+            item.setLocation(i % 3 == 1 ? "MA" : "CA");
             item.setImageUrls(Set.of("<images>"));
             item.setExtras(null);
             item.setLegitimacyProof("Proof");
