@@ -1,14 +1,16 @@
 package me.vrishab.auction.item;
 
 import jakarta.transaction.Transactional;
+import me.vrishab.auction.item.ItemSpecification.ItemFilterParams;
+import me.vrishab.auction.system.PageRequestParams;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+
+import static me.vrishab.auction.item.ItemSpecification.filterSpecification;
 
 @Service
 @Transactional
@@ -28,27 +30,15 @@ public class ItemService {
                 );
     }
 
-    public List<Item> findAll() {
-        return this.itemRepo.findAll();
+    public List<Item> findAll(String query, String location, PageRequestParams pageParams) {
+        Pageable pageable = Pageable.unpaged();
+
+        if (pageParams != null && pageParams.getPageSize() != null && pageParams.getPageNum() != null)
+            pageable = pageParams.createPageRequest();
+
+        ItemFilterParams filter = new ItemFilterParams(query, location);
+        return this.itemRepo.findAll(filterSpecification(filter), pageable).toList();
     }
 
-    public Page<Item> findAllPagination(int page, int size) {
-        return this.itemRepo.findAll(PageRequest.of(page - 1, size));
-    }
 
-    public List<Item> searchAllByName(String query) {
-        return this.itemRepo.findAllByNameLikeIgnoreCase("%" + query + "%", Pageable.unpaged()).getContent();
-    }
-
-    public Page<Item> searchAllByName(String query, int page, int size) {
-        return this.itemRepo.findAllByNameLikeIgnoreCase("%" + query + "%", PageRequest.of(page - 1, size));
-    }
-
-    public List<Item> findAllByLocation(String location) {
-        return this.itemRepo.findAllByLocation(location, Pageable.unpaged()).getContent();
-    }
-
-    public Page<Item> findAllByLocation(String location, int page, int size) {
-        return this.itemRepo.findAllByLocation(location, PageRequest.of(page - 1, size));
-    }
 }
