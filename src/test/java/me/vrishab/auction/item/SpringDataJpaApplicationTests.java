@@ -29,9 +29,9 @@ abstract class SpringDataJpaApplicationTests {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
         calendar.add(Calendar.HOUR_OF_DAY, 1);
-        auction.setStartTime(calendar.getTime());
+        auction.setStartTime(calendar.getTime().toInstant());
         calendar.add(Calendar.HOUR_OF_DAY, 1);
-        auction.setEndTime(calendar.getTime());
+        auction.setEndTime(calendar.getTime().toInstant());
         auction.setInitialPrice(100.00);
         auction.setBuyer("vr@domain.tld");
         auction.setItems(generateItems());

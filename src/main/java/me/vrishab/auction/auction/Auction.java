@@ -10,7 +10,7 @@ import me.vrishab.auction.item.Item;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -36,12 +36,12 @@ public class Auction implements Serializable {
     @NotNull(message = "start date is required")
     @Future(message = "Please provide a future date")
     @DateTimeFormat(iso = ISO.DATE_TIME)
-    private Date startTime;
+    private Instant startTime;
 
     @NotNull(message = "end date is required")
     @Future(message = "Please provide a future date")
     @DateTimeFormat(iso = ISO.DATE_TIME)
-    private Date endTime;
+    private Instant endTime;
 
     @NotNull(message = "initial price is required")
     @PositiveOrZero(message = "Please provide a valid price")
