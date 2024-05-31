@@ -8,6 +8,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,9 @@ class UserServiceTest {
 
     @Mock
     UserRepository repository;
+
+    @Mock
+    PasswordEncoder encoder;
 
     @InjectMocks
     UserService service;
@@ -131,6 +135,7 @@ class UserServiceTest {
         User newUser = users.get(5);
 
         given(repository.save(newUser)).willReturn(newUser);
+        given(encoder.encode(newUser.getPassword())).willReturn("$2a$10$SgFzATB7cRNuSmWdCK0EA.bOZorh4/TjouLRLWSDxwCR4hGo/6/5i");
 
         // When
         User savedUser = service.save(newUser);
@@ -172,14 +177,15 @@ class UserServiceTest {
         User update = new User();
         update.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
         update.setName("New Name");
-        update.setPassword("New Password");
+        update.setPassword("$2a$10$w0.OcE5rFi5iXGm/cQjMeOH4ht9SxWoOn8Lao9veuQkZJrxoMQQOm");
         update.setDescription("New Description");
         update.setEmail("name@domain.tld");
         update.setContact("1234567890");
         update.setEnabled(true);
 
         given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(oldUser));
-        given(repository.save(update)).willReturn(update);
+        given(encoder.encode(update.getPassword())).willReturn("$2a$10$w0.OcE5rFi5iXGm/cQjMeOH4ht9SxWoOn8Lao9veuQkZJrxoMQQOm");
+        given(repository.save(oldUser)).willReturn(update);
 
         // When
         User updatedUser = service.update("9a540a1e-b599-4cec-aeb1-6396eb8fa271", update);
