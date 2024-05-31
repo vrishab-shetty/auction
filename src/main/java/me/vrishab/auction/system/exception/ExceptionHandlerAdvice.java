@@ -2,6 +2,7 @@ package me.vrishab.auction.system.exception;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import me.vrishab.auction.auction.AuctionNotFoundException;
 import me.vrishab.auction.item.ItemNotFoundException;
 import me.vrishab.auction.security.AuthenticationRequiredException;
 import me.vrishab.auction.system.Result;
@@ -46,6 +47,13 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(UserEmailAlreadyExistException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleDuplicateEmailRequest(UserEmailAlreadyExistException ex) {
+        return new Result(false, ex.getMessage());
+    }
+
+    // Auctions
+    @ExceptionHandler(AuctionNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result handleAuctionNotFoundException(AuctionNotFoundException ex) {
         return new Result(false, ex.getMessage());
     }
 
