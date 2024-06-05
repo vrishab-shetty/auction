@@ -22,10 +22,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
@@ -120,7 +117,7 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public Result handleException(Exception ex) {
-        return new Result(false, "A server error occurs", ex.getMessage());
+        return new Result(false, "A server error occurs:\n" + ex.getMessage(), Arrays.toString(ex.getStackTrace()));
     }
 
 

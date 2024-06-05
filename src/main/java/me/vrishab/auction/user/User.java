@@ -12,7 +12,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Data
+@Setter
+@Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
 @AllArgsConstructor
 public class User implements Serializable {
@@ -40,8 +41,7 @@ public class User implements Serializable {
     @Getter(AccessLevel.NONE)
     private Set<Item> wishList = new HashSet<>();
 
-    @OneToMany(cascade = {CascadeType.ALL})
-    @JoinColumn(name = "ownerId")
+    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "user")
     @Getter(AccessLevel.NONE)
     private Set<Auction> auctions = new HashSet<>();
 
@@ -63,9 +63,11 @@ public class User implements Serializable {
 
     public void addAuction(@NonNull Auction auction) {
         this.auctions.add(auction);
+        auction.setUser(this);
     }
 
     public void removeAuction(@NonNull Auction auction) {
+        auction.setUser(null);
         this.auctions.remove(auction);
     }
 }

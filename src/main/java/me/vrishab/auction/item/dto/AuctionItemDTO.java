@@ -1,0 +1,27 @@
+package me.vrishab.auction.item.dto;
+
+import lombok.NonNull;
+
+import java.util.Set;
+import java.util.UUID;
+
+public record AuctionItemDTO(
+        @NonNull
+        UUID id,
+
+        @NonNull
+        String name,
+
+        @NonNull
+        String description,
+
+        @NonNull
+        String location,
+
+        Set<String> imageUrls,
+
+        String legitimacyProof,
+
+        String extras
+) {
+}
