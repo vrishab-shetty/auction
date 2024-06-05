@@ -196,7 +196,7 @@ class UserServiceTest {
                 () -> assertThat(updatedUser.getName()).isEqualTo("New Name"),
                 () -> assertThat(updatedUser.getDescription()).isEqualTo("New Description")
         );
-        verify(repository, times(1)).save(update);
+        verify(repository, times(1)).save(oldUser);
         verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
     }
 

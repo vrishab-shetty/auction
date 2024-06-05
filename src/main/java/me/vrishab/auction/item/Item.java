@@ -1,10 +1,13 @@
 package me.vrishab.auction.item;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.HashSet;
@@ -12,7 +15,8 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Data
+@Setter
+@Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
 public class Item implements Serializable {
 
@@ -20,21 +24,10 @@ public class Item implements Serializable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @NotBlank(message = "name is required")
-    @Size(
-            min = 2, max = 25,
-            message = "minimum 2 character and maximum 25 characters."
-    )
     private String name;
 
-    @NotBlank(message = "description is required")
-    @Size(
-            min = 2, max = 255,
-            message = "minimum 2 character and maximum 255 characters."
-    )
     private String description;
 
-    @NotBlank(message = "location is required")
     private String location;
 
     @ElementCollection(fetch = FetchType.EAGER)
