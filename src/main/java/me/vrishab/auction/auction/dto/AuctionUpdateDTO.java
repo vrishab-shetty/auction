@@ -2,13 +2,14 @@ package me.vrishab.auction.auction.dto;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
-import me.vrishab.auction.item.dto.ItemEditableDTO;
+import me.vrishab.auction.item.dto.AuctionItemUpdateDTO;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 
-public record AuctionEditableDTO(
+public record AuctionUpdateDTO(
         @NotBlank(message = "name is required")
         @Size(
                 min = 2, max = 25,
@@ -30,11 +31,9 @@ public record AuctionEditableDTO(
         @PositiveOrZero(message = "Please provide a valid price")
         Double initialPrice,
 
-        @NotNull(message = "At least one item is required")
-        @Size(
-                min = 1,
-                message = "auction needs at least one item"
-        )
-        @Valid List<ItemEditableDTO> items
+        @Valid List<AuctionItemUpdateDTO> items
 ) {
+    public List<AuctionItemUpdateDTO> items() {
+        return items != null ? items : Collections.emptyList();
+    }
 }

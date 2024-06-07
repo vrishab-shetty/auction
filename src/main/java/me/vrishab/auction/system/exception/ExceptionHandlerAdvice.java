@@ -2,7 +2,9 @@ package me.vrishab.auction.system.exception;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
+import lombok.extern.slf4j.Slf4j;
 import me.vrishab.auction.auction.AuctionNotFoundException;
+import me.vrishab.auction.auction.UnAuthorizedAuctionAccess;
 import me.vrishab.auction.item.ItemNotFoundException;
 import me.vrishab.auction.security.AuthenticationRequiredException;
 import me.vrishab.auction.system.Result;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.*;
 
+@Slf4j
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
 
@@ -51,6 +54,12 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(AuctionNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result handleAuctionNotFoundException(AuctionNotFoundException ex) {
+        return new Result(false, ex.getMessage());
+    }
+
+    @ExceptionHandler(UnAuthorizedAuctionAccess.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Result handleUnauthorizedAuctionAccess(UnAuthorizedAuctionAccess ex) {
         return new Result(false, ex.getMessage());
     }
 
@@ -117,6 +126,7 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public Result handleException(Exception ex) {
+        log.error(ex.getMessage(), ex);
         return new Result(false, "A server error occurs:\n" + ex.getMessage(), Arrays.toString(ex.getStackTrace()));
     }
 

@@ -5,7 +5,9 @@ import jakarta.validation.constraints.Size;
 
 import java.util.Set;
 
-public record ItemEditableDTO(
+public record AuctionItemUpdateDTO(
+        String id,
+
         @NotBlank(message = "name is required")
         @Size(
                 min = 2, max = 25,

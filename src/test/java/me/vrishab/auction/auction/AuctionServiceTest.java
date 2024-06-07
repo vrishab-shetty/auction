@@ -1,6 +1,7 @@
 package me.vrishab.auction.auction;
 
 import me.vrishab.auction.item.Item;
+import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.user.User;
 import me.vrishab.auction.user.UserRepository;
@@ -35,12 +36,17 @@ class AuctionServiceTest {
     @Mock
     UserRepository userRepo;
 
+    @Mock
+    ItemRepository itemRepository;
+
     @InjectMocks
     AuctionService auctionService;
 
     List<Auction> auctions;
 
     User user;
+
+    Item item;
 
     @BeforeEach
     void setUp() {
@@ -58,7 +64,7 @@ class AuctionServiceTest {
 
         for (int i = 0; i < 10; i++) {
 
-            Item item = new Item();
+            item = new Item();
             item.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a" + i));
             item.setName("Item");
             item.setDescription("Description");
@@ -137,7 +143,8 @@ class AuctionServiceTest {
     void testFindAllAuctionSuccess() {
 
         // Given
-        given(auctionRepo.findAll(eq(Pageable.unpaged())))
+        Pageable pageable = Pageable.unpaged();
+        given(auctionRepo.findAll(eq(pageable)))
                 .willReturn(new PageImpl<>(
                                 this.auctions
                         )
@@ -148,6 +155,8 @@ class AuctionServiceTest {
 
         // Then
         assertThat(returnedAuctions).hasSize(10);
+
+        verify(auctionRepo, times(1)).findAll(pageable);
     }
 
     @Test
@@ -198,6 +207,7 @@ class AuctionServiceTest {
         newAuction.setEndTime(calendar.getTime().toInstant());
         newAuction.setInitialPrice(100.00);
         newAuction.setBuyer("name1@domain.tld");
+        newAuction.setItems(Set.of(newItem));
 
         given(auctionRepo.save(newAuction)).willReturn(newAuction);
 
@@ -212,10 +222,180 @@ class AuctionServiceTest {
         // Then
         assertAll(
                 () -> assertThat(savedAuction.getId().toString()).isEqualTo("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
-                () -> assertThat(savedAuction.getItems()).allMatch(item -> item.getSeller().equals(user.getEmail())),
-                () -> assertThat(savedAuction.getCurrentBid()).isNull(),
-                () -> assertThat(savedAuction.getItems()).allMatch(item -> item.getAuctionId().equals(savedAuction.getId())),
-                () -> assertThat(savedAuction.getUser().getId()).isEqualTo(userId)
+                () -> assertThat(savedAuction.getItems().size()).isEqualTo(1),
+                () -> assertThat(savedAuction.getCurrentBid()).isNull()
         );
+
+        assertAll(
+                () -> assertThat(savedAuction.getItems()).allMatch(item -> item.getSeller().equals(user.getEmail())),
+                () -> assertThat(savedAuction.getItems()).allMatch(item -> item.getAuctionId().equals(savedAuction.getId())),
+                () -> assertThat(savedAuction.getOwnerEmail()).isEqualTo("name@domain.tld")
+        );
+
+        verify(auctionRepo, times(1)).save(newAuction);
+        verify(userRepo, times(1)).findById(userId);
+    }
+
+    @Test
+    void testUpdateAuctionSuccess() {
+        Calendar calendar = Calendar.getInstance();
+
+        UUID auctionId = UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
+
+        Item oldItem = new Item();
+        oldItem.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"));
+        oldItem.setName("Item");
+        oldItem.setDescription("Description");
+        oldItem.setLocation("MA");
+        oldItem.setImageUrls(Set.of("<images>"));
+        oldItem.setLegitimacyProof("Proof");
+        oldItem.setAuctionId(auctionId);
+        oldItem.setSeller("name@domain.tld");
+
+        Auction oldAuction = new Auction();
+
+        oldAuction.setId(auctionId);
+        oldAuction.setName("Auction");
+        calendar.setTime(new Date());
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
+        oldAuction.setStartTime(calendar.getTime().toInstant());
+        calendar.add(Calendar.HOUR_OF_DAY, 2);
+        oldAuction.setEndTime(calendar.getTime().toInstant());
+        oldAuction.setInitialPrice(100.00);
+        oldAuction.setBuyer("name1@domain.tld");
+        oldAuction.setUser(user);
+
+        calendar = Calendar.getInstance();
+
+        Item updateItem = new Item();
+        updateItem.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"));
+        updateItem.setName("New Item");
+        updateItem.setDescription("New Description");
+        updateItem.setLocation("CA");
+        updateItem.setImageUrls(Set.of("<images>"));
+        updateItem.setExtras(null);
+        updateItem.setLegitimacyProof("Proof");
+
+        Auction updateAuction = new Auction();
+
+        updateAuction.setId(auctionId);
+        updateAuction.setName("New Auction");
+        calendar.setTime(new Date());
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
+        updateAuction.setStartTime(calendar.getTime().toInstant());
+        calendar.add(Calendar.HOUR_OF_DAY, 3);
+        updateAuction.setEndTime(calendar.getTime().toInstant());
+        updateAuction.setInitialPrice(150.00);
+        updateAuction.setBuyer("name1@domain.tld");
+        updateAuction.setItems(Set.of(updateItem));
+
+        UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270");
+
+        given(userRepo.findById(userId))
+                .willReturn(Optional.of(user));
+
+        given(auctionRepo.findById(auctionId))
+                .willReturn(Optional.of(oldAuction));
+        given(auctionRepo.save(oldAuction)).willReturn(oldAuction);
+
+        given(itemRepository.findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"))).willReturn(Optional.of(updateItem));
+
+        // When
+        Auction updatedAuction = this.auctionService.update("9a540a1e-b599-4cec-aeb1-6396eb8fa270", updateAuction, "a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
+
+        // Then
+        assertAll(
+                () -> assertThat(updatedAuction.getId().toString()).isEqualTo("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
+                () -> assertThat(updateAuction.getItems().size()).isEqualTo(1),
+                () -> assertThat(updatedAuction.getInitialPrice()).isEqualTo(150.0),
+                () -> assertThat(updateAuction.getName()).isEqualTo("New Auction"),
+                () -> assertThat(updatedAuction.getItems().iterator().next().getName()).isEqualTo("New Item")
+        );
+        assertAll(
+                () -> assertThat(updatedAuction.getItems()).allMatch(item -> item.getSeller().equals(user.getEmail())),
+                () -> assertThat(updatedAuction.getItems()).allMatch(item -> item.getAuctionId().equals(updatedAuction.getId()))
+        );
+
+    }
+
+    @Test
+    void testUpdateAuctionUnauthorized() {
+
+        // Given
+        Calendar calendar = Calendar.getInstance();
+
+        UUID auctionId = UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
+
+        Item oldItem = new Item();
+        oldItem.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"));
+        oldItem.setName("Item");
+        oldItem.setDescription("Description");
+        oldItem.setLocation("MA");
+        oldItem.setImageUrls(Set.of("<images>"));
+        oldItem.setLegitimacyProof("Proof");
+        oldItem.setAuctionId(auctionId);
+        oldItem.setSeller("name2@domain.tld");
+
+        Auction oldAuction = new Auction();
+
+        oldAuction.setId(auctionId);
+        oldAuction.setName("Auction");
+        calendar.setTime(new Date());
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
+        oldAuction.setStartTime(calendar.getTime().toInstant());
+        calendar.add(Calendar.HOUR_OF_DAY, 2);
+        oldAuction.setEndTime(calendar.getTime().toInstant());
+        oldAuction.setInitialPrice(100.00);
+        oldAuction.setBuyer("name1@domain.tld");
+        oldAuction.setUser(user);
+
+        calendar = Calendar.getInstance();
+
+        Item updateItem = new Item();
+        updateItem.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"));
+        updateItem.setName("New Item");
+        updateItem.setDescription("New Description");
+        updateItem.setLocation("CA");
+        updateItem.setImageUrls(Set.of("<images>"));
+        updateItem.setExtras(null);
+        updateItem.setLegitimacyProof("Proof");
+
+        Auction updateAuction = new Auction();
+
+        updateAuction.setId(auctionId);
+        updateAuction.setName("New Auction");
+        calendar.setTime(new Date());
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
+        updateAuction.setStartTime(calendar.getTime().toInstant());
+        calendar.add(Calendar.HOUR_OF_DAY, 3);
+        updateAuction.setEndTime(calendar.getTime().toInstant());
+        updateAuction.setInitialPrice(150.00);
+        updateAuction.setBuyer("name1@domain.tld");
+        updateAuction.setItems(Set.of(updateItem));
+
+
+        UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+
+        given(userRepo.findById(userId))
+                .willReturn(Optional.of(user).map(loggedUser -> {
+                            User otherUser = new User();
+                            otherUser.setEmail("name2@domain.tld");
+                            return otherUser;
+                        }
+                ));
+
+        given(auctionRepo.findById(auctionId))
+                .willReturn(Optional.of(oldAuction));
+
+        // When
+
+        Throwable thrown = catchThrowable(() -> {
+            this.auctionService.update("9a540a1e-b599-4cec-aeb1-6396eb8fa271", updateAuction, "a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
+        });
+
+        assertThat(thrown).isInstanceOf(UnAuthorizedAuctionAccess.class).hasMessage("The user not an owner of the auction");
+
+        verify(userRepo, times(1)).findById(userId);
+        verify(auctionRepo, times(1)).findById(auctionId);
     }
 }
