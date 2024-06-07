@@ -2,11 +2,10 @@ package me.vrishab.auction.auction;
 
 import jakarta.transaction.Transactional;
 import me.vrishab.auction.item.Item;
-import me.vrishab.auction.item.ItemNotFoundException;
 import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
+import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.User;
-import me.vrishab.auction.user.UserNotFoundException;
 import me.vrishab.auction.user.UserRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,7 +34,7 @@ public class AuctionService {
 
     public Auction findById(String id) {
         return this.auctionRepo.findById(UUID.fromString(id))
-                .orElseThrow(() -> new AuctionNotFoundException(UUID.fromString(id)));
+                .orElseThrow(() -> new ObjectNotFoundException("auction", UUID.fromString(id)));
     }
 
     public List<Auction> findAll(PageRequestParams pageSettings) {
@@ -47,9 +46,9 @@ public class AuctionService {
     }
 
     public Auction add(String userId, Auction auction) {
-        UUID id = UUID.fromString(userId);
-        User user = userRepo.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+        UUID userUUID = UUID.fromString(userId);
+        User user = userRepo.findById(userUUID)
+                .orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
 
         user.addAuction(auction);
         auction.initializeItems();
@@ -61,12 +60,12 @@ public class AuctionService {
 
         UUID userUUID = UUID.fromString(userId);
         User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new UserNotFoundException(userUUID));
+                .orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
 
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction oldAuction = auctionRepo.findById(auctionUUID)
                 .orElseThrow(
-                        () -> new AuctionNotFoundException(auctionUUID)
+                        () -> new ObjectNotFoundException("auction", auctionUUID)
                 );
 
         authorizeUser(user, oldAuction);
@@ -89,7 +88,7 @@ public class AuctionService {
             Item item;
             if (auctionItem.getId() != null) {
                 item = itemRepo.findById(auctionItem.getId())
-                        .orElseThrow(() -> new ItemNotFoundException(auctionItem.getId().toString()));
+                        .orElseThrow(() -> new ObjectNotFoundException("item", auctionItem.getId()));
             } else {
                 item = new Item();
             }

@@ -1,11 +1,13 @@
 package me.vrishab.auction.item;
 
 import me.vrishab.auction.system.PageRequestParams;
+import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,6 +34,9 @@ class ItemControllerTest {
     private MockMvc mockMvc;
 
     List<Item> items;
+
+    @Value("${api.endpoint.base-url}")
+    String baseUrl;
 
     @BeforeEach
     void setUp() {
@@ -64,7 +69,7 @@ class ItemControllerTest {
         given(this.itemService.findById(testItemId)).willReturn(this.items.get(0));
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/items/" + testItemId).accept(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(get(baseUrl + "/items/" + testItemId).accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find one Success"))
                 .andExpect(jsonPath("$.data.id").value(testItemId))
@@ -76,10 +81,10 @@ class ItemControllerTest {
 
         // Given
         String testItemId = this.items.get(0).getId().toString();
-        given(this.itemService.findById(testItemId)).willThrow(new ItemNotFoundException(testItemId));
+        given(this.itemService.findById(testItemId)).willThrow(new ObjectNotFoundException("item", UUID.fromString(testItemId)));
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/items/" + testItemId).accept(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(get(baseUrl + "/items/" + testItemId).accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.message").value("Could not find item with Id " + testItemId))
                 .andExpect(jsonPath("$.data").isEmpty());
@@ -93,7 +98,7 @@ class ItemControllerTest {
                 .willReturn(this.items);
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/items").accept(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(get(baseUrl + "/items").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all items"))
                 .andExpect(jsonPath("$.data").value(Matchers.hasSize(items.size())));
@@ -110,7 +115,7 @@ class ItemControllerTest {
                 );
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/items")
+        this.mockMvc.perform(get(baseUrl + "/items")
                         .param("pageNum", String.valueOf(page))
                         .param("pageSize", String.valueOf(size))
                         .accept(MediaType.APPLICATION_JSON)
@@ -132,7 +137,7 @@ class ItemControllerTest {
                 );
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/items")
+        this.mockMvc.perform(get(baseUrl + "/items")
                         .param("query", name)
                         .accept(MediaType.APPLICATION_JSON)
                 )
@@ -155,7 +160,7 @@ class ItemControllerTest {
                 );
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/items")
+        this.mockMvc.perform(get(baseUrl + "/items")
                         .param("location", location)
                         .accept(MediaType.APPLICATION_JSON)
                 )
@@ -172,7 +177,7 @@ class ItemControllerTest {
                 .willReturn(this.items);
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/items")
+        this.mockMvc.perform(get(baseUrl + "/items")
                         .param("pageNum", "3")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))

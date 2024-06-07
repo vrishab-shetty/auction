@@ -1,6 +1,7 @@
 package me.vrishab.auction.item;
 
 import me.vrishab.auction.system.PageRequestParams;
+import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -99,7 +100,7 @@ class ItemServiceTest {
 
         // Then
         assertThat(thrown)
-                .isInstanceOf(ItemNotFoundException.class)
+                .isInstanceOf(ObjectNotFoundException.class)
                 .hasMessage("Could not find item with Id e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a3");
         verify(repository, times(1)).findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a3"));
     }

@@ -1,6 +1,7 @@
 package me.vrishab.auction.user;
 
 import jakarta.transaction.Transactional;
+import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -55,12 +56,12 @@ public class UserService implements UserDetailsService {
                     oldUser.setEnabled(update.getEnabled());
                     return this.userRepo.save(oldUser);
                 })
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> new ObjectNotFoundException("user", id));
     }
 
     public void delete(String userId) {
         UUID id = UUID.fromString(userId);
-        this.userRepo.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException("user", id));
         this.userRepo.deleteById(id);
     }
 

@@ -1,9 +1,6 @@
 package me.vrishab.auction.auction;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,16 +32,12 @@ public class Auction implements Serializable {
 
     private Double initialPrice;
 
-    @PositiveOrZero(message = "Please provide a valid price")
     private Double currentBid;
 
     @OneToMany(orphanRemoval = true, cascade = {CascadeType.ALL})
     @JoinColumn(name = "auctionId", nullable = false)
     private Set<Item> items = new HashSet<>();
 
-    @Email(regexp = "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}",
-            flags = Pattern.Flag.CASE_INSENSITIVE,
-            message = "Please provide a valid email address")
     private String buyer;
 
     @ManyToOne

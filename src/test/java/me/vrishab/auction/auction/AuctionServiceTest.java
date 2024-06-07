@@ -3,6 +3,7 @@ package me.vrishab.auction.auction;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
+import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.User;
 import me.vrishab.auction.user.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -134,7 +135,7 @@ class AuctionServiceTest {
 
         // Then
         assertThat(thrown)
-                .isInstanceOf(AuctionNotFoundException.class)
+                .isInstanceOf(ObjectNotFoundException.class)
                 .hasMessage("Could not find auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c0");
 
     }

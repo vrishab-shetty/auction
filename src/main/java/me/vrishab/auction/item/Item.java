@@ -1,9 +1,6 @@
 package me.vrishab.auction.item;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,10 +37,6 @@ public class Item implements Serializable {
     @Column(insertable = false, updatable = false, nullable = false)
     private UUID auctionId;
 
-    @NotNull
-    @Email(regexp = "[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,3}",
-            flags = Pattern.Flag.CASE_INSENSITIVE,
-            message = "Please provide a valid email address")
     @Column(nullable = false)
     private String seller;
 

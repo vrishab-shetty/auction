@@ -3,9 +3,7 @@ package me.vrishab.auction.system.exception;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import me.vrishab.auction.auction.AuctionNotFoundException;
 import me.vrishab.auction.auction.UnAuthorizedAuctionAccess;
-import me.vrishab.auction.item.ItemNotFoundException;
 import me.vrishab.auction.security.AuthenticationRequiredException;
 import me.vrishab.auction.system.Result;
 import me.vrishab.auction.user.UserEmailAlreadyExistException;
@@ -30,17 +28,16 @@ import java.util.*;
 @RestControllerAdvice
 public class ExceptionHandlerAdvice {
 
-    // Items
-    @ExceptionHandler(ItemNotFoundException.class)
+    // Generic Exception
+    @ExceptionHandler(ObjectNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Result handleItemNotFoundException(ItemNotFoundException ex) {
+    public Result handleObjectNotFoundException(ObjectNotFoundException ex) {
         return new Result(false, ex.getMessage());
     }
 
     // Users
     @ExceptionHandler(UserNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Result handleItemNotFoundException(UserNotFoundException ex) {
+    public Result handleUsernameNotFoundException(UserNotFoundException ex) {
         return new Result(false, ex.getMessage());
     }
 
@@ -51,12 +48,6 @@ public class ExceptionHandlerAdvice {
     }
 
     // Auctions
-    @ExceptionHandler(AuctionNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Result handleAuctionNotFoundException(AuctionNotFoundException ex) {
-        return new Result(false, ex.getMessage());
-    }
-
     @ExceptionHandler(UnAuthorizedAuctionAccess.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result handleUnauthorizedAuctionAccess(UnAuthorizedAuctionAccess ex) {

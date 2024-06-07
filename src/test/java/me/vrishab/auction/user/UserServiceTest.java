@@ -1,5 +1,6 @@
 package me.vrishab.auction.user;
 
+import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -215,7 +216,7 @@ class UserServiceTest {
         given(repository.findById(Mockito.any(UUID.class))).willReturn(Optional.empty());
 
         // When
-        assertThrows(UserNotFoundException.class, () -> {
+        assertThrows(ObjectNotFoundException.class, () -> {
             service.update("9a540a1e-b599-4cec-aeb1-6396eb8fa271", update);
         });
 
@@ -254,7 +255,7 @@ class UserServiceTest {
         given(repository.findById(Mockito.any(UUID.class))).willReturn(Optional.empty());
 
         // When
-        assertThrows(UserNotFoundException.class, () -> service.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        assertThrows(ObjectNotFoundException.class, () -> service.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
 
         // Then
         verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));

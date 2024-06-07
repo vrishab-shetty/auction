@@ -8,6 +8,7 @@ import me.vrishab.auction.item.dto.AuctionItemUpdateDTO;
 import me.vrishab.auction.item.dto.ItemCreationDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.PageRequestParams;
+import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -47,6 +49,9 @@ class AuctionControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Value("${api.endpoint.base-url}")
+    String baseUrl;
 
     @BeforeEach
     void setUp() {
@@ -111,7 +116,7 @@ class AuctionControllerTest {
         );
 
         // Then and When
-        this.mockMvc.perform(get("/api/v1/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1").accept(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(get(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find Auctions"))
                 .andExpect(jsonPath("$.data.id").value("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"));
@@ -122,10 +127,10 @@ class AuctionControllerTest {
 
         // Given
         UUID id = UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
-        given(auctionService.findById("a6c9417c-d01a-40e9-a22d-7621fd31a8c1")).willThrow(new AuctionNotFoundException(id));
+        given(auctionService.findById("a6c9417c-d01a-40e9-a22d-7621fd31a8c1")).willThrow(new ObjectNotFoundException("auction", id));
 
         // Then and When
-        this.mockMvc.perform(get("/api/v1/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1").accept(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(get(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value("false"))
                 .andExpect(jsonPath("$.message").value("Could not find auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c1"))
                 .andExpect(jsonPath("$.data").isEmpty());
@@ -139,7 +144,7 @@ class AuctionControllerTest {
                 .willReturn(this.auctions);
 
         // Then and When
-        this.mockMvc.perform(get("/api/v1/auctions").accept(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(get(baseUrl + "/auctions").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all Auctions"))
                 .andExpect(jsonPath("$.data", Matchers.hasSize(this.auctions.size())));
@@ -174,7 +179,7 @@ class AuctionControllerTest {
 
         String json = this.objectMapper.writeValueAsString(auctionCreationDTO);
 
-        this.mockMvc.perform(post("/api/v1/auctions")
+        this.mockMvc.perform(post(baseUrl + "/auctions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .accept(MediaType.APPLICATION_JSON))
@@ -213,7 +218,7 @@ class AuctionControllerTest {
 
         String json = this.objectMapper.writeValueAsString(auctionCreationDTO);
 
-        this.mockMvc.perform(put("/api/v1/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .accept(MediaType.APPLICATION_JSON))
@@ -251,7 +256,7 @@ class AuctionControllerTest {
 
         String json = this.objectMapper.writeValueAsString(auctionCreationDTO);
 
-        this.mockMvc.perform(put("/api/v1/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .accept(MediaType.APPLICATION_JSON))
