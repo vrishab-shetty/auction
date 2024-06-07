@@ -1,9 +1,11 @@
 package me.vrishab.auction.auction;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import me.vrishab.auction.auction.dto.AuctionEditableDTO;
+import me.vrishab.auction.auction.dto.AuctionCreationDTO;
+import me.vrishab.auction.auction.dto.AuctionUpdateDTO;
 import me.vrishab.auction.item.Item;
-import me.vrishab.auction.item.dto.ItemEditableDTO;
+import me.vrishab.auction.item.dto.AuctionItemUpdateDTO;
+import me.vrishab.auction.item.dto.ItemCreationDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.user.User;
@@ -23,8 +25,7 @@ import java.util.*;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @SpringBootTest
@@ -151,12 +152,12 @@ class AuctionControllerTest {
         Auction newAuction = this.auctions.get(0);
         String id = user.getId().toString();
 
-        AuctionEditableDTO auctionEditableDTO = new AuctionEditableDTO(
+        AuctionCreationDTO auctionCreationDTO = new AuctionCreationDTO(
                 newAuction.getName(),
                 newAuction.getStartTime(),
                 newAuction.getEndTime(),
                 newAuction.getInitialPrice(),
-                newAuction.getItems().stream().map(item -> new ItemEditableDTO(
+                newAuction.getItems().stream().map(item -> new ItemCreationDTO(
                         item.getName(),
                         item.getDescription(),
                         item.getLocation(),
@@ -171,7 +172,7 @@ class AuctionControllerTest {
         );
         given(authService.getUserInfo(Mockito.any())).willReturn(id);
 
-        String json = this.objectMapper.writeValueAsString(auctionEditableDTO);
+        String json = this.objectMapper.writeValueAsString(auctionCreationDTO);
 
         this.mockMvc.perform(post("/api/v1/auctions")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -182,5 +183,80 @@ class AuctionControllerTest {
                 .andExpect(jsonPath("$.data.name").value("Auction 0"))
                 .andExpect(jsonPath("$.data.items", Matchers.hasSize(1)))
                 .andExpect(jsonPath("$.data.user").value("name@domain.tld"));
+    }
+
+    @Test
+    void testUpdateAuctionSuccess() throws Exception {
+        Auction update = this.auctions.get(0);
+        String id = user.getId().toString();
+
+        AuctionUpdateDTO auctionCreationDTO = new AuctionUpdateDTO(
+                update.getName(),
+                update.getStartTime(),
+                update.getEndTime(),
+                update.getInitialPrice(),
+                update.getItems().stream().map(item -> new AuctionItemUpdateDTO(
+                        item.getId().toString(),
+                        item.getName(),
+                        item.getDescription(),
+                        item.getLocation(),
+                        item.getImageUrls(),
+                        item.getLegitimacyProof(),
+                        item.getExtras()
+                )).toList()
+        );
+
+        given(auctionService.update(eq(id), Mockito.any(Auction.class), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"))).willReturn(
+                update
+        );
+        given(authService.getUserInfo(Mockito.any())).willReturn(id);
+
+        String json = this.objectMapper.writeValueAsString(auctionCreationDTO);
+
+        this.mockMvc.perform(put("/api/v1/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Update an Auction"))
+                .andExpect(jsonPath("$.data.name").value("Auction 0"))
+                .andExpect(jsonPath("$.data.items", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$.data.user").value("name@domain.tld"));
+    }
+
+    @Test
+    void testUpdateAuctionUnAuthorized() throws Exception {
+        Auction update = this.auctions.get(0);
+        String id = user.getId().toString();
+
+        AuctionCreationDTO auctionCreationDTO = new AuctionCreationDTO(
+                update.getName(),
+                update.getStartTime(),
+                update.getEndTime(),
+                update.getInitialPrice(),
+                update.getItems().stream().map(item -> new ItemCreationDTO(
+                        item.getName(),
+                        item.getDescription(),
+                        item.getLocation(),
+                        item.getImageUrls(),
+                        item.getLegitimacyProof(),
+                        item.getExtras()
+                )).toList()
+        );
+
+        given(auctionService.update(eq(id), Mockito.any(Auction.class), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"))).willThrow(
+                new UnAuthorizedAuctionAccess()
+        );
+        given(authService.getUserInfo(Mockito.any())).willReturn(id);
+
+        String json = this.objectMapper.writeValueAsString(auctionCreationDTO);
+
+        this.mockMvc.perform(put("/api/v1/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("The user not an owner of the auction"))
+                .andExpect(jsonPath("$.data").isEmpty());
     }
 }

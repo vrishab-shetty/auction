@@ -53,4 +53,24 @@ public class Auction implements Serializable {
     public String getOwnerEmail() {
         return user.getEmail();
     }
+
+    public void initializeItems() {
+        if (user == null) {
+            throw new IllegalStateException("User must be set before initializing items");
+        }
+        items.forEach(item -> {
+            item.setAuctionId(this.id);
+            item.setSeller(user.getEmail());
+        });
+    }
+
+    public void removeAllItems() {
+        this.items.forEach(item -> item.setAuctionId(null));
+        this.items.clear();
+    }
+
+    public void addAllItems(Set<Item> items) {
+        this.items.addAll(items);
+        initializeItems();
+    }
 }
