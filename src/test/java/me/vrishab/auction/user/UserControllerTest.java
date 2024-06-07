@@ -2,12 +2,14 @@ package me.vrishab.auction.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.security.AuthService;
+import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.dto.UserEditableDTO;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -42,6 +44,9 @@ class UserControllerTest {
     ObjectMapper objectMapper;
 
     List<User> users;
+
+    @Value("${api.endpoint.base-url}")
+    String baseUrl;
 
     @BeforeEach
     void setUp() {
@@ -91,7 +96,7 @@ class UserControllerTest {
         given(service.findByUsername("name3@domain.tld")).willReturn(users.get(3));
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/users/name3@domain.tld").accept(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(get(baseUrl + "/users/name3@domain.tld").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find a user"))
                 .andExpect(jsonPath("$.data.id").value("9a540a1e-b599-4cec-aeb1-6396eb8fa273"))
@@ -105,7 +110,7 @@ class UserControllerTest {
         given(service.findByUsername(Mockito.anyString())).willThrow(new UserNotFoundException("name3@domain.tld"));
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/users/name3@domain.tld").accept(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(get(baseUrl + "/users/name3@domain.tld").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.message").value("Could find user with username name3@domain.tld"))
                 .andExpect(jsonPath("$.data").isEmpty());
@@ -118,7 +123,7 @@ class UserControllerTest {
         given(service.findAll()).willReturn(users);
 
         // When and Then
-        this.mockMvc.perform(get("/api/v1/users").accept(MediaType.APPLICATION_JSON))
+        this.mockMvc.perform(get(baseUrl + "/users").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all users"))
                 .andExpect(jsonPath("$.data.size()").value(10));
@@ -151,7 +156,7 @@ class UserControllerTest {
         given(service.save(Mockito.any(User.class))).willReturn(savedUser);
 
         // When and then
-        this.mockMvc.perform(post("/api/v1/users")
+        this.mockMvc.perform(post(baseUrl + "/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson)
                         .accept(MediaType.APPLICATION_JSON))
@@ -178,7 +183,7 @@ class UserControllerTest {
         given(service.save(Mockito.any(User.class))).willThrow(new UserEmailAlreadyExistException("name@domain.tld"));
 
         // When and then
-        this.mockMvc.perform(post("/api/v1/users")
+        this.mockMvc.perform(post(baseUrl + "/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(userJson)
                         .accept(MediaType.APPLICATION_JSON))
@@ -214,7 +219,7 @@ class UserControllerTest {
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         // When and then
 
-        this.mockMvc.perform(put("/api/v1/user/self")
+        this.mockMvc.perform(put(baseUrl + "/user/self")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .accept(MediaType.APPLICATION_JSON))
@@ -239,16 +244,16 @@ class UserControllerTest {
 
 
         given(this.service.update(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), Mockito.any(User.class)))
-                .willThrow(new UserNotFoundException(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271")));
+                .willThrow(new ObjectNotFoundException("user", UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271")));
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         // When and then
 
-        this.mockMvc.perform(put("/api/v1/user/self")
+        this.mockMvc.perform(put(baseUrl + "/user/self")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
-                .andExpect(jsonPath("$.message").value("Could find user with Id 9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
+                .andExpect(jsonPath("$.message").value("Could not find user with Id 9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
                 .andExpect(jsonPath("$.data").isEmpty());
     }
 
@@ -260,7 +265,7 @@ class UserControllerTest {
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         // When and then
 
-        this.mockMvc.perform(delete("/api/v1/user/self")
+        this.mockMvc.perform(delete(baseUrl + "/user/self")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Delete a user"))
@@ -271,15 +276,15 @@ class UserControllerTest {
     void testDeleteUserNotFound() throws Exception {
 
         // Given
-        doThrow(new UserNotFoundException(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).when(this.service).delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        doThrow(new ObjectNotFoundException("user", UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).when(this.service).delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         // When and then
 
 
-        this.mockMvc.perform(delete("/api/v1/user/self")
+        this.mockMvc.perform(delete(baseUrl + "/user/self")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
-                .andExpect(jsonPath("$.message").value("Could find user with Id 9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
+                .andExpect(jsonPath("$.message").value("Could not find user with Id 9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
                 .andExpect(jsonPath("$.data").isEmpty());
     }
 }
