@@ -1,7 +1,7 @@
 package me.vrishab.auction.auction;
 
-public class AuctionAlreadyBeganOrEndedException extends RuntimeException {
-    public AuctionAlreadyBeganOrEndedException(String auctionId) {
+public class AuctionForbiddenUpdateException extends RuntimeException {
+    public AuctionForbiddenUpdateException(String auctionId) {
         super("Provided Auction with id " + auctionId + " has already began or ended and cannot be modified");
     }
 }

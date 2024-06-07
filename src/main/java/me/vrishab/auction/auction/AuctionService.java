@@ -58,17 +58,13 @@ public class AuctionService {
 
     public Auction update(String userId, Auction update, String auctionId) {
 
-        UUID userUUID = UUID.fromString(userId);
-        User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
-
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction oldAuction = auctionRepo.findById(auctionUUID)
                 .orElseThrow(
                         () -> new ObjectNotFoundException("auction", auctionUUID)
                 );
 
-        authorizeUser(user, oldAuction);
+        authorizeUser(UUID.fromString(userId), oldAuction);
         checkAuctionNotStarted(oldAuction);
 
         oldAuction.setName(update.getName());
@@ -80,6 +76,19 @@ public class AuctionService {
         oldAuction.initializeItems();
 
         return this.auctionRepo.save(oldAuction);
+    }
+
+    public void delete(String userId, String auctionId) {
+        UUID auctionUUID = UUID.fromString(auctionId);
+        Auction oldAuction = auctionRepo.findById(auctionUUID)
+                .orElseThrow(
+                        () -> new ObjectNotFoundException("auction", auctionUUID)
+                );
+
+        authorizeUser(UUID.fromString(userId), oldAuction);
+        checkAuctionNotStarted(oldAuction);
+
+        this.auctionRepo.deleteById(auctionUUID);
     }
 
     private Set<Item> getUpdatedItems(Auction update) {
@@ -104,7 +113,10 @@ public class AuctionService {
         return updatedItems;
     }
 
-    private void authorizeUser(User user, Auction auction) {
+    private void authorizeUser(UUID userUUID, Auction auction) {
+        User user = userRepo.findById(userUUID)
+                .orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
+
         if (!user.getEmail().equals(auction.getOwnerEmail())) {
             throw new UnAuthorizedAuctionAccess();
         }
@@ -112,7 +124,7 @@ public class AuctionService {
 
     private void checkAuctionNotStarted(Auction auction) {
         if (auction.getStartTime().isBefore(Instant.now())) {
-            throw new AuctionAlreadyBeganOrEndedException(auction.getId().toString());
+            throw new AuctionForbiddenUpdateException(auction.getId().toString());
         }
     }
 }

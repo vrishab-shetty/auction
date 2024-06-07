@@ -27,6 +27,8 @@ import java.util.*;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -262,6 +264,79 @@ class AuctionControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.message").value("The user not an owner of the auction"))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testUpdateAuctionForbiddenUpdate() throws Exception {
+        Auction update = this.auctions.get(0);
+        String id = user.getId().toString();
+
+        AuctionCreationDTO auctionCreationDTO = new AuctionCreationDTO(
+                update.getName(),
+                update.getStartTime(),
+                update.getEndTime(),
+                update.getInitialPrice(),
+                update.getItems().stream().map(item -> new ItemCreationDTO(
+                        item.getName(),
+                        item.getDescription(),
+                        item.getLocation(),
+                        item.getImageUrls(),
+                        item.getLegitimacyProof(),
+                        item.getExtras()
+                )).toList()
+        );
+
+        given(auctionService.update(eq(id), Mockito.any(Auction.class), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"))).willThrow(
+                new AuctionForbiddenUpdateException("a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+        );
+        given(authService.getUserInfo(Mockito.any())).willReturn(id);
+
+        String json = this.objectMapper.writeValueAsString(auctionCreationDTO);
+
+        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("Provided Auction with id a6c9417c-d01a-40e9-a22d-7621fd31a8c0 has already began or ended and cannot be modified"))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testDeleteAuctionSuccess() throws Exception {
+        doNothing().when(this.auctionService).delete(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
+        given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+
+        this.mockMvc.perform(delete(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Delete an Auction"))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testDeleteAuctionUnauthorized() throws Exception {
+        doThrow(new UnAuthorizedAuctionAccess()).when(this.auctionService).delete(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
+        given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+
+        this.mockMvc.perform(delete(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("The user not an owner of the auction"))
+                .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testDeleteAuctionForbiddenUpdate() throws Exception {
+
+        doThrow(new AuctionForbiddenUpdateException("9a540a1e-b599-4cec-aeb1-6396eb8fa271")).when(this.auctionService).delete(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
+        given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+
+        this.mockMvc.perform(delete(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("Provided Auction with id 9a540a1e-b599-4cec-aeb1-6396eb8fa271 has already began or ended and cannot be modified"))
                 .andExpect(jsonPath("$.data").isEmpty());
     }
 }

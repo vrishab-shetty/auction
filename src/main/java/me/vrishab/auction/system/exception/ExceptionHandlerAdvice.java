@@ -3,6 +3,7 @@ package me.vrishab.auction.system.exception;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import me.vrishab.auction.auction.AuctionForbiddenUpdateException;
 import me.vrishab.auction.auction.UnAuthorizedAuctionAccess;
 import me.vrishab.auction.security.AuthenticationRequiredException;
 import me.vrishab.auction.system.Result;
@@ -49,8 +50,14 @@ public class ExceptionHandlerAdvice {
 
     // Auctions
     @ExceptionHandler(UnAuthorizedAuctionAccess.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     public Result handleUnauthorizedAuctionAccess(UnAuthorizedAuctionAccess ex) {
+        return new Result(false, ex.getMessage());
+    }
+
+    @ExceptionHandler(AuctionForbiddenUpdateException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result handleAuctionForbiddenUpdate(AuctionForbiddenUpdateException ex) {
         return new Result(false, ex.getMessage());
     }
 

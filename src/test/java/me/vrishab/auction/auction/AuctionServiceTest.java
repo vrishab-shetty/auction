@@ -25,8 +25,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuctionServiceTest {
@@ -398,5 +397,111 @@ class AuctionServiceTest {
 
         verify(userRepo, times(1)).findById(userId);
         verify(auctionRepo, times(1)).findById(auctionId);
+    }
+
+    @Test
+    void testDeleteAuctionSuccess() {
+
+        // Given
+        Calendar calendar = Calendar.getInstance();
+
+        UUID auctionId = UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
+
+        Item item = new Item();
+        item.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"));
+        item.setName("Item");
+        item.setDescription("Description");
+        item.setLocation("MA");
+        item.setImageUrls(Set.of("<images>"));
+        item.setLegitimacyProof("Proof");
+        item.setAuctionId(auctionId);
+        item.setSeller("name2@domain.tld");
+
+        Auction auction = new Auction();
+
+        auction.setId(auctionId);
+        auction.setName("Auction");
+        calendar.setTime(new Date());
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
+        auction.setStartTime(calendar.getTime().toInstant());
+        calendar.add(Calendar.HOUR_OF_DAY, 2);
+        auction.setEndTime(calendar.getTime().toInstant());
+        auction.setInitialPrice(100.00);
+        auction.setBuyer("name1@domain.tld");
+        auction.setUser(user);
+
+
+        UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+
+        given(auctionRepo.findById(auctionId)).willReturn(Optional.of(auction));
+        given(userRepo.findById(userId))
+                .willReturn(Optional.of(user));
+        doNothing().when(this.auctionRepo).deleteById(auctionId);
+
+        // When
+        auctionService.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271", "a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
+
+        // Then
+        verify(userRepo, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        verify(auctionRepo, times(1)).deleteById(UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"));
+
+    }
+
+    @Test
+    void testDeleteAuctionUnauthorizedAccess() {
+
+        // Given
+        Calendar calendar = Calendar.getInstance();
+
+        UUID auctionId = UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
+
+        Item item = new Item();
+        item.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"));
+        item.setName("Item");
+        item.setDescription("Description");
+        item.setLocation("MA");
+        item.setImageUrls(Set.of("<images>"));
+        item.setLegitimacyProof("Proof");
+        item.setAuctionId(auctionId);
+        item.setSeller("name2@domain.tld");
+
+        Auction auction = new Auction();
+
+        auction.setId(auctionId);
+        auction.setName("Auction");
+        calendar.setTime(new Date());
+        calendar.add(Calendar.HOUR_OF_DAY, 1);
+        auction.setStartTime(calendar.getTime().toInstant());
+        calendar.add(Calendar.HOUR_OF_DAY, 2);
+        auction.setEndTime(calendar.getTime().toInstant());
+        auction.setInitialPrice(100.00);
+        auction.setBuyer("name1@domain.tld");
+        auction.setUser(user);
+
+
+        UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+
+        given(auctionRepo.findById(auctionId)).willReturn(Optional.of(auction));
+        given(userRepo.findById(userId))
+                .willReturn(Optional.of(user).map(it -> {
+                            User otherUser = new User();
+                            otherUser.setEmail("name2@domain.tld");
+                            return otherUser;
+                        }
+                ));
+
+        // When
+
+
+        // Then
+        Throwable thrown = catchThrowable(() -> {
+            this.auctionService.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271", "a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
+        });
+
+        assertThat(thrown).isInstanceOf(UnAuthorizedAuctionAccess.class).hasMessage("The user not an owner of the auction");
+
+        verify(userRepo, times(1)).findById(userId);
+        verify(auctionRepo, times(1)).findById(auctionId);
+
     }
 }

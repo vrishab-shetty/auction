@@ -87,4 +87,14 @@ public class AuctionController {
 
     }
 
+    @DeleteMapping("/auctions/{auctionId}")
+    public Result deleteAuction(
+            Authentication auth,
+            @PathVariable
+            String auctionId) {
+        String userId = authService.getUserInfo(auth);
+        this.auctionService.delete(userId, auctionId);
+        return new Result(true, "Delete an Auction");
+    }
+
 }
