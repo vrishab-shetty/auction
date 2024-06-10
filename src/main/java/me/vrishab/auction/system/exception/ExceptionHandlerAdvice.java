@@ -4,12 +4,15 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import me.vrishab.auction.auction.AuctionForbiddenUpdateException;
+import me.vrishab.auction.auction.AuctionNotInBidingPhaseException;
+import me.vrishab.auction.auction.InvalidBidAmountException;
 import me.vrishab.auction.auction.UnAuthorizedAuctionAccess;
 import me.vrishab.auction.security.AuthenticationRequiredException;
 import me.vrishab.auction.system.Result;
 import me.vrishab.auction.user.UserEmailAlreadyExistException;
 import me.vrishab.auction.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -58,6 +61,18 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(AuctionForbiddenUpdateException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public Result handleAuctionForbiddenUpdate(AuctionForbiddenUpdateException ex) {
+        return new Result(false, ex.getMessage());
+    }
+
+    @ExceptionHandler(AuctionNotInBidingPhaseException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public Result handleAuctionNotInBidingPhaseException(AuctionNotInBidingPhaseException ex) {
+        return new Result(false, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidBidAmountException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result handleInvalidBidAmountException(InvalidBidAmountException ex) {
         return new Result(false, ex.getMessage());
     }
 
@@ -119,6 +134,12 @@ public class ExceptionHandlerAdvice {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleBasicAuthenticationException(Exception ex) {
         return new Result(false, ex.getMessage());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result handleBadRequestBodyException(HttpMessageNotReadableException ex) {
+        return new Result(false, ex.getMessage().split(":")[0]);
     }
 
     @ExceptionHandler(Exception.class)

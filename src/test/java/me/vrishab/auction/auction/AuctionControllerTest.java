@@ -3,6 +3,7 @@ package me.vrishab.auction.auction;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.auction.dto.AuctionCreationDTO;
 import me.vrishab.auction.auction.dto.AuctionUpdateDTO;
+import me.vrishab.auction.auction.dto.BidRequestDTO;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.dto.AuctionItemUpdateDTO;
 import me.vrishab.auction.item.dto.ItemCreationDTO;
@@ -92,7 +93,7 @@ class AuctionControllerTest {
             calendar.add(Calendar.HOUR_OF_DAY, 1 + i % 3);
             auction.setEndTime(calendar.getTime().toInstant());
             auction.setInitialPrice(100.00);
-            auction.setCurrentBid(100.00);
+            auction.setCurrentBid(150.00);
             auction.setBuyer("name1@domain.tld");
 
             auction.setItems(Set.of(item));
@@ -252,7 +253,7 @@ class AuctionControllerTest {
         );
 
         given(auctionService.update(eq(id), Mockito.any(Auction.class), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"))).willThrow(
-                new UnAuthorizedAuctionAccess()
+                new UnAuthorizedAuctionAccess(false)
         );
         given(authService.getUserInfo(Mockito.any())).willReturn(id);
 
@@ -317,7 +318,7 @@ class AuctionControllerTest {
 
     @Test
     void testDeleteAuctionUnauthorized() throws Exception {
-        doThrow(new UnAuthorizedAuctionAccess()).when(this.auctionService).delete(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
+        doThrow(new UnAuthorizedAuctionAccess(false)).when(this.auctionService).delete(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
 
         this.mockMvc.perform(delete(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
@@ -338,5 +339,91 @@ class AuctionControllerTest {
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.message").value("Provided Auction with id 9a540a1e-b599-4cec-aeb1-6396eb8fa271 has already began or ended and cannot be modified"))
                 .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testPlaceBidSuccess() throws Exception {
+        //
+        Auction auction = this.auctions.get(1);
+        given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        given(this.auctionService.bid(
+                eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"),
+                eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
+                eq(150.0))
+        ).willReturn(auction);
+
+        BidRequestDTO bidRequestDTO = new BidRequestDTO(
+                150.0
+        );
+
+        String json = this.objectMapper.writeValueAsString(bidRequestDTO);
+        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1/bid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Place a Bid"))
+                .andExpect(jsonPath("$.data.currentBid").value("150.0"))
+                .andExpect(jsonPath("$.data.buyer").value("name1@domain.tld"));
+
+
+    }
+
+    @Test
+    void testPlaceBidNotInBidingPhase() throws Exception {
+        //
+        Auction auction = this.auctions.get(1);
+        given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        given(this.auctionService.bid(
+                eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"),
+                eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
+                eq(150.0))
+        ).willThrow(
+                new AuctionNotInBidingPhaseException(auction.getId())
+        );
+
+        BidRequestDTO bidRequestDTO = new BidRequestDTO(
+                150.0
+        );
+
+        String json = this.objectMapper.writeValueAsString(bidRequestDTO);
+        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1/bid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("Auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c1 is not in biding Phase"))
+                .andExpect(jsonPath("$.data").isEmpty());
+
+
+    }
+
+    @Test
+    void testPlaceBidInvalidBidAmount() throws Exception {
+        //
+        Auction auction = this.auctions.get(1);
+        given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        given(this.auctionService.bid(
+                eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"),
+                eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
+                eq(50.0))
+        ).willThrow(
+                new InvalidBidAmountException()
+        );
+
+        BidRequestDTO bidRequestDTO = new BidRequestDTO(
+                50.0
+        );
+
+        String json = this.objectMapper.writeValueAsString(bidRequestDTO);
+        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1/bid")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("Bid amount must be higher than the current bid"))
+                .andExpect(jsonPath("$.data").isEmpty());
+
+
     }
 }

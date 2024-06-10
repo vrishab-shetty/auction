@@ -7,6 +7,7 @@ import me.vrishab.auction.auction.converter.AuctionUpdateDTOToAuctionConverter;
 import me.vrishab.auction.auction.dto.AuctionCreationDTO;
 import me.vrishab.auction.auction.dto.AuctionDTO;
 import me.vrishab.auction.auction.dto.AuctionUpdateDTO;
+import me.vrishab.auction.auction.dto.BidRequestDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.Result;
@@ -95,6 +96,22 @@ public class AuctionController {
         String userId = authService.getUserInfo(auth);
         this.auctionService.delete(userId, auctionId);
         return new Result(true, "Delete an Auction");
+    }
+
+    @PutMapping("/auctions/{auctionId}/bid")
+    public Result placeBid(
+            Authentication auth,
+            @PathVariable
+            String auctionId,
+            @RequestBody
+            @Valid
+            BidRequestDTO bidRequest
+    ) {
+        String userId = authService.getUserInfo(auth);
+        Auction auction = this.auctionService.bid(userId, auctionId, bidRequest.bidAmount());
+
+        AuctionDTO auctionDTO = this.auctionToAuctionDTOConverter.convert(auction);
+        return new Result(true, "Place a Bid", auctionDTO);
     }
 
 }
