@@ -21,10 +21,12 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.*;
 
@@ -140,6 +142,14 @@ public class ExceptionHandlerAdvice {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleBadRequestBodyException(HttpMessageNotReadableException ex) {
         return new Result(false, ex.getMessage().split(":")[0]);
+    }
+
+    @ExceptionHandler({NoResourceFoundException.class, HttpRequestMethodNotSupportedException.class})
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public Result handleNoResourceFoundException(Exception ex) {
+        log.error(ex.getMessage(), ex);
+
+        return new Result(false, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

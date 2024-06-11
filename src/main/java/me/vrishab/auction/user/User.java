@@ -16,6 +16,7 @@ import java.util.UUID;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
 @AllArgsConstructor
+@Table(name = "\"USER\"")
 public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -39,14 +40,14 @@ public class User implements Serializable {
             joinColumns = @JoinColumn(name = "userId"),
             inverseJoinColumns = @JoinColumn(name = "itemId"))
     @Getter(AccessLevel.NONE)
-    private Set<Item> wishList = new HashSet<>();
+    private Set<Item> wishlist = new HashSet<>();
 
     @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "user")
     @Getter(AccessLevel.NONE)
     private Set<Auction> auctions = new HashSet<>();
 
-    public Set<Item> getWishList() {
-        return Collections.unmodifiableSet(this.wishList);
+    public Set<Item> getWishlist() {
+        return Collections.unmodifiableSet(this.wishlist);
     }
 
     public Set<Auction> getAuctions() {
@@ -54,11 +55,11 @@ public class User implements Serializable {
     }
 
     public void addFavouriteItem(@NonNull Item item) {
-        this.wishList.add(item);
+        this.wishlist.add(item);
     }
 
     public void removeFavouriteItem(@NonNull Item item) {
-        this.wishList.remove(item);
+        this.wishlist.remove(item);
     }
 
     public void addAuction(@NonNull Auction auction) {

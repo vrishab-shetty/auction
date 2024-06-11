@@ -1,6 +1,9 @@
 package me.vrishab.auction.user;
 
 import jakarta.transaction.Transactional;
+import me.vrishab.auction.auction.Auction;
+import me.vrishab.auction.item.Item;
+import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,10 +19,12 @@ import java.util.UUID;
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepo;
+    private final ItemRepository itemRepo;
     private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepo, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepo, ItemRepository itemRepo, PasswordEncoder passwordEncoder) {
         this.userRepo = userRepo;
+        this.itemRepo = itemRepo;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -63,6 +68,41 @@ public class UserService implements UserDetailsService {
         UUID id = UUID.fromString(userId);
         this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException("user", id));
         this.userRepo.deleteById(id);
+    }
+
+    public List<Item> wishlist(String userId) {
+        UUID id = UUID.fromString(userId);
+        User user = this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException("user", id));
+
+        return user.getWishlist().stream().toList();
+    }
+
+
+    public List<Item> addItem(String userId, String itemId) {
+        UUID userUUID = UUID.fromString(userId);
+        UUID itemUUID = UUID.fromString(itemId);
+        User user = this.userRepo.findById(userUUID).orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
+        Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ObjectNotFoundException("item", itemUUID));
+        user.addFavouriteItem(item);
+        return this.userRepo.save(user).getWishlist()
+                .stream().toList();
+    }
+
+    public List<Item> removeItem(String userId, String itemId) {
+        UUID userUUID = UUID.fromString(userId);
+        UUID itemUUID = UUID.fromString(itemId);
+        User user = this.userRepo.findById(userUUID).orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
+        Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ObjectNotFoundException("item", itemUUID));
+        user.removeFavouriteItem(item);
+        return this.userRepo.save(user).getWishlist()
+                .stream().toList();
+    }
+
+    public List<Auction> auctions(String userId) {
+        UUID id = UUID.fromString(userId);
+        User user = this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException("user", id));
+
+        return user.getAuctions().stream().toList();
     }
 
     @Override

@@ -2,6 +2,10 @@ package me.vrishab.auction.user;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import me.vrishab.auction.auction.converter.AuctionToAuctionDTOConverter;
+import me.vrishab.auction.auction.dto.AuctionDTO;
+import me.vrishab.auction.item.converter.ItemToAuctionItemDTO;
+import me.vrishab.auction.item.dto.AuctionItemDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.Result;
 import me.vrishab.auction.user.converter.UserCreationToUserConverter;
@@ -21,12 +25,16 @@ public class UserController {
     private final UserService userService;
     private final UserToUserDTOConverter userToUserDTOConverter;
     private final UserCreationToUserConverter userCreationToUserConverter;
+    private final AuctionToAuctionDTOConverter auctionToAuctionDTOConverter;
+    private final ItemToAuctionItemDTO itemToAuctionItemDTO;
     private final AuthService authService;
 
-    public UserController(UserService userService, UserToUserDTOConverter userToUserDTOConverter, UserCreationToUserConverter userCreationToUserConverter, AuthService authService) {
+    public UserController(UserService userService, UserToUserDTOConverter userToUserDTOConverter, UserCreationToUserConverter userCreationToUserConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, ItemToAuctionItemDTO itemToAuctionItemDTO, AuthService authService) {
         this.userService = userService;
         this.userToUserDTOConverter = userToUserDTOConverter;
         this.userCreationToUserConverter = userCreationToUserConverter;
+        this.auctionToAuctionDTOConverter = auctionToAuctionDTOConverter;
+        this.itemToAuctionItemDTO = itemToAuctionItemDTO;
         this.authService = authService;
     }
 
@@ -71,5 +79,35 @@ public class UserController {
         return new Result(true, "Delete a user");
     }
 
+    @GetMapping("/user/self/wishlist")
+    public Result getWishlist(Authentication auth) {
+        String userId = authService.getUserInfo(auth);
+        List<AuctionItemDTO> itemDTOS = this.userService.wishlist(userId).stream()
+                .map(this.itemToAuctionItemDTO::convert).toList();
+        return new Result(true, "Get User Wishlist", itemDTOS);
+    }
 
+    @PutMapping("/user/self/wishlist/{itemId}")
+    public Result addItem(Authentication auth, @PathVariable String itemId) {
+        String userId = authService.getUserInfo(auth);
+        List<AuctionItemDTO> itemDTOS = this.userService.addItem(userId, itemId).stream()
+                .map(this.itemToAuctionItemDTO::convert).toList();
+        return new Result(true, "Add Item to Wishlist", itemDTOS);
+    }
+
+    @DeleteMapping("/user/self/wishlist/{itemId}")
+    public Result removeItem(Authentication auth, @PathVariable String itemId) {
+        String userId = authService.getUserInfo(auth);
+        List<AuctionItemDTO> itemDTOS = this.userService.removeItem(userId, itemId).stream()
+                .map(this.itemToAuctionItemDTO::convert).toList();
+        return new Result(true, "Delete Item from Wishlist", itemDTOS);
+    }
+
+    @GetMapping("/user/self/auctions")
+    public Result getAuctionList(Authentication auth) {
+        String userId = authService.getUserInfo(auth);
+        List<AuctionDTO> auctionDTOS = this.userService.auctions(userId).stream()
+                .map(this.auctionToAuctionDTOConverter::convert).toList();
+        return new Result(true, "Get User Auctions", auctionDTOS);
+    }
 }
