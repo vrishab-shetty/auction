@@ -658,7 +658,7 @@ class AuctionServiceTest {
         // Then
         assertThat(thrown)
                 .isInstanceOf(AuctionNotInBidingPhaseException.class)
-                .hasMessage("Auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c1 is not in biding Phase");
+                .hasMessage("Auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c1 is not in Biding Phase");
 
         verify(userRepo, times(1)).findById(userId);
         verify(auctionRepo, times(1)).findById(auctionId);

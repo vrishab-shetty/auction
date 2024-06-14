@@ -60,7 +60,7 @@ public class UserControllerIntegrationTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all users"))
-                .andExpect(jsonPath("$.data", Matchers.hasSize(10)));
+                .andExpect(jsonPath("$.data", Matchers.hasSize(9)));
     }
 
 

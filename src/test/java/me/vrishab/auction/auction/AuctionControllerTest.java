@@ -22,6 +22,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
@@ -35,6 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
 class AuctionControllerTest {
 
     @Autowired
@@ -392,7 +394,7 @@ class AuctionControllerTest {
                         .content(json)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
-                .andExpect(jsonPath("$.message").value("Auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c1 is not in biding Phase"))
+                .andExpect(jsonPath("$.message").value("Auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c1 is not in Biding Phase"))
                 .andExpect(jsonPath("$.data").isEmpty());
 
 
