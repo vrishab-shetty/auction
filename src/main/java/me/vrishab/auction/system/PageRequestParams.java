@@ -23,4 +23,8 @@ public class PageRequestParams {
         return PageRequest.of(pageNum - 1, pageSize);
     }
 
+    public boolean isValid() {
+        return getPageSize() != null && getPageNum() != null;
+    }
+
 }

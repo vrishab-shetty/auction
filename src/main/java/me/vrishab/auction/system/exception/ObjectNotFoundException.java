@@ -4,7 +4,7 @@ import java.util.UUID;
 
 public class ObjectNotFoundException extends RuntimeException {
 
-    public ObjectNotFoundException(String objectName, UUID id) {
-        super("Could not find " + objectName + " with Id " + id.toString());
+    public ObjectNotFoundException(Entity object, UUID id) {
+        super("Could not find " + object.getName() + " with Id " + id.toString());
     }
 }

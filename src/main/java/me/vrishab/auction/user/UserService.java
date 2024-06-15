@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemRepository;
+import me.vrishab.auction.system.exception.Entity;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -61,18 +62,18 @@ public class UserService implements UserDetailsService {
                     oldUser.setEnabled(update.getEnabled());
                     return this.userRepo.save(oldUser);
                 })
-                .orElseThrow(() -> new ObjectNotFoundException("user", id));
+                .orElseThrow(() -> new ObjectNotFoundException(Entity.USER, id));
     }
 
     public void delete(String userId) {
         UUID id = UUID.fromString(userId);
-        this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException("user", id));
+        this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException(Entity.USER, id));
         this.userRepo.deleteById(id);
     }
 
     public List<Item> wishlist(String userId) {
         UUID id = UUID.fromString(userId);
-        User user = this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException("user", id));
+        User user = this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException(Entity.USER, id));
 
         return user.getWishlist().stream().toList();
     }
@@ -81,8 +82,8 @@ public class UserService implements UserDetailsService {
     public List<Item> addItem(String userId, String itemId) {
         UUID userUUID = UUID.fromString(userId);
         UUID itemUUID = UUID.fromString(itemId);
-        User user = this.userRepo.findById(userUUID).orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
-        Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ObjectNotFoundException("item", itemUUID));
+        User user = this.userRepo.findById(userUUID).orElseThrow(() -> new ObjectNotFoundException(Entity.USER, userUUID));
+        Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ObjectNotFoundException(Entity.ITEM, itemUUID));
         user.addFavouriteItem(item);
         return this.userRepo.save(user).getWishlist()
                 .stream().toList();
@@ -91,8 +92,8 @@ public class UserService implements UserDetailsService {
     public List<Item> removeItem(String userId, String itemId) {
         UUID userUUID = UUID.fromString(userId);
         UUID itemUUID = UUID.fromString(itemId);
-        User user = this.userRepo.findById(userUUID).orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
-        Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ObjectNotFoundException("item", itemUUID));
+        User user = this.userRepo.findById(userUUID).orElseThrow(() -> new ObjectNotFoundException(Entity.USER, userUUID));
+        Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ObjectNotFoundException(Entity.ITEM, itemUUID));
         user.removeFavouriteItem(item);
         return this.userRepo.save(user).getWishlist()
                 .stream().toList();
@@ -100,7 +101,7 @@ public class UserService implements UserDetailsService {
 
     public List<Auction> auctions(String userId) {
         UUID id = UUID.fromString(userId);
-        User user = this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException("user", id));
+        User user = this.userRepo.findById(id).orElseThrow(() -> new ObjectNotFoundException(Entity.USER, id));
 
         return user.getAuctions().stream().toList();
     }

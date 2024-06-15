@@ -4,6 +4,7 @@ import jakarta.transaction.Transactional;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
+import me.vrishab.auction.system.exception.Entity;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.User;
 import me.vrishab.auction.user.UserRepository;
@@ -31,12 +32,12 @@ public class AuctionService {
 
     public Auction findById(String id) {
         return this.auctionRepo.findById(UUID.fromString(id))
-                .orElseThrow(() -> new ObjectNotFoundException("auction", UUID.fromString(id)));
+                .orElseThrow(() -> new ObjectNotFoundException(Entity.AUCTION, UUID.fromString(id)));
     }
 
     public List<Auction> findAll(PageRequestParams pageSettings) {
         Pageable pageable = Pageable.unpaged();
-        if (pageSettings != null && pageSettings.getPageNum() != null && pageSettings.getPageSize() != null)
+        if (pageSettings != null && pageSettings.isValid())
             pageable = pageSettings.createPageRequest();
 
         return this.auctionRepo.findAll(pageable).toList();
@@ -45,7 +46,7 @@ public class AuctionService {
     public Auction add(String userId, Auction auction) {
         UUID userUUID = UUID.fromString(userId);
         User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
+                .orElseThrow(() -> new ObjectNotFoundException(Entity.USER, userUUID));
 
         user.addAuction(auction);
         auction.initializeItems();
@@ -58,7 +59,7 @@ public class AuctionService {
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction oldAuction = auctionRepo.findById(auctionUUID)
                 .orElseThrow(
-                        () -> new ObjectNotFoundException("auction", auctionUUID)
+                        () -> new ObjectNotFoundException(Entity.AUCTION, auctionUUID)
                 );
 
         authorizedUser(UUID.fromString(userId), oldAuction);
@@ -79,7 +80,7 @@ public class AuctionService {
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction oldAuction = auctionRepo.findById(auctionUUID)
                 .orElseThrow(
-                        () -> new ObjectNotFoundException("auction", auctionUUID)
+                        () -> new ObjectNotFoundException(Entity.AUCTION, auctionUUID)
                 );
 
         authorizedUser(UUID.fromString(userId), oldAuction);
@@ -93,7 +94,7 @@ public class AuctionService {
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction auction = auctionRepo.findById(auctionUUID)
                 .orElseThrow(
-                        () -> new ObjectNotFoundException("auction", auctionUUID)
+                        () -> new ObjectNotFoundException(Entity.AUCTION, auctionUUID)
                 );
 
         User user = unauthorizedUser(UUID.fromString(userId), auction);
@@ -132,7 +133,7 @@ public class AuctionService {
             Item item;
             if (auctionItem.getId() != null) {
                 item = itemRepo.findById(auctionItem.getId())
-                        .orElseThrow(() -> new ObjectNotFoundException("item", auctionItem.getId()));
+                        .orElseThrow(() -> new ObjectNotFoundException(Entity.ITEM, auctionItem.getId()));
             } else {
                 item = new Item();
             }
@@ -150,7 +151,7 @@ public class AuctionService {
 
     private void authorizedUser(UUID userUUID, Auction auction) {
         User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
+                .orElseThrow(() -> new ObjectNotFoundException(Entity.USER, userUUID));
 
         if (!user.getEmail().equals(auction.getOwnerEmail())) {
             throw new UnAuthorizedAuctionAccess(false);
@@ -159,7 +160,7 @@ public class AuctionService {
 
     private User unauthorizedUser(UUID userUUID, Auction auction) {
         User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new ObjectNotFoundException("user", userUUID));
+                .orElseThrow(() -> new ObjectNotFoundException(Entity.USER, userUUID));
 
         if (user.getEmail().equals(auction.getOwnerEmail())) {
             throw new UnAuthorizedAuctionAccess(true);
