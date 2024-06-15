@@ -3,6 +3,7 @@ package me.vrishab.auction.item;
 import jakarta.transaction.Transactional;
 import me.vrishab.auction.item.ItemSpecification.ItemFilterParams;
 import me.vrishab.auction.system.PageRequestParams;
+import me.vrishab.auction.system.exception.Entity;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -28,14 +29,14 @@ public class ItemService {
         UUID itemUUID = UUID.fromString(itemId);
         return this.itemRepo.findById(itemUUID)
                 .orElseThrow(
-                        () -> new ObjectNotFoundException("item", itemUUID)
+                        () -> new ObjectNotFoundException(Entity.ITEM, itemUUID)
                 );
     }
 
     public List<Item> findAll(String query, String location, PageRequestParams pageParams) {
         Pageable pageable = Pageable.unpaged();
 
-        if (pageParams != null && pageParams.getPageSize() != null && pageParams.getPageNum() != null)
+        if (pageParams != null && pageParams.isValid())
             pageable = pageParams.createPageRequest();
 
         ItemFilterParams filter = new ItemFilterParams(query, location);

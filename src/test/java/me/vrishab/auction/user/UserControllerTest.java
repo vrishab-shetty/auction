@@ -2,6 +2,7 @@ package me.vrishab.auction.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.security.AuthService;
+import me.vrishab.auction.system.exception.Entity;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.dto.UserEditableDTO;
 import org.junit.jupiter.api.AfterEach;
@@ -246,7 +247,7 @@ class UserControllerTest {
 
 
         given(this.service.update(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), Mockito.any(User.class)))
-                .willThrow(new ObjectNotFoundException("user", UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271")));
+                .willThrow(new ObjectNotFoundException(Entity.USER, UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271")));
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         // When and then
 
@@ -278,7 +279,7 @@ class UserControllerTest {
     void testDeleteUserNotFound() throws Exception {
 
         // Given
-        doThrow(new ObjectNotFoundException("user", UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).when(this.service).delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        doThrow(new ObjectNotFoundException(Entity.USER, UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).when(this.service).delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         // When and then
 

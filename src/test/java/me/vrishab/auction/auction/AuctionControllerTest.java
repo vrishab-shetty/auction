@@ -9,6 +9,7 @@ import me.vrishab.auction.item.dto.AuctionItemUpdateDTO;
 import me.vrishab.auction.item.dto.ItemCreationDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.PageRequestParams;
+import me.vrishab.auction.system.exception.Entity;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.User;
 import org.hamcrest.Matchers;
@@ -132,7 +133,7 @@ class AuctionControllerTest {
 
         // Given
         UUID id = UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
-        given(auctionService.findById("a6c9417c-d01a-40e9-a22d-7621fd31a8c1")).willThrow(new ObjectNotFoundException("auction", id));
+        given(auctionService.findById("a6c9417c-d01a-40e9-a22d-7621fd31a8c1")).willThrow(new ObjectNotFoundException(Entity.AUCTION, id));
 
         // Then and When
         this.mockMvc.perform(get(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1").accept(MediaType.APPLICATION_JSON))
