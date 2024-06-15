@@ -1,6 +1,7 @@
 package me.vrishab.auction.user;
 
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
+import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static me.vrishab.auction.user.UserException.UserEmailAlreadyExistException;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -108,7 +110,7 @@ class UserServiceTest {
         });
 
         // Then
-        assertThat(thrown).isInstanceOf(UserNotFoundException.class).hasMessage("Could find user with username name1@domain.tld");
+        assertThat(thrown).isInstanceOf(UserNotFoundByUsernameException.class).hasMessage("Could find user with username name1@domain.tld");
 
         verify(repository, times(1)).findByEmail("name1@domain.tld");
     }
