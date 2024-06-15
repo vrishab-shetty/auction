@@ -1,12 +1,14 @@
 package me.vrishab.auction.auction;
 
 import jakarta.transaction.Transactional;
+import me.vrishab.auction.auction.AuctionException.*;
 import me.vrishab.auction.item.Item;
+import me.vrishab.auction.item.ItemException;
+import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
-import me.vrishab.auction.system.exception.Entity;
-import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.User;
+import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -24,15 +26,22 @@ public class AuctionService {
 
     private final ItemRepository itemRepo;
 
+    private final AuctionException auctionException;
+
+    private final ItemException itemException;
+
     public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo, ItemRepository itemRepo) {
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
+        this.auctionException = new AuctionException();
+        this.itemException = new ItemException();
     }
 
     public Auction findById(String id) {
-        return this.auctionRepo.findById(UUID.fromString(id))
-                .orElseThrow(() -> new ObjectNotFoundException(Entity.AUCTION, UUID.fromString(id)));
+        UUID auctionUUID = UUID.fromString(id);
+        return this.auctionRepo.findById(auctionUUID)
+                .orElseThrow(() -> new AuctionNotFoundByIdException(auctionUUID));
     }
 
     public List<Auction> findAll(PageRequestParams pageSettings) {
@@ -46,7 +55,7 @@ public class AuctionService {
     public Auction add(String userId, Auction auction) {
         UUID userUUID = UUID.fromString(userId);
         User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new ObjectNotFoundException(Entity.USER, userUUID));
+                .orElseThrow(() -> new UserNotFoundByIdException(userUUID));
 
         user.addAuction(auction);
         auction.initializeItems();
@@ -58,9 +67,7 @@ public class AuctionService {
 
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction oldAuction = auctionRepo.findById(auctionUUID)
-                .orElseThrow(
-                        () -> new ObjectNotFoundException(Entity.AUCTION, auctionUUID)
-                );
+                .orElseThrow(() -> new AuctionNotFoundByIdException(auctionUUID));
 
         authorizedUser(UUID.fromString(userId), oldAuction);
         checkAuctionNotStarted(oldAuction);
@@ -79,9 +86,7 @@ public class AuctionService {
     public void delete(String userId, String auctionId) {
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction oldAuction = auctionRepo.findById(auctionUUID)
-                .orElseThrow(
-                        () -> new ObjectNotFoundException(Entity.AUCTION, auctionUUID)
-                );
+                .orElseThrow(() -> new AuctionNotFoundByIdException(auctionUUID));
 
         authorizedUser(UUID.fromString(userId), oldAuction);
         checkAuctionNotStarted(oldAuction);
@@ -93,9 +98,7 @@ public class AuctionService {
 
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction auction = auctionRepo.findById(auctionUUID)
-                .orElseThrow(
-                        () -> new ObjectNotFoundException(Entity.AUCTION, auctionUUID)
-                );
+                .orElseThrow(() -> new AuctionNotFoundByIdException(auctionUUID));
 
         User user = unauthorizedUser(UUID.fromString(userId), auction);
         checkAuctionInBidingPhase(auction);
@@ -112,18 +115,19 @@ public class AuctionService {
         Double currentPrice = Optional.ofNullable(auction.getCurrentBid())
                 .orElse(auction.getInitialPrice());
 
-        if(bidAmount <= currentPrice) {
+        if (bidAmount <= currentPrice) {
             throw new InvalidBidAmountException();
         }
     }
 
     private void checkAuctionInBidingPhase(Auction auction) {
-        Instant now = Instant.now();;
+        Instant now = Instant.now();
+        ;
         boolean isAuctionStarted = auction.getStartTime().isBefore(now);
         boolean isAuctionEnded = auction.getEndTime().isBefore(now);
 
-        if(!isAuctionStarted || isAuctionEnded) {
-            throw new AuctionNotInBidingPhaseException(auction.getId());
+        if (!isAuctionStarted || isAuctionEnded) {
+            throw new AuctionForbiddenBidingPhaseException(auction.getId());
         }
     }
 
@@ -133,7 +137,7 @@ public class AuctionService {
             Item item;
             if (auctionItem.getId() != null) {
                 item = itemRepo.findById(auctionItem.getId())
-                        .orElseThrow(() -> new ObjectNotFoundException(Entity.ITEM, auctionItem.getId()));
+                        .orElseThrow(() -> new ItemNotFoundByIdException(auctionItem.getId()));
             } else {
                 item = new Item();
             }
@@ -151,19 +155,19 @@ public class AuctionService {
 
     private void authorizedUser(UUID userUUID, Auction auction) {
         User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new ObjectNotFoundException(Entity.USER, userUUID));
+                .orElseThrow(() -> new ItemNotFoundByIdException(userUUID));
 
         if (!user.getEmail().equals(auction.getOwnerEmail())) {
-            throw new UnAuthorizedAuctionAccess(false);
+            throw new UnauthorizedAuctionAccess(false);
         }
     }
 
     private User unauthorizedUser(UUID userUUID, Auction auction) {
         User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new ObjectNotFoundException(Entity.USER, userUUID));
+                .orElseThrow(() -> new ItemNotFoundByIdException(userUUID));
 
         if (user.getEmail().equals(auction.getOwnerEmail())) {
-            throw new UnAuthorizedAuctionAccess(true);
+            throw new UnauthorizedAuctionAccess(true);
         }
 
         return user;
@@ -171,7 +175,7 @@ public class AuctionService {
 
     private void checkAuctionNotStarted(Auction auction) {
         if (auction.getStartTime().isBefore(Instant.now())) {
-            throw new AuctionForbiddenUpdateException(auction.getId().toString());
+            throw new AuctionForbiddenUpdateException(auction.getId());
         }
     }
 }

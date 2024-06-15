@@ -1,10 +1,9 @@
 package me.vrishab.auction.item;
 
 import jakarta.transaction.Transactional;
+import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemSpecification.ItemFilterParams;
 import me.vrishab.auction.system.PageRequestParams;
-import me.vrishab.auction.system.exception.Entity;
-import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,7 @@ public class ItemService {
         UUID itemUUID = UUID.fromString(itemId);
         return this.itemRepo.findById(itemUUID)
                 .orElseThrow(
-                        () -> new ObjectNotFoundException(Entity.ITEM, itemUUID)
+                        () -> new ItemNotFoundByIdException(itemUUID)
                 );
     }
 

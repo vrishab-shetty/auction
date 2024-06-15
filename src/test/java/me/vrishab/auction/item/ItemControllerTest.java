@@ -1,8 +1,7 @@
 package me.vrishab.auction.item;
 
+import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.system.PageRequestParams;
-import me.vrishab.auction.system.exception.Entity;
-import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -84,7 +83,7 @@ class ItemControllerTest {
 
         // Given
         String testItemId = this.items.get(0).getId().toString();
-        given(this.itemService.findById(testItemId)).willThrow(new ObjectNotFoundException(Entity.ITEM, UUID.fromString(testItemId)));
+        given(this.itemService.findById(testItemId)).willThrow(new ItemNotFoundByIdException(UUID.fromString(testItemId)));
 
         // When and Then
         this.mockMvc.perform(get(baseUrl + "/items/" + testItemId).accept(MediaType.APPLICATION_JSON))

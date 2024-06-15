@@ -9,8 +9,6 @@ import me.vrishab.auction.item.dto.AuctionItemUpdateDTO;
 import me.vrishab.auction.item.dto.ItemCreationDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.PageRequestParams;
-import me.vrishab.auction.system.exception.Entity;
-import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
@@ -28,6 +26,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.*;
 
+import static me.vrishab.auction.auction.AuctionException.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
@@ -133,7 +132,7 @@ class AuctionControllerTest {
 
         // Given
         UUID id = UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
-        given(auctionService.findById("a6c9417c-d01a-40e9-a22d-7621fd31a8c1")).willThrow(new ObjectNotFoundException(Entity.AUCTION, id));
+        given(auctionService.findById("a6c9417c-d01a-40e9-a22d-7621fd31a8c1")).willThrow(new AuctionNotFoundByIdException(id));
 
         // Then and When
         this.mockMvc.perform(get(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1").accept(MediaType.APPLICATION_JSON))
@@ -256,7 +255,7 @@ class AuctionControllerTest {
         );
 
         given(auctionService.update(eq(id), Mockito.any(Auction.class), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"))).willThrow(
-                new UnAuthorizedAuctionAccess(false)
+                new UnauthorizedAuctionAccess(false)
         );
         given(authService.getUserInfo(Mockito.any())).willReturn(id);
 
@@ -292,7 +291,7 @@ class AuctionControllerTest {
         );
 
         given(auctionService.update(eq(id), Mockito.any(Auction.class), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"))).willThrow(
-                new AuctionForbiddenUpdateException("a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
+                new AuctionForbiddenUpdateException(update.getId())
         );
         given(authService.getUserInfo(Mockito.any())).willReturn(id);
 
@@ -321,7 +320,7 @@ class AuctionControllerTest {
 
     @Test
     void testDeleteAuctionUnauthorized() throws Exception {
-        doThrow(new UnAuthorizedAuctionAccess(false)).when(this.auctionService).delete(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
+        doThrow(new UnauthorizedAuctionAccess(false)).when(this.auctionService).delete(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
 
         this.mockMvc.perform(delete(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
@@ -334,7 +333,7 @@ class AuctionControllerTest {
     @Test
     void testDeleteAuctionForbiddenUpdate() throws Exception {
 
-        doThrow(new AuctionForbiddenUpdateException("9a540a1e-b599-4cec-aeb1-6396eb8fa271")).when(this.auctionService).delete(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
+        doThrow(new AuctionForbiddenUpdateException(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).when(this.auctionService).delete(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
 
         this.mockMvc.perform(delete(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c0")
@@ -382,7 +381,7 @@ class AuctionControllerTest {
                 eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
                 eq(150.0))
         ).willThrow(
-                new AuctionNotInBidingPhaseException(auction.getId())
+                new AuctionForbiddenBidingPhaseException(auction.getId())
         );
 
         BidRequestDTO bidRequestDTO = new BidRequestDTO(
