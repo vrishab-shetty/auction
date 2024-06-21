@@ -24,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 import static me.vrishab.auction.auction.AuctionException.*;
@@ -94,8 +95,8 @@ class AuctionControllerTest {
             auction.setStartTime(calendar.getTime().toInstant());
             calendar.add(Calendar.HOUR_OF_DAY, 1 + i % 3);
             auction.setEndTime(calendar.getTime().toInstant());
-            auction.setInitialPrice(100.00);
-            auction.setCurrentBid(150.00);
+            auction.setInitialPrice(BigDecimal.valueOf(100.00));
+            auction.setCurrentBid(BigDecimal.valueOf(150.00));
             auction.setBuyer("name1@domain.tld");
 
             auction.setItems(Set.of(item));
@@ -351,11 +352,11 @@ class AuctionControllerTest {
         given(this.auctionService.bid(
                 eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"),
                 eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
-                eq(150.0))
+                eq(BigDecimal.valueOf(150.0)))
         ).willReturn(auction);
 
         BidRequestDTO bidRequestDTO = new BidRequestDTO(
-                150.0
+                BigDecimal.valueOf(150.0)
         );
 
         String json = this.objectMapper.writeValueAsString(bidRequestDTO);
@@ -379,13 +380,13 @@ class AuctionControllerTest {
         given(this.auctionService.bid(
                 eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"),
                 eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
-                eq(150.0))
+                eq(BigDecimal.valueOf(150.0)))
         ).willThrow(
                 new AuctionForbiddenBidingPhaseException(auction.getId())
         );
 
         BidRequestDTO bidRequestDTO = new BidRequestDTO(
-                150.0
+                BigDecimal.valueOf(150.0)
         );
 
         String json = this.objectMapper.writeValueAsString(bidRequestDTO);
@@ -408,13 +409,13 @@ class AuctionControllerTest {
         given(this.auctionService.bid(
                 eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"),
                 eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
-                eq(50.0))
+                eq(BigDecimal.valueOf(50.0)))
         ).willThrow(
                 new InvalidBidAmountException()
         );
 
         BidRequestDTO bidRequestDTO = new BidRequestDTO(
-                50.0
+                BigDecimal.valueOf(50.0)
         );
 
         String json = this.objectMapper.writeValueAsString(bidRequestDTO);
