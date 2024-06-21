@@ -8,7 +8,7 @@ import lombok.Setter;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.user.User;
 
-import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @Setter
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
-public class Auction implements Serializable {
+public class Auction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -30,9 +30,9 @@ public class Auction implements Serializable {
 
     private Instant endTime;
 
-    private Double initialPrice;
+    private BigDecimal initialPrice;
 
-    private Double currentBid;
+    private BigDecimal currentBid;
 
     @OneToMany(orphanRemoval = true, cascade = {CascadeType.ALL})
     @JoinColumn(name = "auctionId", nullable = false)

@@ -13,6 +13,7 @@ import me.vrishab.auction.user.UserRepository;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 
@@ -76,8 +77,9 @@ public class AuctionService {
         oldAuction.setStartTime(update.getStartTime());
         oldAuction.setEndTime(update.getEndTime());
         oldAuction.setInitialPrice(update.getInitialPrice());
+        Set<Item> updated = getUpdatedItems(oldAuction, update);
         oldAuction.removeAllItems();
-        oldAuction.addAllItems(getUpdatedItems(update));
+        oldAuction.addAllItems(updated);
         oldAuction.initializeItems();
 
         return this.auctionRepo.save(oldAuction);
@@ -94,7 +96,7 @@ public class AuctionService {
         this.auctionRepo.deleteById(auctionUUID);
     }
 
-    public Auction bid(String userId, String auctionId, Double bidAmount) {
+    public Auction bid(String userId, String auctionId, BigDecimal bidAmount) {
 
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction auction = auctionRepo.findById(auctionUUID)
@@ -110,14 +112,12 @@ public class AuctionService {
         return this.auctionRepo.save(auction);
     }
 
-    private void checkAuctionBidAmount(Auction auction, Double bidAmount) {
+    private void checkAuctionBidAmount(Auction auction, BigDecimal bidAmount) {
 
-        Double currentPrice = Optional.ofNullable(auction.getCurrentBid())
+        BigDecimal currentPrice = Optional.ofNullable(auction.getCurrentBid())
                 .orElse(auction.getInitialPrice());
 
-        if (bidAmount <= currentPrice) {
-            throw new InvalidBidAmountException();
-        }
+        if (bidAmount.compareTo(currentPrice) < 0) throw new InvalidBidAmountException();
     }
 
     private void checkAuctionInBidingPhase(Auction auction) {
@@ -131,13 +131,16 @@ public class AuctionService {
         }
     }
 
-    private Set<Item> getUpdatedItems(Auction update) {
+    private Set<Item> getUpdatedItems(Auction oldAuction, Auction update) {
         Set<Item> updatedItems = new HashSet<>();
         for (Item auctionItem : update.getItems()) {
             Item item;
             if (auctionItem.getId() != null) {
                 item = itemRepo.findById(auctionItem.getId())
                         .orElseThrow(() -> new ItemNotFoundByIdException(auctionItem.getId()));
+                if (!oldAuction.getItems().contains(item)) {
+                    throw new AuctionItemNotFoundException(oldAuction.getId(), item.getId());
+                }
             } else {
                 item = new Item();
             }

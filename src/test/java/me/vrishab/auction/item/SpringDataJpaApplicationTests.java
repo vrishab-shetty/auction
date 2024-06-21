@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
@@ -39,7 +40,7 @@ abstract class SpringDataJpaApplicationTests {
         auction.setStartTime(calendar.getTime().toInstant());
         calendar.add(Calendar.HOUR_OF_DAY, 1);
         auction.setEndTime(calendar.getTime().toInstant());
-        auction.setInitialPrice(100.00);
+        auction.setInitialPrice(BigDecimal.valueOf(100.00));
         auction.setBuyer("vr@domain.tld");
         auction.setItems(generateItems());
 

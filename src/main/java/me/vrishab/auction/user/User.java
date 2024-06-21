@@ -5,7 +5,6 @@ import lombok.*;
 import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.item.Item;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
 @AllArgsConstructor
 @Table(name = "\"USER\"")
-public class User implements Serializable {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

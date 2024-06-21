@@ -22,7 +22,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @RestControllerAdvice
@@ -132,7 +135,7 @@ public class ExceptionHandlerAdvice {
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public Result handleException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new Result(false, "A server error occurs:\n" + ex.getMessage(), Arrays.toString(ex.getStackTrace()));
+        return new Result(false, "A server error occurs:\n" + ex.getMessage());
     }
 
 
