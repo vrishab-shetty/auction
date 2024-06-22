@@ -1,6 +1,6 @@
 package me.vrishab.auction.security;
 
-import me.vrishab.auction.user.User;
+import me.vrishab.auction.user.model.User;
 import me.vrishab.auction.user.UserPrincipal;
 import me.vrishab.auction.user.converter.UserToUserDTOConverter;
 import me.vrishab.auction.user.dto.UserDTO;

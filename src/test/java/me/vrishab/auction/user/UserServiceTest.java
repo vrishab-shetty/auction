@@ -2,6 +2,10 @@ package me.vrishab.auction.user;
 
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
+import me.vrishab.auction.user.model.Address;
+import me.vrishab.auction.user.model.USZipcode;
+import me.vrishab.auction.user.model.User;
+import me.vrishab.auction.TestData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,7 +16,6 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -37,47 +40,16 @@ class UserServiceTest {
     @InjectMocks
     UserService service;
 
-    ArrayList<User> users;
+    List<User> users;
 
     @BeforeEach
     void setUp() {
-
-        users = new ArrayList<>();
-        /*
-        {
-            "data": {
-                "name": "Vicky",
-                "description": "A tool lover",
-                "enabled": true,
-                "email": "name@domain.tld",
-                "contact": "1234567890",
-                "wishlist": [
-                  "2a2a2de5-ecea-4f25-bd1a-99a01a0be135",
-                  "2a2a2de5-ecea-4f25-bd1a-99a01a0be134"
-                ],
-                "auctions": [
-                  "0180280f-50e5-44b5-a744-37361f60c611",
-                  "0180280f-50e5-44b5-a744-37361f60c612"
-                ]
-            }
-         */
-        for (int i = 0; i < 10; i++) {
-            User user = new User();
-            user.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa27" + i));
-            user.setName("Name " + i);
-            user.setPassword("password");
-            user.setDescription("Description " + i);
-            user.setEnabled(true);
-            user.setEmail("name" + i + "@domain.tld");
-            user.setContact("1234567890");
-            users.add(user);
-        }
-
+        this.users = TestData.generateUsers();
     }
 
     @AfterEach
     void tearDown() {
-
+        this.users.clear();
     }
 
     @Test
@@ -106,7 +78,7 @@ class UserServiceTest {
 
         // When
         Throwable thrown = catchThrowable(() -> {
-            User returnedUser = service.findByUsername("name1@domain.tld");
+            service.findByUsername("name1@domain.tld");
         });
 
         // Then
@@ -156,9 +128,7 @@ class UserServiceTest {
         given(repository.existsByEmail(Mockito.anyString())).willReturn(true);
 
         // When
-        Throwable thrown = catchThrowable(() -> {
-            service.save(newUser);
-        });
+        Throwable thrown = catchThrowable(() -> service.save(newUser));
 
         // Then
         assertThat(thrown).isInstanceOf(UserEmailAlreadyExistException.class).hasMessage("The email name0@domain.tld already exist");
@@ -168,22 +138,23 @@ class UserServiceTest {
     void testUpdateUserSuccess() {
 
         // Given
-        User oldUser = new User();
-        oldUser.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
-        oldUser.setName("Name");
-        oldUser.setPassword("Password");
-        oldUser.setDescription("Description");
-        oldUser.setEmail("name@domain.tld");
-        oldUser.setContact("1234567890");
-        oldUser.setEnabled(true);
+        User oldUser = this.users.get(1);
 
         User update = new User();
         update.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
         update.setName("New Name");
-        update.setPassword("$2a$10$w0.OcE5rFi5iXGm/cQjMeOH4ht9SxWoOn8Lao9veuQkZJrxoMQQOm");
+        update.setPassword("newpassword");
         update.setDescription("New Description");
         update.setEmail("name@domain.tld");
         update.setContact("1234567890");
+        update.setHomeAddress(
+                new Address(
+                        "New Street",
+                        new USZipcode(oldUser.getHomeZipCode()),
+                        "New City",
+                        "New Country"
+                )
+        );
         update.setEnabled(true);
 
         given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(oldUser));
@@ -197,7 +168,9 @@ class UserServiceTest {
         assertAll(
                 () -> assertThat(updatedUser.getId()).isEqualTo(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271")),
                 () -> assertThat(updatedUser.getName()).isEqualTo("New Name"),
-                () -> assertThat(updatedUser.getDescription()).isEqualTo("New Description")
+                () -> assertThat(updatedUser.getDescription()).isEqualTo("New Description"),
+                () -> assertThat(updatedUser.getHomeZipCode()).isEqualTo("02211"),
+                () -> assertThat(updatedUser.getHomeCountry()).isEqualTo("New Country")
         );
         verify(repository, times(1)).save(oldUser);
         verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
@@ -207,20 +180,12 @@ class UserServiceTest {
     void testUpdateUserNotFound() {
 
         // Given
-        User update = new User();
-        update.setName("New Name");
-        update.setPassword("New Password");
-        update.setDescription("New Description");
-        update.setEmail("name@domain.tld");
-        update.setContact("1234567890");
-        update.setEnabled(true);
+        User update = this.users.get(1);
 
         given(repository.findById(Mockito.any(UUID.class))).willReturn(Optional.empty());
 
         // When
-        assertThrows(ObjectNotFoundException.class, () -> {
-            service.update("9a540a1e-b599-4cec-aeb1-6396eb8fa271", update);
-        });
+        assertThrows(ObjectNotFoundException.class, () -> service.update("9a540a1e-b599-4cec-aeb1-6396eb8fa271", update));
 
         // Then
         verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
@@ -230,14 +195,7 @@ class UserServiceTest {
     void testDeleteUserSuccess() {
 
         // Given
-        User user = new User();
-        user.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
-        user.setName("New Name");
-        user.setPassword("New Password");
-        user.setDescription("New Description");
-        user.setEmail("name@domain.tld");
-        user.setContact("1234567890");
-        user.setEnabled(true);
+        User user = this.users.get(1);
 
         given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(user));
         doNothing().when(repository).deleteById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));

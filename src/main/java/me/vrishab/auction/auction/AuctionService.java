@@ -3,11 +3,10 @@ package me.vrishab.auction.auction;
 import jakarta.transaction.Transactional;
 import me.vrishab.auction.auction.AuctionException.*;
 import me.vrishab.auction.item.Item;
-import me.vrishab.auction.item.ItemException;
 import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
-import me.vrishab.auction.user.User;
+import me.vrishab.auction.user.model.User;
 import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserRepository;
 import org.springframework.data.domain.Pageable;
@@ -27,16 +26,11 @@ public class AuctionService {
 
     private final ItemRepository itemRepo;
 
-    private final AuctionException auctionException;
-
-    private final ItemException itemException;
 
     public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo, ItemRepository itemRepo) {
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
-        this.auctionException = new AuctionException();
-        this.itemException = new ItemException();
     }
 
     public Auction findById(String id) {
@@ -122,7 +116,6 @@ public class AuctionService {
 
     private void checkAuctionInBidingPhase(Auction auction) {
         Instant now = Instant.now();
-        ;
         boolean isAuctionStarted = auction.getStartTime().isBefore(now);
         boolean isAuctionEnded = auction.getEndTime().isBefore(now);
 

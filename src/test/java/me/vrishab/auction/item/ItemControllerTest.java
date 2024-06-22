@@ -2,6 +2,7 @@ package me.vrishab.auction.item;
 
 import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.system.PageRequestParams;
+import me.vrishab.auction.TestData;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,9 +16,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.mockito.BDDMockito.given;
@@ -43,25 +42,14 @@ class ItemControllerTest {
     @BeforeEach
     void setUp() {
 
-        items = new ArrayList<>();
-
-        for (int i = 0; i < 10; i++) {
-            Item item = new Item();
-            item.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a" + i));
-            item.setName("Item " + i + (i % 2 == 0 ? " (special)" : ""));
-            item.setDescription("Description " + i);
-            item.setLocation(i % 3 == 1 ? "MA" : "CA");
-            item.setImageUrls(Set.of("<images>"));
-            item.setExtras(null);
-            item.setAuctionId(UUID.fromString("c4838b19-9c96-45e0-abd7-c77d91af22b" + i % 2));
-            item.setLegitimacyProof("Proof");
-            item.setSeller("vr@domain.tld");
-            this.items.add(item);
-        }
+        this.items = TestData.generateItems();
     }
 
     @AfterEach
     void tearDown() {
+
+        this.items.clear();
+
     }
 
     @Test

@@ -8,10 +8,12 @@ import me.vrishab.auction.item.converter.ItemToAuctionItemDTO;
 import me.vrishab.auction.item.dto.AuctionItemDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.Result;
-import me.vrishab.auction.user.converter.UserCreationToUserConverter;
+import me.vrishab.auction.user.converter.UserEditableToUserConverter;
 import me.vrishab.auction.user.converter.UserToUserDTOConverter;
 import me.vrishab.auction.user.dto.UserDTO;
 import me.vrishab.auction.user.dto.UserEditableDTO;
+import me.vrishab.auction.user.model.BillingDetails;
+import me.vrishab.auction.user.model.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,15 +26,15 @@ public class UserController {
 
     private final UserService userService;
     private final UserToUserDTOConverter userToUserDTOConverter;
-    private final UserCreationToUserConverter userCreationToUserConverter;
+    private final UserEditableToUserConverter userEditableToUserConverter;
     private final AuctionToAuctionDTOConverter auctionToAuctionDTOConverter;
     private final ItemToAuctionItemDTO itemToAuctionItemDTO;
     private final AuthService authService;
 
-    public UserController(UserService userService, UserToUserDTOConverter userToUserDTOConverter, UserCreationToUserConverter userCreationToUserConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, ItemToAuctionItemDTO itemToAuctionItemDTO, AuthService authService) {
+    public UserController(UserService userService, UserToUserDTOConverter userToUserDTOConverter, UserEditableToUserConverter userEditableToUserConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, ItemToAuctionItemDTO itemToAuctionItemDTO, AuthService authService) {
         this.userService = userService;
         this.userToUserDTOConverter = userToUserDTOConverter;
-        this.userCreationToUserConverter = userCreationToUserConverter;
+        this.userEditableToUserConverter = userEditableToUserConverter;
         this.auctionToAuctionDTOConverter = auctionToAuctionDTOConverter;
         this.itemToAuctionItemDTO = itemToAuctionItemDTO;
         this.authService = authService;
@@ -54,7 +56,7 @@ public class UserController {
 
     @PostMapping("/users")
     public Result addUser(@Valid @RequestBody UserEditableDTO newUserDTO) {
-        User newUser = this.userCreationToUserConverter.convert(newUserDTO);
+        User newUser = this.userEditableToUserConverter.convert(newUserDTO);
         User savedUser = this.userService.save(newUser);
         UserDTO savedUserDto = this.userToUserDTOConverter.convert(savedUser);
         return new Result(true, "Add a user", savedUserDto);
@@ -64,7 +66,7 @@ public class UserController {
     public Result updateUser(Authentication auth, @Valid @RequestBody UserEditableDTO updateDTO) {
         String userId = authService.getUserInfo(auth);
 
-        User update = this.userCreationToUserConverter.convert(updateDTO);
+        User update = this.userEditableToUserConverter.convert(updateDTO);
         User updatedUser = this.userService.update(userId, update);
         UserDTO updatedUserDto = this.userToUserDTOConverter.convert(updatedUser);
 
@@ -109,5 +111,19 @@ public class UserController {
         List<AuctionDTO> auctionDTOS = this.userService.auctions(userId).stream()
                 .map(this.auctionToAuctionDTOConverter::convert).toList();
         return new Result(true, "Get User Auctions", auctionDTOS);
+    }
+
+    @PutMapping("/user/self/billingDetails")
+    public Result addBillingDetails(Authentication auth, @RequestBody @Valid BillingDetails billingDetails) {
+        String userId = authService.getUserInfo(auth);
+        this.userService.addBillingDetails(userId, billingDetails);
+        return new Result(true, "Add Billing Details");
+    }
+
+    @GetMapping("/user/self/billingDetails")
+    public Result getBillingDetails(Authentication auth) {
+        String userId = authService.getUserInfo(auth);
+
+        return new Result(true, "Get Billing Details", this.userService.getBillingDetails(userId));
     }
 }

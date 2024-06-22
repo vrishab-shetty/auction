@@ -8,7 +8,7 @@ import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
-import me.vrishab.auction.user.User;
+import me.vrishab.auction.user.model.User;
 import me.vrishab.auction.user.UserRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +26,8 @@ import java.math.BigDecimal;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
+import static me.vrishab.auction.TestData.generateAuctions;
+import static me.vrishab.auction.TestData.generateUsers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -54,67 +56,23 @@ class AuctionServiceTest {
 
     User otherUser;
 
-    Item item;
 
     @BeforeEach
     void setUp() {
-        auctions = new ArrayList<>();
 
-        ownerUser = new User();
-        ownerUser.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270"));
-        ownerUser.setName("Name");
-        ownerUser.setPassword("password");
-        ownerUser.setDescription("Description");
-        ownerUser.setEnabled(true);
-        ownerUser.setEmail("name0@domain.tld");
-        ownerUser.setContact("1234567890");
+        Iterator<User> users = generateUsers().iterator();
 
-        otherUser = new User();
+        this.ownerUser = users.next();
 
-        otherUser = new User();
-        otherUser.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
-        otherUser.setName("Name");
-        otherUser.setPassword("password");
-        otherUser.setDescription("Description");
-        otherUser.setEnabled(true);
-        otherUser.setEmail("name1@domain.tld");
-        otherUser.setContact("1234567890");
+        this.otherUser = users.next();
 
-
-        for (int i = 0; i < 10; i++) {
-
-            item = new Item();
-            item.setId(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a" + i));
-            item.setName("Item");
-            item.setDescription("Description");
-            item.setLocation("MA");
-            item.setImageUrls(Set.of("<images>"));
-            item.setExtras(null);
-            item.setLegitimacyProof("Proof");
-            item.setAuctionId(UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c" + i));
-
-            Auction auction = new Auction();
-
-            auction.setId(UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c" + i));
-            auction.setName("Auction " + i);
-            Calendar calendar = Calendar.getInstance();
-            calendar.setTime(new Date());
-            calendar.add(Calendar.HOUR_OF_DAY, 1 + i % 2);
-            auction.setStartTime(calendar.getTime().toInstant());
-            calendar.add(Calendar.HOUR_OF_DAY, 1 + i % 3);
-            auction.setEndTime(calendar.getTime().toInstant());
-            auction.setInitialPrice(BigDecimal.valueOf(100.00));
-            auction.setItems(Set.of(item));
-            auctions.add(auction);
-
-            ownerUser.addAuction(auction);
-        }
+        this.auctions = generateAuctions(ownerUser);
 
     }
 
     @AfterEach
     void tearDown() {
-
+        this.auctions.clear();
     }
 
     @Test
@@ -140,13 +98,10 @@ class AuctionServiceTest {
     void testFindAuctionByNotFound() {
 
         // Given
-        UUID id = UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c0");
         given(auctionRepo.findById(Mockito.any(UUID.class))).willReturn(Optional.empty());
 
         // When
-        Throwable thrown = catchThrowable(() -> {
-            auctionService.findById("a6c9417c-d01a-40e9-a22d-7621fd31a8c0");
-        });
+        Throwable thrown = catchThrowable(() -> auctionService.findById("a6c9417c-d01a-40e9-a22d-7621fd31a8c0"));
 
         // Then
         assertThat(thrown)
@@ -170,7 +125,7 @@ class AuctionServiceTest {
         List<Auction> returnedAuctions = auctionService.findAll(new PageRequestParams(null, null));
 
         // Then
-        assertThat(returnedAuctions).hasSize(10);
+        assertThat(returnedAuctions).hasSize(9);
 
         verify(auctionRepo, times(1)).findAll(pageable);
     }
@@ -405,9 +360,7 @@ class AuctionServiceTest {
 
         // When
 
-        Throwable thrown = catchThrowable(() -> {
-            this.auctionService.update("9a540a1e-b599-4cec-aeb1-6396eb8fa270", updateAuction, "a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
-        });
+        Throwable thrown = catchThrowable(() -> this.auctionService.update("9a540a1e-b599-4cec-aeb1-6396eb8fa270", updateAuction, "a6c9417c-d01a-40e9-a22d-7621fd31a8c1"));
 
         assertThat(thrown).isInstanceOf(UnauthorizedAuctionAccess.class).hasMessage("The user not an owner of the auction");
 
@@ -492,9 +445,7 @@ class AuctionServiceTest {
 
         // When
 
-        Throwable thrown = catchThrowable(() -> {
-            this.auctionService.update("9a540a1e-b599-4cec-aeb1-6396eb8fa270", updateAuction, "a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
-        });
+        Throwable thrown = catchThrowable(() -> this.auctionService.update("9a540a1e-b599-4cec-aeb1-6396eb8fa270", updateAuction, "a6c9417c-d01a-40e9-a22d-7621fd31a8c1"));
 
         assertThat(thrown).isInstanceOf(AuctionItemNotFoundException.class).hasMessage("The Item with Id e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a2 is not in the auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
 
@@ -593,9 +544,7 @@ class AuctionServiceTest {
 
 
         // Then
-        Throwable thrown = catchThrowable(() -> {
-            this.auctionService.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa270", "a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
-        });
+        Throwable thrown = catchThrowable(() -> this.auctionService.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa270", "a6c9417c-d01a-40e9-a22d-7621fd31a8c1"));
 
         assertThat(thrown).isInstanceOf(UnauthorizedAuctionAccess.class).hasMessage("The user not an owner of the auction");
 

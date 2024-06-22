@@ -2,6 +2,8 @@ package me.vrishab.auction.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.user.dto.UserEditableDTO;
+import me.vrishab.auction.user.model.CreditCard;
+import me.vrishab.auction.TestData;
 import org.hamcrest.Matchers;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -72,7 +74,11 @@ public class UserControllerIntegrationTest {
                 "password",
                 "Description",
                 "name@domain.tld",
-                "1234567890"
+                "1234567890",
+                "00000",
+                "street",
+                "city",
+                "country"
         );
 
         String userJson = this.objectMapper.writeValueAsString(userEditableDTO);
@@ -97,7 +103,11 @@ public class UserControllerIntegrationTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value("Find a user"))
                 .andExpect(jsonPath("$.data.id").value(userID))
-                .andExpect(jsonPath("$.data.username").value("name@domain.tld"));
+                .andExpect(jsonPath("$.data.username").value("name@domain.tld"))
+                .andExpect(jsonPath("$.data.homeAddress.city").value("city"))
+                .andExpect(jsonPath("$.data.homeAddress.street").value("street"))
+                .andExpect(jsonPath("$.data.homeAddress.country").value("country"))
+                .andExpect(jsonPath("$.data.homeAddress.zipcode").value("00000"));
     }
 
     @Test
@@ -109,8 +119,13 @@ public class UserControllerIntegrationTest {
                 "Password",
                 "New Description",
                 "name@domain.tld",
-                "1234567890"
+                "1234567890",
+                "00000",
+                "New Street",
+                "New City",
+                "New Country"
         );
+
 
         String json = this.objectMapper.writeValueAsString(userEditableDTO);
 
@@ -122,12 +137,16 @@ public class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Update a user"))
                 .andExpect(jsonPath("$.data.name").value("New Name"))
-                .andExpect(jsonPath("$.data.description").value("New Description"));
+                .andExpect(jsonPath("$.data.description").value("New Description"))
+                .andExpect(jsonPath("$.data.homeAddress.city").value("New City"))
+                .andExpect(jsonPath("$.data.homeAddress.street").value("New Street"))
+                .andExpect(jsonPath("$.data.homeAddress.country").value("New Country"))
+                .andExpect(jsonPath("$.data.homeAddress.zipcode").value("00000"));
 
     }
 
     @Test
-    @DisplayName("Delete deleteUser operation")
+    @DisplayName("Check deleteUser operation")
     void testDeleteUserSuccess() throws Exception {
 
         this.mockMvc.perform(delete(this.baseUrl + "/user/self")
@@ -136,6 +155,59 @@ public class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Delete a user"))
                 .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    @DisplayName("Check invalid zipcode")
+    void testInvalidZipCode() throws Exception {
+        UserEditableDTO userEditableDTO = new UserEditableDTO(
+                "New Name",
+                "Password",
+                "New Description",
+                "name@domain.tld",
+                "1234567890",
+                "00-23",
+                "New Street",
+                "New City",
+                "New Country"
+        );
+
+
+        String json = this.objectMapper.writeValueAsString(userEditableDTO);
+
+        this.mockMvc.perform(put(this.baseUrl + "/user/self")
+                        .header("Authorization", this.token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("The zipcode 00-23 is invalid"))
+                .andExpect(jsonPath("$.data", Matchers.nullValue()));
+    }
+
+    @Test
+    @DisplayName("Check addBillingDetails operation")
+    void testAddBillingDetails() throws Exception {
+
+        CreditCard creditCard = TestData.getCreditCard(0);
+
+        String jsonString = this.objectMapper.writeValueAsString(creditCard);
+
+        this.mockMvc.perform(put(this.baseUrl + "/user/self/billingDetails")
+                        .header("Authorization", this.token)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonString))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Add Billing Details"));
+
+        this.mockMvc.perform(get(this.baseUrl + "/user/self/billingDetails")
+                        .header("Authorization", this.token)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Get Billing Details"))
+                .andExpect(jsonPath("$.data", Matchers.hasSize(2)))
+                .andExpect(jsonPath("$.data[*].cardNumber", Matchers.hasItems(creditCard.getCardNumber())));
     }
 
 }

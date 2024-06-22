@@ -1,6 +1,7 @@
 package me.vrishab.auction.user.dto;
 
 import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.Length;
 
 public record UserEditableDTO(
         @NotBlank(message = "name is required")
@@ -28,6 +29,19 @@ public record UserEditableDTO(
         String email,
         @NotBlank(message = "contact info is required")
         @Size(min = 10, max = 10, message = "Please provide a valid phone number")
-        String contact
+        String contact,
+
+        @NotNull(message = "zipcode is required")
+        @Length(min = 4, max = 10, message = "Please provide a valid ZIP code")
+        String zipCode,
+
+        @NotNull(message = "street is required")
+        String street,
+
+        @NotNull(message = "city is required")
+        String city,
+
+        @NotNull(message = "country is required")
+        String country
 ) {
 }

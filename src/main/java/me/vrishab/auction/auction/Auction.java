@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import me.vrishab.auction.item.Item;
-import me.vrishab.auction.user.User;
+import me.vrishab.auction.user.model.User;
 
 import java.math.BigDecimal;
 import java.time.Instant;
