@@ -27,4 +27,11 @@ public class UserException {
         }
     }
 
+    public static class InvalidZipcodeException extends ObjectBadRequestException {
+
+        public InvalidZipcodeException(String unknownZipCode) {
+            super("The zipcode " + unknownZipCode + " is invalid");
+        }
+    }
+
 }

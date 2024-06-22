@@ -23,7 +23,7 @@ public class JwtProvider {
 
     public String createToken(UserDTO userDTO, List<String> authorities) {
         Instant now = Instant.now();
-        Long expiresIn = 2L; // 2 hours
+        long expiresIn = 2; // 2 hours
 
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer("self")
