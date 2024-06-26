@@ -77,9 +77,7 @@ class UserServiceTest {
         given(repository.findByEmail(Mockito.any(String.class))).willReturn(Optional.empty());
 
         // When
-        Throwable thrown = catchThrowable(() -> {
-            service.findByUsername("name1@domain.tld");
-        });
+        Throwable thrown = catchThrowable(() -> service.findByUsername("name1@domain.tld"));
 
         // Then
         assertThat(thrown).isInstanceOf(UserNotFoundByUsernameException.class).hasMessage("Could find user with username name1@domain.tld");

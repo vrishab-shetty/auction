@@ -139,7 +139,6 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.data.homeAddress.street").value("Street 1"))
                 .andExpect(jsonPath("$.data.homeAddress.country").value("Country 1"))
                 .andExpect(jsonPath("$.data.homeAddress.zipcode").value("02211"));
-        ;
     }
 
     @Test

@@ -26,7 +26,12 @@ public class Item {
 
     private String location;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection
+    @CollectionTable(
+            name = "IMAGE",
+            joinColumns = @JoinColumn(name = "ITEM_ID")
+    )
+    @Column(name = "IMAGE_URL")
     private Set<String> imageUrls = new HashSet<>();
 
     private String legitimacyProof;
