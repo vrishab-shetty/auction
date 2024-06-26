@@ -3,6 +3,7 @@ package me.vrishab.auction.auction.dto;
 import lombok.NonNull;
 import me.vrishab.auction.item.dto.AuctionItemDTO;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -21,9 +22,9 @@ public record AuctionDTO(
         Instant endTime,
 
         @NonNull
-        Double initialPrice,
+        BigDecimal initialPrice,
 
-        Double currentBid,
+        BigDecimal currentBid,
 
         @NonNull
         List<AuctionItemDTO> items,

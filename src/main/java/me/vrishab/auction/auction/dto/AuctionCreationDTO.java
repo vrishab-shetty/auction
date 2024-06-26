@@ -5,6 +5,7 @@ import jakarta.validation.constraints.*;
 import me.vrishab.auction.item.dto.ItemCreationDTO;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public record AuctionCreationDTO(
 
         @NotNull(message = "initial price is required")
         @PositiveOrZero(message = "Please provide a valid price")
-        Double initialPrice,
+        BigDecimal initialPrice,
 
         @NotNull(message = "At least one item is required")
         @Size(

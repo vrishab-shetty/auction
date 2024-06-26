@@ -1,5 +1,7 @@
 package me.vrishab.auction.user;
 
+import lombok.Getter;
+import me.vrishab.auction.user.model.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -7,6 +9,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.stream.Stream;
 
+@Getter
 public class UserPrincipal implements UserDetails {
 
 
@@ -53,7 +56,4 @@ public class UserPrincipal implements UserDetails {
         return user.getEnabled();
     }
 
-    public User getUser() {
-        return user;
-    }
 }

@@ -3,14 +3,8 @@ package me.vrishab.auction.system.exception;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import me.vrishab.auction.auction.AuctionForbiddenUpdateException;
-import me.vrishab.auction.auction.AuctionNotInBidingPhaseException;
-import me.vrishab.auction.auction.InvalidBidAmountException;
-import me.vrishab.auction.auction.UnAuthorizedAuctionAccess;
 import me.vrishab.auction.security.AuthenticationRequiredException;
 import me.vrishab.auction.system.Result;
-import me.vrishab.auction.user.UserEmailAlreadyExistException;
-import me.vrishab.auction.user.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -28,7 +22,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @RestControllerAdvice
@@ -41,40 +38,21 @@ public class ExceptionHandlerAdvice {
         return new Result(false, ex.getMessage());
     }
 
-    // Users
-    @ExceptionHandler(UserNotFoundException.class)
-    public Result handleUsernameNotFoundException(UserNotFoundException ex) {
-        return new Result(false, ex.getMessage());
-    }
-
-    @ExceptionHandler(UserEmailAlreadyExistException.class)
+    @ExceptionHandler(ObjectBadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Result handleDuplicateEmailRequest(UserEmailAlreadyExistException ex) {
+    public Result handleObjectBadRequestException(ObjectBadRequestException ex) {
         return new Result(false, ex.getMessage());
     }
 
-    // Auctions
-    @ExceptionHandler(UnAuthorizedAuctionAccess.class)
+    @ExceptionHandler(ObjectUnauthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Result handleObjectUnauthorizedException(ObjectUnauthorizedException ex) {
+        return new Result(false, ex.getMessage());
+    }
+
+    @ExceptionHandler(ObjectForbiddenException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public Result handleUnauthorizedAuctionAccess(UnAuthorizedAuctionAccess ex) {
-        return new Result(false, ex.getMessage());
-    }
-
-    @ExceptionHandler(AuctionForbiddenUpdateException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public Result handleAuctionForbiddenUpdate(AuctionForbiddenUpdateException ex) {
-        return new Result(false, ex.getMessage());
-    }
-
-    @ExceptionHandler(AuctionNotInBidingPhaseException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public Result handleAuctionNotInBidingPhaseException(AuctionNotInBidingPhaseException ex) {
-        return new Result(false, ex.getMessage());
-    }
-
-    @ExceptionHandler(InvalidBidAmountException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Result handleInvalidBidAmountException(InvalidBidAmountException ex) {
+    public Result handleAuctionForbiddenUpdate(ObjectForbiddenException ex) {
         return new Result(false, ex.getMessage());
     }
 
@@ -138,6 +116,7 @@ public class ExceptionHandlerAdvice {
         return new Result(false, ex.getMessage());
     }
 
+    // HTTP Request Handlers
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleBadRequestBodyException(HttpMessageNotReadableException ex) {
@@ -156,7 +135,7 @@ public class ExceptionHandlerAdvice {
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public Result handleException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new Result(false, "A server error occurs:\n" + ex.getMessage(), Arrays.toString(ex.getStackTrace()));
+        return new Result(false, "A server error occurs:\n" + ex.getMessage());
     }
 
 

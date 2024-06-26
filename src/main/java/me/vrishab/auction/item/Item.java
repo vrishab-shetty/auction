@@ -5,9 +5,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import me.vrishab.auction.user.User;
 
-import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -16,7 +14,7 @@ import java.util.UUID;
 @Setter
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
-public class Item implements Serializable {
+public class Item {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -28,7 +26,12 @@ public class Item implements Serializable {
 
     private String location;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection
+    @CollectionTable(
+            name = "IMAGE",
+            joinColumns = @JoinColumn(name = "ITEM_ID")
+    )
+    @Column(name = "IMAGE_URL")
     private Set<String> imageUrls = new HashSet<>();
 
     private String legitimacyProof;

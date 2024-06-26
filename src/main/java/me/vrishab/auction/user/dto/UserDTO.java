@@ -1,6 +1,7 @@
 package me.vrishab.auction.user.dto;
 
 import lombok.NonNull;
+import me.vrishab.auction.user.model.Address;
 
 import java.util.UUID;
 
@@ -15,6 +16,8 @@ public record UserDTO(
         @NonNull
         String contact,
         @NonNull
-        Boolean enabled
+        Boolean enabled,
+        @NonNull
+        Address homeAddress
 ) {
 }

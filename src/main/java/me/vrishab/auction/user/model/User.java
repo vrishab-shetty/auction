@@ -1,11 +1,10 @@
-package me.vrishab.auction.user;
+package me.vrishab.auction.user.model;
 
 import jakarta.persistence.*;
 import lombok.*;
 import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.item.Item;
 
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,7 +16,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
 @AllArgsConstructor
 @Table(name = "\"USER\"")
-public class User implements Serializable {
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
@@ -35,15 +34,24 @@ public class User implements Serializable {
 
     private String contact;
 
+    private Address homeAddress;
+
+    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Set<BillingDetails> billingDetails = new HashSet<>();
+
     @ManyToMany
     @JoinTable(name = "wishlist",
             joinColumns = @JoinColumn(name = "userId"),
             inverseJoinColumns = @JoinColumn(name = "itemId"))
     @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private Set<Item> wishlist = new HashSet<>();
 
     @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "user")
     @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
     private Set<Auction> auctions = new HashSet<>();
 
     public Set<Item> getWishlist() {
@@ -67,8 +75,26 @@ public class User implements Serializable {
         auction.setUser(this);
     }
 
-    public void removeAuction(@NonNull Auction auction) {
-        auction.setUser(null);
-        this.auctions.remove(auction);
+    public String getHomeZipCode() {
+        return this.homeAddress.getZipcode();
+    }
+
+    public String getHomeStreet() {
+        return this.homeAddress.getStreet();
+    }
+
+    public String getHomeCity() {
+        return this.homeAddress.getCity();
+    }
+
+    public String getHomeCountry() { return this.homeAddress.getCountry(); }
+
+    public Set<BillingDetails> getBillingDetails() {
+        return Collections.unmodifiableSet(billingDetails);
+    }
+
+    public void addBillingDetail(BillingDetails billingDetail) {
+        billingDetails.add(billingDetail);
+        billingDetail.setUser(this);
     }
 }

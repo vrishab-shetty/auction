@@ -1,8 +1,8 @@
 package me.vrishab.auction.user.converter;
 
 import lombok.NonNull;
-import me.vrishab.auction.user.User;
 import me.vrishab.auction.user.dto.UserDTO;
+import me.vrishab.auction.user.model.User;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,8 @@ public class UserToUserDTOConverter implements Converter<User, UserDTO> {
                 source.getDescription(),
                 source.getEmail(),
                 source.getContact(),
-                source.getEnabled()
+                source.getEnabled(),
+                source.getHomeAddress()
         );
     }
 }

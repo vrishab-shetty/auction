@@ -2,8 +2,11 @@ package me.vrishab.auction.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.security.AuthService;
-import me.vrishab.auction.system.exception.ObjectNotFoundException;
+import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
+import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
 import me.vrishab.auction.user.dto.UserEditableDTO;
+import me.vrishab.auction.user.model.User;
+import me.vrishab.auction.TestData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,10 +20,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import static me.vrishab.auction.user.UserException.UserEmailAlreadyExistException;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
@@ -52,43 +55,12 @@ class UserControllerTest {
 
     @BeforeEach
     void setUp() {
-
-        users = new ArrayList<>();
-        /*
-        {
-            "data": {
-                "name": "Vicky",
-                "description": "A tool lover",
-                "enabled": true,
-                "email": "name@domain.tld",
-                "contact": "1234567890",
-                "wishlist": [
-                  "2a2a2de5-ecea-4f25-bd1a-99a01a0be135",
-                  "2a2a2de5-ecea-4f25-bd1a-99a01a0be134"
-                ],
-                "auctions": [
-                  "0180280f-50e5-44b5-a744-37361f60c611",
-                  "0180280f-50e5-44b5-a744-37361f60c612"
-                ]
-            }
-         */
-        for (int i = 0; i < 10; i++) {
-            User user = new User();
-            user.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa27" + i));
-            user.setName("Name " + i);
-            user.setPassword("password");
-            user.setDescription("Description " + i);
-            user.setEnabled(true);
-            user.setEmail("name" + i + "@domain.tld");
-            user.setContact("1234567890");
-            users.add(user);
-        }
-
+        this.users = TestData.generateUsers();
     }
 
     @AfterEach
     void tearDown() {
-
+        this.users.clear();
     }
 
     @Test
@@ -109,7 +81,7 @@ class UserControllerTest {
     void testFindUserByUsernameNotFound() throws Exception {
 
         // Given
-        given(service.findByUsername(Mockito.anyString())).willThrow(new UserNotFoundException("name3@domain.tld"));
+        given(service.findByUsername(Mockito.anyString())).willThrow(new UserNotFoundByUsernameException("name3@domain.tld"));
 
         // When and Then
         this.mockMvc.perform(get(baseUrl + "/users/name3@domain.tld").accept(MediaType.APPLICATION_JSON))
@@ -136,26 +108,23 @@ class UserControllerTest {
     void testAddUserSuccess() throws Exception {
 
         // Given
+        User user = this.users.get(1);
+
         UserEditableDTO userEditableDTO = new UserEditableDTO(
-                "Name",
-                "Password",
-                "Description",
-                "name@domain.tld",
-                "1234567890"
+                user.getName(),
+                user.getPassword(),
+                user.getDescription(),
+                user.getEmail(),
+                user.getContact(),
+                user.getHomeZipCode(),
+                user.getHomeStreet(),
+                user.getHomeCity(),
+                user.getHomeCountry()
         );
 
         String userJson = this.objectMapper.writeValueAsString(userEditableDTO);
 
-        User savedUser = new User();
-        savedUser.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
-        savedUser.setName("Name");
-        savedUser.setPassword("Password");
-        savedUser.setDescription("Description");
-        savedUser.setEmail("name@domain.tld");
-        savedUser.setContact("1234567890");
-        savedUser.setEnabled(true);
-
-        given(service.save(Mockito.any(User.class))).willReturn(savedUser);
+        given(service.save(Mockito.any(User.class))).willReturn(user);
 
         // When and then
         this.mockMvc.perform(post(baseUrl + "/users")
@@ -165,24 +134,33 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Add a user"))
                 .andExpect(jsonPath("$.data.id").value("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
-                .andExpect(jsonPath("$.data.username").value("name@domain.tld"));
+                .andExpect(jsonPath("$.data.username").value("name1@domain.tld"))
+                .andExpect(jsonPath("$.data.homeAddress.city").value("City 1"))
+                .andExpect(jsonPath("$.data.homeAddress.street").value("Street 1"))
+                .andExpect(jsonPath("$.data.homeAddress.country").value("Country 1"))
+                .andExpect(jsonPath("$.data.homeAddress.zipcode").value("02211"));
     }
 
     @Test
     void testAddUserUsernameAlreadyExist() throws Exception {
 
         // Given
+        User user = this.users.get(1);
         UserEditableDTO userEditableDTO = new UserEditableDTO(
-                "Name",
-                "Password",
-                "Description",
-                "name@domain.tld",
-                "1234567890"
+                user.getName(),
+                user.getPassword(),
+                user.getDescription(),
+                user.getEmail(),
+                user.getContact(),
+                user.getHomeZipCode(),
+                user.getHomeStreet(),
+                user.getHomeCity(),
+                user.getHomeCountry()
         );
 
         String userJson = this.objectMapper.writeValueAsString(userEditableDTO);
 
-        given(service.save(Mockito.any(User.class))).willThrow(new UserEmailAlreadyExistException("name@domain.tld"));
+        given(service.save(Mockito.any(User.class))).willThrow(new UserEmailAlreadyExistException("name1@domain.tld"));
 
         // When and then
         this.mockMvc.perform(post(baseUrl + "/users")
@@ -190,7 +168,7 @@ class UserControllerTest {
                         .content(userJson)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
-                .andExpect(jsonPath("$.message").value("The email name@domain.tld already exist"))
+                .andExpect(jsonPath("$.message").value("The email name1@domain.tld already exist"))
                 .andExpect(jsonPath("$.data").isEmpty());
     }
 
@@ -198,26 +176,22 @@ class UserControllerTest {
     void testUpdateUserSuccess() throws Exception {
 
         // Given
+        User user = this.users.get(1);
         UserEditableDTO userEditableDTO = new UserEditableDTO(
-                "New Name",
-                "Password",
-                "New Description",
-                "name@domain.tld",
-                "1234567890"
+                user.getName(),
+                user.getPassword(),
+                user.getDescription(),
+                user.getEmail(),
+                user.getContact(),
+                user.getHomeZipCode(),
+                user.getHomeStreet(),
+                user.getHomeCity(),
+                user.getHomeCountry()
         );
 
         String json = this.objectMapper.writeValueAsString(userEditableDTO);
 
-        User updatedUser = new User();
-        updatedUser.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
-        updatedUser.setName("New Name");
-        updatedUser.setPassword("Password");
-        updatedUser.setDescription("New Description");
-        updatedUser.setEmail("name@domain.tld");
-        updatedUser.setContact("1234567890");
-        updatedUser.setEnabled(false);
-
-        given(this.service.update(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), Mockito.any(User.class))).willReturn(updatedUser);
+        given(this.service.update(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), Mockito.any(User.class))).willReturn(user);
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         // When and then
 
@@ -228,25 +202,34 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Update a user"))
                 .andExpect(jsonPath("$.data.id").value("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
-                .andExpect(jsonPath("$.data.name").value("New Name"))
-                .andExpect(jsonPath("$.data.description").value("New Description"));
+                .andExpect(jsonPath("$.data.name").value("Name 1"))
+                .andExpect(jsonPath("$.data.description").value("Description 1"))
+                .andExpect(jsonPath("$.data.homeAddress.city").value("City 1"))
+                .andExpect(jsonPath("$.data.homeAddress.street").value("Street 1"))
+                .andExpect(jsonPath("$.data.homeAddress.country").value("Country 1"))
+                .andExpect(jsonPath("$.data.homeAddress.zipcode").value("02211"));
     }
 
     @Test
     void testUpdateUserNotFound() throws Exception {
+        User user = this.users.get(1);
         UserEditableDTO userEditableDTO = new UserEditableDTO(
-                "New Name",
-                "Password",
-                "New Description",
-                "name@domain.tld",
-                "1234567890"
+                user.getName(),
+                user.getPassword(),
+                user.getDescription(),
+                user.getEmail(),
+                user.getContact(),
+                user.getHomeZipCode(),
+                user.getHomeStreet(),
+                user.getHomeCity(),
+                user.getHomeCountry()
         );
 
         String json = this.objectMapper.writeValueAsString(userEditableDTO);
 
 
         given(this.service.update(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), Mockito.any(User.class)))
-                .willThrow(new ObjectNotFoundException("user", UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271")));
+                .willThrow(new UserNotFoundByIdException(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271")));
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         // When and then
 
@@ -278,7 +261,7 @@ class UserControllerTest {
     void testDeleteUserNotFound() throws Exception {
 
         // Given
-        doThrow(new ObjectNotFoundException("user", UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).when(this.service).delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        doThrow(new UserNotFoundByIdException(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).when(this.service).delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         // When and then
 
