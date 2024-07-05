@@ -1,9 +1,9 @@
 package me.vrishab.auction.security;
 
-import me.vrishab.auction.user.model.User;
 import me.vrishab.auction.user.UserPrincipal;
 import me.vrishab.auction.user.converter.UserToUserDTOConverter;
 import me.vrishab.auction.user.dto.UserDTO;
+import me.vrishab.auction.user.model.User;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
