@@ -52,8 +52,7 @@ public class AuctionService {
         User user = userRepo.findById(userUUID)
                 .orElseThrow(() -> new UserNotFoundByIdException(userUUID));
 
-        user.addAuction(auction);
-        auction.initializeItems();
+        auction.setUser(user);
 
         return auctionRepo.save(auction);
     }
@@ -70,11 +69,9 @@ public class AuctionService {
         oldAuction.setName(update.getName());
         oldAuction.setStartTime(update.getStartTime());
         oldAuction.setEndTime(update.getEndTime());
-        oldAuction.setInitialPrice(update.getInitialPrice());
         Set<Item> updated = getUpdatedItems(oldAuction, update);
         oldAuction.removeAllItems();
         oldAuction.addAllItems(updated);
-        oldAuction.initializeItems();
 
         return this.auctionRepo.save(oldAuction);
     }
@@ -90,26 +87,32 @@ public class AuctionService {
         this.auctionRepo.deleteById(auctionUUID);
     }
 
-    public Auction bid(String userId, String auctionId, BigDecimal bidAmount) {
+    public Item bid(String userId, String auctionId, String itemId, BigDecimal bidAmount) {
 
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction auction = auctionRepo.findById(auctionUUID)
                 .orElseThrow(() -> new AuctionNotFoundByIdException(auctionUUID));
 
+        UUID itemUUID = UUID.fromString(itemId);
+        Item item = itemRepo.findById(itemUUID)
+                .orElseThrow(() -> new ItemNotFoundByIdException(itemUUID));
+        if (!auction.getItems().contains(item)) {
+            throw new AuctionItemNotFoundException(auctionUUID, item.getId());
+        }
+
         User user = unauthorizedUser(UUID.fromString(userId), auction);
         checkAuctionInBidingPhase(auction);
-        checkAuctionBidAmount(auction, bidAmount);
+        checkAuctionBidAmount(item, bidAmount);
 
-        auction.setCurrentBid(bidAmount);
-        auction.setBuyer(user.getEmail());
+        item.setCurrentBid(bidAmount);
+        item.setBuyer(user);
 
-        return this.auctionRepo.save(auction);
+        return this.itemRepo.save(item);
     }
+    private void checkAuctionBidAmount(Item item, BigDecimal bidAmount) {
 
-    private void checkAuctionBidAmount(Auction auction, BigDecimal bidAmount) {
-
-        BigDecimal currentPrice = Optional.ofNullable(auction.getCurrentBid())
-                .orElse(auction.getInitialPrice());
+        BigDecimal currentPrice = Optional.ofNullable(item.getCurrentBid())
+                .orElse(item.getInitialPrice());
 
         if (bidAmount.compareTo(currentPrice) < 0) throw new InvalidBidAmountException();
     }
@@ -143,6 +146,7 @@ public class AuctionService {
             item.setLocation(auctionItem.getLocation());
             item.setExtras(auctionItem.getExtras());
             item.setLegitimacyProof(auctionItem.getLegitimacyProof());
+            item.setInitialPrice(auctionItem.getInitialPrice());
             item.setImageUrls(auctionItem.getImageUrls());
             updatedItems.add(item);
         }

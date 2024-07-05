@@ -27,10 +27,6 @@ public record AuctionCreationDTO(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         Instant endTime,
 
-        @NotNull(message = "initial price is required")
-        @PositiveOrZero(message = "Please provide a valid price")
-        BigDecimal initialPrice,
-
         @NotNull(message = "At least one item is required")
         @Size(
                 min = 1,

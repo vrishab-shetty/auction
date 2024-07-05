@@ -1,7 +1,13 @@
 package me.vrishab.auction.item;
 
+import me.vrishab.auction.TestData;
 import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.auction.AuctionRepository;
+import me.vrishab.auction.auction.AuctionService;
+import me.vrishab.auction.user.UserRepository;
+import me.vrishab.auction.user.UserService;
+import me.vrishab.auction.user.model.User;
+import me.vrishab.auction.utils.Data;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.TestInstance;
@@ -9,11 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.math.BigDecimal;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -21,54 +24,39 @@ import java.util.Set;
 abstract class SpringDataJpaApplicationTests {
 
     @Autowired
+    private AuctionService auctionService;
+
+    @Autowired
     private AuctionRepository auctionRepo;
 
+    @Autowired
+    private UserService userService;
 
-    /*
-        Uncomment the setUp and tearDown if not using CommandLineRunner to initialize the DB
-        Otherwise the integration and authorized endpoint test will not pass
-    */
+    @Autowired
+    private UserRepository userRepo;
 
     @BeforeAll
     void setUp() {
-        Auction auction = new Auction();
+        User user = Data.generateUser();
 
-        auction.setName("auction");
+        userService.save(user);
+
+        Set<Item> items = new HashSet<>(Data.generateItems(10));
+        Auction auction = Data.generateAuction(items);
+
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(new Date());
-        calendar.add(Calendar.HOUR_OF_DAY, 1);
-        auction.setStartTime(calendar.getTime().toInstant());
-        calendar.add(Calendar.HOUR_OF_DAY, 1);
-        auction.setEndTime(calendar.getTime().toInstant());
-        auction.setInitialPrice(BigDecimal.valueOf(100.00));
-        auction.setBuyer("vr@domain.tld");
-        auction.setItems(generateItems());
 
-        auctionRepo.save(auction);
+        auction.setStartTime(calendar.getTime().toInstant().plus(1, ChronoUnit.HOURS));
+        auction.setEndTime(calendar.getTime().toInstant().plus(2, ChronoUnit.HOURS));
+
+        auctionService.add(user.getId().toString(), auction);
     }
 
-    private static Set<Item> generateItems() {
-        Set<Item> items = new HashSet<>();
-
-        for (int i = 0; i < 10; i++) {
-            Item item = new Item();
-            item.setName("Item " + i + (i % 2 == 0 ? " (special)" : ""));
-            item.setDescription("Description " + i);
-            item.setLocation(i % 3 == 1 ? "MA" : "CA");
-            item.setImageUrls(Set.of("<images>"));
-            item.setExtras(null);
-            item.setLegitimacyProof("Proof");
-            item.setSeller("vr@domain.tld");
-            items.add(item);
-        }
-
-//        items.forEach(System.out::println);
-
-        return items;
-    }
 
     @AfterAll
     void tearDown() {
         auctionRepo.deleteAll();
+        userRepo.deleteAll();
     }
 }

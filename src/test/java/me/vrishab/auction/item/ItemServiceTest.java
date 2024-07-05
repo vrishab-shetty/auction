@@ -3,6 +3,7 @@ package me.vrishab.auction.item;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.TestData;
+import me.vrishab.auction.utils.Data;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,7 @@ class ItemServiceTest {
 
     @BeforeEach
     void setUp() {
-        this.items = TestData.generateItems();
+        this.items = TestData.generateItems(TestData.generateUser(), null);
     }
 
     @AfterEach
@@ -68,8 +69,7 @@ class ItemServiceTest {
                 () -> assertThat(returnedItem.getImageUrls()).isEqualTo(Set.of("<images>")),
                 () -> assertThat(returnedItem.getExtras()).isEqualTo(null),
                 () -> assertThat(returnedItem.getLegitimacyProof()).isEqualTo("Proof"),
-                () -> assertThat(returnedItem.getAuctionId()).isEqualTo(UUID.fromString("c4838b19-9c96-45e0-abd7-c77d91af22b1")),
-                () -> assertThat(returnedItem.getSeller()).isEqualTo("vr@domain.tld")
+                () -> assertThat(returnedItem.getSeller()).isEqualTo("name@domain.tld")
         );
 
 

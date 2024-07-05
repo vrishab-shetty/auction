@@ -1,6 +1,7 @@
 package me.vrishab.auction.user.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -14,12 +15,13 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
 public abstract class BillingDetails {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @org.hibernate.annotations.UuidGenerator
     private UUID id;
 
-    @ManyToOne
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private User user;
 
+    @NotBlank(message = "owner name is required")
     @Column(nullable = false)
     private String owner;
 

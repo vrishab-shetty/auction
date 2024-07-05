@@ -32,9 +32,7 @@ public class AuctionCreationDTOToAuctionConverter implements Converter<AuctionCr
         auction.setName(source.name());
         auction.setStartTime(source.startTime());
         auction.setEndTime(source.endTime());
-        auction.setBuyer(null);
-        auction.setInitialPrice(source.initialPrice());
-        auction.setItems(items);
+        auction.addAllItems(items);
         return auction;
     }
 

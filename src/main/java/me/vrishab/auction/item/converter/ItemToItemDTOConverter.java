@@ -1,16 +1,15 @@
 package me.vrishab.auction.item.converter;
 
-import lombok.NonNull;
 import me.vrishab.auction.item.Item;
-import me.vrishab.auction.item.dto.AuctionItemDTO;
+import me.vrishab.auction.item.dto.ItemDTO;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class ItemToAuctionItemDTO implements Converter<Item, AuctionItemDTO> {
+public class ItemToItemDTOConverter implements Converter<Item, ItemDTO> {
     @Override
-    public @NonNull AuctionItemDTO convert(Item source) {
-        return new AuctionItemDTO(
+    public ItemDTO convert(Item source) {
+        return new ItemDTO(
                 source.getId(),
                 source.getName(),
                 source.getDescription(),
@@ -20,7 +19,9 @@ public class ItemToAuctionItemDTO implements Converter<Item, AuctionItemDTO> {
                 source.getImageUrls(),
                 source.getLegitimacyProof(),
                 source.getExtras(),
-                source.getBuyerEmail()
+                source.getBuyerEmail(),
+                source.getSeller(),
+                source.getPopularity()
         );
     }
 }

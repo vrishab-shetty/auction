@@ -18,6 +18,7 @@ public class ItemCreationDTOToItemConverter implements Converter<ItemCreationDTO
         item.setLocation(source.location());
         item.setImageUrls(source.imageUrls());
         item.setLegitimacyProof(source.legitimacyProof());
+        item.setInitialPrice(source.initialPrice());
         item.setExtras(source.extras());
 
         return item;

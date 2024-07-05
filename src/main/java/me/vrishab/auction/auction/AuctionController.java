@@ -8,6 +8,9 @@ import me.vrishab.auction.auction.dto.AuctionCreationDTO;
 import me.vrishab.auction.auction.dto.AuctionDTO;
 import me.vrishab.auction.auction.dto.AuctionUpdateDTO;
 import me.vrishab.auction.auction.dto.BidRequestDTO;
+import me.vrishab.auction.item.Item;
+import me.vrishab.auction.item.converter.ItemToAuctionItemDTO;
+import me.vrishab.auction.item.dto.AuctionItemDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.Result;
@@ -29,13 +32,15 @@ public class AuctionController {
     private final AuctionToAuctionDTOConverter auctionToAuctionDTOConverter;
 
     private final AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter;
+    private final ItemToAuctionItemDTO itemToAuctionItemDTO;
 
-    public AuctionController(AuctionService auctionService, AuthService authService, AuctionCreationDTOToAuctionConverter auctionCreationDTOToAuctionConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter) {
+    public AuctionController(AuctionService auctionService, AuthService authService, AuctionCreationDTOToAuctionConverter auctionCreationDTOToAuctionConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter, ItemToAuctionItemDTO itemToAuctionItemDTO) {
         this.auctionService = auctionService;
         this.authService = authService;
         this.auctionCreationDTOToAuctionConverter = auctionCreationDTOToAuctionConverter;
         this.auctionToAuctionDTOConverter = auctionToAuctionDTOConverter;
         this.auctionUpdateDTOToAuctionConverter = auctionUpdateDTOToAuctionConverter;
+        this.itemToAuctionItemDTO = itemToAuctionItemDTO;
     }
 
     @GetMapping("/auctions/{auctionId}")
@@ -98,20 +103,22 @@ public class AuctionController {
         return new Result(true, "Delete an Auction");
     }
 
-    @PutMapping("/auctions/{auctionId}/bid")
+    @PutMapping("/auctions/{auctionId}/items/{itemId}/bid")
     public Result placeBid(
             Authentication auth,
             @PathVariable
             String auctionId,
+            @PathVariable String itemId,
             @RequestBody
             @Valid
             BidRequestDTO bidRequest
     ) {
         String userId = authService.getUserInfo(auth);
-        Auction auction = this.auctionService.bid(userId, auctionId, bidRequest.bidAmount());
+        Item auctionItem = this.auctionService.bid(userId, auctionId, itemId, bidRequest.bidAmount());
 
-        AuctionDTO auctionDTO = this.auctionToAuctionDTOConverter.convert(auction);
-        return new Result(true, "Place a Bid", auctionDTO);
+        AuctionItemDTO itemDTO  = this.itemToAuctionItemDTO.convert(auctionItem);
+
+        return new Result(true, "Place a Bid", itemDTO);
     }
 
 }

@@ -30,10 +30,7 @@ public class AuctionToAuctionDTOConverter implements Converter<Auction, AuctionD
                 source.getName(),
                 source.getStartTime(),
                 source.getEndTime(),
-                source.getInitialPrice(),
-                source.getCurrentBid(),
                 itemDTOs,
-                source.getBuyer(),
                 source.getOwnerEmail()
         );
     }
