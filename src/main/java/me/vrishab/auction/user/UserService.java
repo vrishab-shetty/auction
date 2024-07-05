@@ -2,6 +2,7 @@ package me.vrishab.auction.user;
 
 import jakarta.transaction.Transactional;
 import me.vrishab.auction.auction.Auction;
+import me.vrishab.auction.auction.AuctionRepository;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemRepository;
@@ -19,7 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -28,16 +28,22 @@ public class UserService implements UserDetailsService {
 
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
-    private final PasswordEncoder passwordEncoder;
-    private final CreditCardRepository creditCardRepository;
-    private final BankAccountRepository bankAccountRepository;
+    private final AuctionRepository auctionRepo;
 
-    public UserService(UserRepository userRepo, ItemRepository itemRepo, PasswordEncoder passwordEncoder, CreditCardRepository creditCardRepository, BankAccountRepository bankAccountRepository) {
+    private final PasswordEncoder passwordEncoder;
+
+    private final BillingDetailsRepository<BillingDetails, UUID> billingDetailsRepo;
+    private final CreditCardRepository creditCardRepo;
+    private final BankAccountRepository bankAccountRepo;
+
+    public UserService(UserRepository userRepo, ItemRepository itemRepo, AuctionRepository auctionRepo, PasswordEncoder passwordEncoder, BillingDetailsRepository<BillingDetails, UUID> billingDetailsRepo, CreditCardRepository creditCardRepo, BankAccountRepository bankAccountRepo) {
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
+        this.auctionRepo = auctionRepo;
         this.passwordEncoder = passwordEncoder;
-        this.creditCardRepository = creditCardRepository;
-        this.bankAccountRepository = bankAccountRepository;
+        this.billingDetailsRepo = billingDetailsRepo;
+        this.creditCardRepo = creditCardRepo;
+        this.bankAccountRepo = bankAccountRepo;
     }
 
     public User findByUsername(String username) {
@@ -78,9 +84,15 @@ public class UserService implements UserDetailsService {
     }
 
     public void delete(String userId) {
-        UUID id = UUID.fromString(userId);
-        this.userRepo.findById(id).orElseThrow(() -> new UserNotFoundByIdException(id));
-        this.userRepo.deleteById(id);
+        User user = getUser(userId);
+
+        UUID userUUID = UUID.fromString(userId);
+//         Remove Wishlist link first then auction
+        this.userRepo.removeAllItemFromWishlist(userUUID);
+        this.billingDetailsRepo.deleteByUser(user);
+        this.auctionRepo.deleteByUser(user);
+
+        this.userRepo.deleteById(UUID.fromString(userId));
     }
 
     public List<Item> wishlist(String userId) {
@@ -92,20 +104,27 @@ public class UserService implements UserDetailsService {
 
     public List<Item> addItem(String userId, String itemId) {
         User user = getUser(userId);
+
         UUID itemUUID = UUID.fromString(itemId);
+        UUID userUUID = UUID.fromString(userId);
         Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ItemNotFoundByIdException(itemUUID));
         user.addFavouriteItem(item);
-        return this.userRepo.save(user).getWishlist()
-                .stream().toList();
+
+        this.userRepo.addItemToWishlist(userUUID, itemUUID);
+        return user.getWishlist().stream().toList();
     }
 
     public List<Item> removeItem(String userId, String itemId) {
         User user = getUser(userId);
+
         UUID itemUUID = UUID.fromString(itemId);
+        UUID userUUID = UUID.fromString(userId);
         Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ItemNotFoundByIdException(itemUUID));
         user.removeFavouriteItem(item);
-        return this.userRepo.save(user).getWishlist()
-                .stream().toList();
+
+        this.userRepo.removeItemFromWishlist(userUUID, itemUUID);
+
+        return user.getWishlist().stream().toList();
     }
 
     private User getUser(String userId) {
@@ -116,25 +135,26 @@ public class UserService implements UserDetailsService {
     public List<Auction> auctions(String userId) {
         User user = getUser(userId);
 
-        return user.getAuctions().stream().toList();
+        return this.auctionRepo.findByUser(user);
     }
 
     public void addBillingDetails(String userId, BillingDetails billingDetails) {
         User user = getUser(userId);
-        user.addBillingDetail(billingDetails);
+        billingDetails.setUser(user);
 
         if (billingDetails instanceof CreditCard) {
-            creditCardRepository.save((CreditCard) billingDetails);
+            creditCardRepo.save((CreditCard) billingDetails);
         } else if (billingDetails instanceof BankAccount) {
-            bankAccountRepository.save((BankAccount) billingDetails);
+            bankAccountRepo.save((BankAccount) billingDetails);
         } else {
             throw new IllegalArgumentException("Unknown billing details type");
         }
     }
 
-    public Set<BillingDetails> getBillingDetails(String userId) {
+    public List<BillingDetails> getBillingDetails(String userId) {
         User user = getUser(userId);
-        return user.getBillingDetails();
+
+        return this.billingDetailsRepo.findByUser(user);
     }
 
     @Override

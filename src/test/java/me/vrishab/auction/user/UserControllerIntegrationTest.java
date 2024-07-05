@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.user.dto.UserEditableDTO;
 import me.vrishab.auction.user.model.CreditCard;
 import me.vrishab.auction.TestData;
+import me.vrishab.auction.utils.Data;
 import org.hamcrest.Matchers;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
@@ -189,7 +190,7 @@ public class UserControllerIntegrationTest {
     @DisplayName("Check addBillingDetails operation")
     void testAddBillingDetails() throws Exception {
 
-        CreditCard creditCard = TestData.getCreditCard(0);
+        CreditCard creditCard = Data.getCreditCard(0);
 
         String jsonString = this.objectMapper.writeValueAsString(creditCard);
 

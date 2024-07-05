@@ -3,6 +3,7 @@ package me.vrishab.auction.item;
 import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.TestData;
+import me.vrishab.auction.utils.Data;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,7 +43,7 @@ class ItemControllerTest {
     @BeforeEach
     void setUp() {
 
-        this.items = TestData.generateItems();
+        this.items = TestData.generateItems(Data.generateUser(), null);
     }
 
     @AfterEach

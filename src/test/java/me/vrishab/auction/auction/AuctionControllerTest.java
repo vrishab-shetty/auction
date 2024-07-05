@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.auction.dto.AuctionCreationDTO;
 import me.vrishab.auction.auction.dto.AuctionUpdateDTO;
 import me.vrishab.auction.auction.dto.BidRequestDTO;
+import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.dto.AuctionItemUpdateDTO;
 import me.vrishab.auction.item.dto.ItemCreationDTO;
 import me.vrishab.auction.security.AuthService;
@@ -24,12 +25,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
+import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
 
-import static me.vrishab.auction.auction.AuctionException.*;
 import static me.vrishab.auction.TestData.generateAuctions;
 import static me.vrishab.auction.TestData.generateUsers;
+import static me.vrishab.auction.auction.AuctionException.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
@@ -55,6 +57,8 @@ class AuctionControllerTest {
 
     private User user;
 
+    private User buyer;
+
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -64,9 +68,11 @@ class AuctionControllerTest {
     @BeforeEach
     void setUp() {
 
-        user = generateUsers().iterator().next();
+        Iterator<User> users = generateUsers().iterator();
+        this.user = users.next();
+        this.buyer = users.next();
 
-        this.auctions = generateAuctions(user);
+        this.auctions = generateAuctions(this.user, this.buyer);
     }
 
     @AfterEach
@@ -129,11 +135,11 @@ class AuctionControllerTest {
                 newAuction.getName(),
                 newAuction.getStartTime(),
                 newAuction.getEndTime(),
-                newAuction.getInitialPrice(),
                 newAuction.getItems().stream().map(item -> new ItemCreationDTO(
                         item.getName(),
                         item.getDescription(),
                         item.getLocation(),
+                        item.getInitialPrice(),
                         item.getImageUrls(),
                         item.getLegitimacyProof(),
                         item.getExtras()
@@ -155,7 +161,7 @@ class AuctionControllerTest {
                 .andExpect(jsonPath("$.message").value("Add an Auction"))
                 .andExpect(jsonPath("$.data.name").value("Auction 0"))
                 .andExpect(jsonPath("$.data.items", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$.data.user").value("name0@domain.tld"));
+                .andExpect(jsonPath("$.data.user").value(this.user.getEmail()));
     }
 
     @Test
@@ -167,12 +173,12 @@ class AuctionControllerTest {
                 update.getName(),
                 update.getStartTime(),
                 update.getEndTime(),
-                update.getInitialPrice(),
                 update.getItems().stream().map(item -> new AuctionItemUpdateDTO(
                         item.getId().toString(),
                         item.getName(),
                         item.getDescription(),
                         item.getLocation(),
+                        item.getInitialPrice(),
                         item.getImageUrls(),
                         item.getLegitimacyProof(),
                         item.getExtras()
@@ -194,7 +200,7 @@ class AuctionControllerTest {
                 .andExpect(jsonPath("$.message").value("Update an Auction"))
                 .andExpect(jsonPath("$.data.name").value("Auction 0"))
                 .andExpect(jsonPath("$.data.items", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$.data.user").value("name0@domain.tld"));
+                .andExpect(jsonPath("$.data.user").value(this.user.getEmail()));
     }
 
     @Test
@@ -206,11 +212,11 @@ class AuctionControllerTest {
                 update.getName(),
                 update.getStartTime(),
                 update.getEndTime(),
-                update.getInitialPrice(),
                 update.getItems().stream().map(item -> new ItemCreationDTO(
                         item.getName(),
                         item.getDescription(),
                         item.getLocation(),
+                        item.getInitialPrice(),
                         item.getImageUrls(),
                         item.getLegitimacyProof(),
                         item.getExtras()
@@ -242,11 +248,11 @@ class AuctionControllerTest {
                 update.getName(),
                 update.getStartTime(),
                 update.getEndTime(),
-                update.getInitialPrice(),
                 update.getItems().stream().map(item -> new ItemCreationDTO(
                         item.getName(),
                         item.getDescription(),
                         item.getLocation(),
+                        item.getInitialPrice(),
                         item.getImageUrls(),
                         item.getLegitimacyProof(),
                         item.getExtras()
@@ -308,40 +314,52 @@ class AuctionControllerTest {
 
     @Test
     void testPlaceBidSuccess() throws Exception {
-        //
+
         Auction auction = this.auctions.get(1);
+
+        BigDecimal bidAmount = BigDecimal.valueOf(150.0);
+
+        Item item = auction.getItems().iterator().next();
+        item.setCurrentBid(bidAmount);
+
+        String itemId = item.getId().toString();
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+
         given(this.auctionService.bid(
                 eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"),
                 eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
-                eq(BigDecimal.valueOf(150.0)))
-        ).willReturn(auction);
+                eq(item.getId().toString()),
+                eq(bidAmount))
+        ).willReturn(item);
 
         BidRequestDTO bidRequestDTO = new BidRequestDTO(
-                BigDecimal.valueOf(150.0)
+                bidAmount
         );
 
         String json = this.objectMapper.writeValueAsString(bidRequestDTO);
-        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1/bid")
+        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1/items/" + itemId + "/bid")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Place a Bid"))
                 .andExpect(jsonPath("$.data.currentBid").value("150.0"))
-                .andExpect(jsonPath("$.data.buyer").value("name1@domain.tld"));
+                .andExpect(jsonPath("$.data.buyer").value(this.buyer.getEmail()));
 
 
     }
 
     @Test
     void testPlaceBidNotInBidingPhase() throws Exception {
-        //
+
         Auction auction = this.auctions.get(1);
+        Item item = auction.getItems().iterator().next();
+        String itemId = item.getId().toString();
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
         given(this.auctionService.bid(
                 eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"),
                 eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
+                eq(itemId),
                 eq(BigDecimal.valueOf(150.0)))
         ).willThrow(
                 new AuctionForbiddenBidingPhaseException(auction.getId())
@@ -352,7 +370,7 @@ class AuctionControllerTest {
         );
 
         String json = this.objectMapper.writeValueAsString(bidRequestDTO);
-        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1/bid")
+        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1/items/" + itemId + "/bid")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .accept(MediaType.APPLICATION_JSON))
@@ -365,22 +383,22 @@ class AuctionControllerTest {
 
     @Test
     void testPlaceBidInvalidBidAmount() throws Exception {
-        //
+
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        BigDecimal bidAmount = BigDecimal.valueOf(50.0);
         given(this.auctionService.bid(
                 eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"),
                 eq("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"),
-                eq(BigDecimal.valueOf(50.0)))
+                eq("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"),
+                eq(bidAmount))
         ).willThrow(
                 new InvalidBidAmountException()
         );
 
-        BidRequestDTO bidRequestDTO = new BidRequestDTO(
-                BigDecimal.valueOf(50.0)
-        );
+        BidRequestDTO bidRequestDTO = new BidRequestDTO(bidAmount);
 
         String json = this.objectMapper.writeValueAsString(bidRequestDTO);
-        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1/bid")
+        this.mockMvc.perform(put(baseUrl + "/auctions/a6c9417c-d01a-40e9-a22d-7621fd31a8c1/items/e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1/bid")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json)
                         .accept(MediaType.APPLICATION_JSON))

@@ -28,7 +28,7 @@ public class BankAccount extends BillingDetails {
     private String bankname;
 
     @Column(nullable = false)
-    @Pattern(regexp = "^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$")
+    @Pattern(regexp = "^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$", message = "Please provide valid swift code")
     @NotBlank(message = "swift is required")
     private String swift;
 

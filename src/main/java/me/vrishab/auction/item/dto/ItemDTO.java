@@ -1,14 +1,12 @@
 package me.vrishab.auction.item.dto;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.NonNull;
 
 import java.math.BigDecimal;
 import java.util.Set;
 import java.util.UUID;
 
-public record AuctionItemDTO(
+public record ItemDTO(
         @NonNull
         UUID id,
 
@@ -32,6 +30,11 @@ public record AuctionItemDTO(
 
         String extras,
 
-        String buyer
+        String buyer,
+
+        String seller,
+
+        Long popularity
 ) {
+
 }

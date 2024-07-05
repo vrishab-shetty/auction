@@ -1,8 +1,11 @@
 package me.vrishab.auction.item.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
 public record AuctionItemUpdateDTO(
@@ -24,6 +27,10 @@ public record AuctionItemUpdateDTO(
 
         @NotBlank(message = "location is required")
         String location,
+
+        @NotNull(message = "initial price is required")
+        @PositiveOrZero(message = "Please provide a valid price")
+        BigDecimal initialPrice,
 
         Set<String> imageUrls,
 

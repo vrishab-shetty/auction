@@ -1,8 +1,10 @@
 package me.vrishab.auction.user;
 
+import me.vrishab.auction.auction.AuctionRepository;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
 import me.vrishab.auction.user.model.Address;
+import me.vrishab.auction.user.model.BillingDetails;
 import me.vrishab.auction.user.model.USZipcode;
 import me.vrishab.auction.user.model.User;
 import me.vrishab.auction.TestData;
@@ -36,6 +38,12 @@ class UserServiceTest {
 
     @Mock
     PasswordEncoder encoder;
+
+    @Mock
+    private BillingDetailsRepository<BillingDetails, UUID> billingRepo;
+
+    @Mock
+    private AuctionRepository auctionRepo;
 
     @InjectMocks
     UserService service;
@@ -197,6 +205,8 @@ class UserServiceTest {
 
         given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(user));
         doNothing().when(repository).deleteById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        doNothing().when(billingRepo).deleteByUser(Mockito.any(User.class));
+        doNothing().when(auctionRepo).deleteByUser(Mockito.any(User.class));
 
         // When
         service.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");

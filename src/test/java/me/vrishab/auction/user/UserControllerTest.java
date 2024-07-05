@@ -202,7 +202,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Update a user"))
                 .andExpect(jsonPath("$.data.id").value("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
-                .andExpect(jsonPath("$.data.name").value("Name 1"))
+                .andExpect(jsonPath("$.data.name").value("User 1"))
                 .andExpect(jsonPath("$.data.description").value("Description 1"))
                 .andExpect(jsonPath("$.data.homeAddress.city").value("City 1"))
                 .andExpect(jsonPath("$.data.homeAddress.street").value("Street 1"))

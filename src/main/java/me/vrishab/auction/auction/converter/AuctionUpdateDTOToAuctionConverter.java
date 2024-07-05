@@ -33,9 +33,7 @@ public class AuctionUpdateDTOToAuctionConverter implements Converter<AuctionUpda
         auction.setName(source.name());
         auction.setStartTime(source.startTime());
         auction.setEndTime(source.endTime());
-        auction.setBuyer(null);
-        auction.setInitialPrice(source.initialPrice());
-        auction.setItems(items);
+        auction.addAllItems(items);
 
         return auction;
     }

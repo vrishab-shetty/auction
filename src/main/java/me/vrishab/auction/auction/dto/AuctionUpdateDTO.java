@@ -28,13 +28,6 @@ public record AuctionUpdateDTO(
         @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
         Instant endTime,
 
-        @NotNull(message = "initial price is required")
-        @PositiveOrZero(message = "Please provide a valid price")
-        BigDecimal initialPrice,
-
         @Valid List<AuctionItemUpdateDTO> items
 ) {
-    public List<AuctionItemUpdateDTO> items() {
-        return items != null ? items : Collections.emptyList();
-    }
 }

@@ -2,8 +2,8 @@ package me.vrishab.auction.user.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.item.Item;
+import me.vrishab.auction.utils.Constants;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -17,8 +17,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @Table(name = "\"USER\"")
 public class User {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
+    @org.hibernate.annotations.UuidGenerator
     private UUID id;
 
     private String name;
@@ -36,43 +37,23 @@ public class User {
 
     private Address homeAddress;
 
-    @OneToMany(mappedBy = "user",cascade = CascadeType.ALL)
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    private Set<BillingDetails> billingDetails = new HashSet<>();
-
-    @ManyToMany
-    @JoinTable(name = "wishlist",
-            joinColumns = @JoinColumn(name = "userId"),
-            inverseJoinColumns = @JoinColumn(name = "itemId"))
+    @ManyToMany(mappedBy = "likedBy")
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
     private Set<Item> wishlist = new HashSet<>();
-
-    @OneToMany(cascade = {CascadeType.ALL}, mappedBy = "user")
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    private Set<Auction> auctions = new HashSet<>();
 
     public Set<Item> getWishlist() {
         return Collections.unmodifiableSet(this.wishlist);
     }
 
-    public Set<Auction> getAuctions() {
-        return Collections.unmodifiableSet(this.auctions);
-    }
-
     public void addFavouriteItem(@NonNull Item item) {
         this.wishlist.add(item);
+        item.addLikedUser(this);
     }
 
     public void removeFavouriteItem(@NonNull Item item) {
         this.wishlist.remove(item);
-    }
-
-    public void addAuction(@NonNull Auction auction) {
-        this.auctions.add(auction);
-        auction.setUser(this);
+        item.removeLikedUser(this);
     }
 
     public String getHomeZipCode() {
@@ -87,14 +68,8 @@ public class User {
         return this.homeAddress.getCity();
     }
 
-    public String getHomeCountry() { return this.homeAddress.getCountry(); }
-
-    public Set<BillingDetails> getBillingDetails() {
-        return Collections.unmodifiableSet(billingDetails);
+    public String getHomeCountry() {
+        return this.homeAddress.getCountry();
     }
 
-    public void addBillingDetail(BillingDetails billingDetail) {
-        billingDetails.add(billingDetail);
-        billingDetail.setUser(this);
-    }
 }
