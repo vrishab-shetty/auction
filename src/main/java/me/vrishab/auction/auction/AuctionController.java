@@ -116,7 +116,7 @@ public class AuctionController {
         String userId = authService.getUserInfo(auth);
         Item auctionItem = this.auctionService.bid(userId, auctionId, itemId, bidRequest.bidAmount());
 
-        AuctionItemDTO itemDTO  = this.itemToAuctionItemDTO.convert(auctionItem);
+        AuctionItemDTO itemDTO = this.itemToAuctionItemDTO.convert(auctionItem);
 
         return new Result(true, "Place a Bid", itemDTO);
     }

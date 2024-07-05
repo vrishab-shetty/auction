@@ -3,7 +3,6 @@ package me.vrishab.auction.user.model;
 import jakarta.persistence.*;
 import lombok.*;
 import me.vrishab.auction.item.Item;
-import me.vrishab.auction.utils.Constants;
 
 import java.util.Collections;
 import java.util.HashSet;

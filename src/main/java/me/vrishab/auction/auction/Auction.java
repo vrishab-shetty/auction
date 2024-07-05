@@ -59,7 +59,7 @@ public class Auction {
         this.items.addAll(items);
         this.items.forEach(item -> {
             item.setAuction(this);
-            if(user != null) item.setSeller(user.getEmail());
+            if (user != null) item.setSeller(user.getEmail());
         });
     }
 

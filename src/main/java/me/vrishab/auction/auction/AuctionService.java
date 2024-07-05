@@ -6,9 +6,9 @@ import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
-import me.vrishab.auction.user.model.User;
 import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserRepository;
+import me.vrishab.auction.user.model.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -109,6 +109,7 @@ public class AuctionService {
 
         return this.itemRepo.save(item);
     }
+
     private void checkAuctionBidAmount(Item item, BigDecimal bidAmount) {
 
         BigDecimal currentPrice = Optional.ofNullable(item.getCurrentBid())

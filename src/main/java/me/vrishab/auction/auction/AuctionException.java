@@ -19,7 +19,7 @@ public class AuctionException {
 
     public static class AuctionItemNotFoundException extends ObjectNotFoundException {
         public AuctionItemNotFoundException(UUID auctionId, UUID itemId) {
-            super("The Item with Id "+itemId+" is not in the auction with Id "+auctionId);
+            super("The Item with Id " + itemId + " is not in the auction with Id " + auctionId);
         }
     }
 

@@ -70,7 +70,7 @@ public class Item {
     private User buyer;
 
     public String getBuyerEmail() {
-        if(buyer == null) return null;
+        if (buyer == null) return null;
         return this.buyer.getEmail();
     }
 
