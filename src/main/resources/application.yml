@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: auction
+  datasource:
+    generate-unique-name: false
+    name: auction
+#      show-sql: true
+
+api:
+  endpoint:
+    base-url: /api/v1
+
+logging:
+  level:
+    org:
+      springframework:
+        security: INFO
