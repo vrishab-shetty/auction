@@ -35,6 +35,8 @@ dependencies {
     runtimeOnly 'com.h2database:h2'
 }
 
-tasks.named('test') {
+tasks.named('test', Test) {
     useJUnitPlatform()
+
+    forkEvery(0)
 }
