@@ -42,26 +42,19 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(addFilters = false)
 class AuctionControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private AuctionService auctionService;
-
-    @MockBean
-    private AuthService authService;
-
-    private List<Auction> auctions;
-
-    private User user;
-
-    private User buyer;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Value("${api.endpoint.base-url}")
     String baseUrl;
+    @Autowired
+    private MockMvc mockMvc;
+    @MockBean
+    private AuctionService auctionService;
+    @MockBean
+    private AuthService authService;
+    private List<Auction> auctions;
+    private User user;
+    private User buyer;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {

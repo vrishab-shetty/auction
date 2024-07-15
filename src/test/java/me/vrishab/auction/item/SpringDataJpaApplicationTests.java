@@ -1,6 +1,5 @@
 package me.vrishab.auction.item;
 
-import me.vrishab.auction.TestData;
 import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.auction.AuctionRepository;
 import me.vrishab.auction.auction.AuctionService;
@@ -16,7 +15,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
 
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)

@@ -1,5 +1,6 @@
 package me.vrishab.auction.user;
 
+import me.vrishab.auction.TestData;
 import me.vrishab.auction.auction.AuctionRepository;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
@@ -7,7 +8,6 @@ import me.vrishab.auction.user.model.Address;
 import me.vrishab.auction.user.model.BillingDetails;
 import me.vrishab.auction.user.model.USZipcode;
 import me.vrishab.auction.user.model.User;
-import me.vrishab.auction.TestData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,17 +38,13 @@ class UserServiceTest {
 
     @Mock
     PasswordEncoder encoder;
-
-    @Mock
-    private BillingDetailsRepository<BillingDetails, UUID> billingRepo;
-
-    @Mock
-    private AuctionRepository auctionRepo;
-
     @InjectMocks
     UserService service;
-
     List<User> users;
+    @Mock
+    private BillingDetailsRepository<BillingDetails, UUID> billingRepo;
+    @Mock
+    private AuctionRepository auctionRepo;
 
     @BeforeEach
     void setUp() {

@@ -1,9 +1,8 @@
 package me.vrishab.auction.item;
 
+import me.vrishab.auction.TestData;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
-import me.vrishab.auction.TestData;
-import me.vrishab.auction.utils.Data;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +16,10 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -64,7 +66,7 @@ class ItemServiceTest {
         assertAll(
                 () -> assertThat(returnedItem.getId()).isEqualTo(id),
                 () -> assertThat(returnedItem.getName()).isEqualTo("Item 3"),
-                () -> assertThat(returnedItem.getDescription()).isEqualTo("Description 3" ),
+                () -> assertThat(returnedItem.getDescription()).isEqualTo("Description 3"),
                 () -> assertThat(returnedItem.getLocation()).isEqualTo("CA"),
                 () -> assertThat(returnedItem.getImageUrls()).isEqualTo(Set.of("<images>")),
                 () -> assertThat(returnedItem.getExtras()).isEqualTo(null),

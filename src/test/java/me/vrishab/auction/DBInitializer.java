@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.UUID;
 
 import static me.vrishab.auction.utils.Data.*;
-import static me.vrishab.auction.utils.Data.generateAuctions;
 
 @Component
 @Profile("integration_test")
