@@ -1,8 +1,8 @@
 package me.vrishab.auction.item;
 
+import me.vrishab.auction.TestData;
 import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.system.PageRequestParams;
-import me.vrishab.auction.TestData;
 import me.vrishab.auction.utils.Data;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
@@ -29,16 +29,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 class ItemControllerTest {
 
-    @MockBean
-    private ItemService itemService;
-
-    @Autowired
-    private MockMvc mockMvc;
-
     List<Item> items;
-
     @Value("${api.endpoint.base-url}")
     String baseUrl;
+    @MockBean
+    private ItemService itemService;
+    @Autowired
+    private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
