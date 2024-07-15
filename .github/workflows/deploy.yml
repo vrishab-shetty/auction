@@ -61,6 +61,6 @@ jobs:
         id: deploy-to-webapp
         uses: digitalocean/app_action@v1.1.5
         with:
-          app_name: auction
+          app_name: auction-management
           token: ${{  secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           images: 'ghcr.io/${{ env.REPO }}:${{ github.sha }}'
