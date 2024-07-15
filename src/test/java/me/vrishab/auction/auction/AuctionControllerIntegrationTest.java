@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.auction.dto.AuctionCreationDTO;
 import me.vrishab.auction.auction.dto.BidRequestDTO;
 import me.vrishab.auction.item.Item;
-import me.vrishab.auction.item.ItemService;
 import me.vrishab.auction.item.dto.ItemCreationDTO;
 import me.vrishab.auction.utils.Data;
 import org.hamcrest.Matchers;
@@ -20,6 +19,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -40,6 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Integration test for Authorized Auction user API endpoints")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Tag("integration")
+@ActiveProfiles("integration_test")
 public class AuctionControllerIntegrationTest {
 
     @Autowired
@@ -52,8 +53,6 @@ public class AuctionControllerIntegrationTest {
     String baseUrl;
 
     String token;
-    @Autowired
-    private ItemService itemService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -108,7 +107,6 @@ public class AuctionControllerIntegrationTest {
     }
 
 
-
     @DisplayName("Check placeBid operation")
     @Test
     void testPlaceBidSuccess() throws Exception {
@@ -121,16 +119,16 @@ public class AuctionControllerIntegrationTest {
 
         String bidingAuctionId = null;
         String itemId = null;
-        for(int i = 0; i<auctions.length(); i++) {
+        for (int i = 0; i < auctions.length(); i++) {
             JSONObject auction = auctions.getJSONObject(i);
-            if(!auction.getString("user").equals("name1@domain.tld")) {
+            if (!auction.getString("user").equals("name1@domain.tld")) {
                 bidingAuctionId = auction.getString("id");
                 itemId = auction.getJSONArray("items").getJSONObject(0).getString("id");
                 break;
             }
         }
 
-        if(bidingAuctionId == null || itemId == null) throw new RuntimeException("Could not find other auction");
+        if (bidingAuctionId == null || itemId == null) throw new RuntimeException("Could not find other auction");
 
         BidRequestDTO bidRequestDTO = new BidRequestDTO(
                 BigDecimal.valueOf(150.0)
@@ -138,7 +136,7 @@ public class AuctionControllerIntegrationTest {
 
 
         String jsonContent = this.objectMapper.writeValueAsString(bidRequestDTO);
-        this.mockMvc.perform(put(this.baseUrl + "/auctions/"+bidingAuctionId+"/items/"+itemId+"/bid")
+        this.mockMvc.perform(put(this.baseUrl + "/auctions/" + bidingAuctionId + "/items/" + itemId + "/bid")
                         .header("Authorization", this.token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonContent)

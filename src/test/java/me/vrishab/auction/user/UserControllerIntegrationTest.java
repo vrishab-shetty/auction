@@ -3,7 +3,6 @@ package me.vrishab.auction.user;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.user.dto.UserEditableDTO;
 import me.vrishab.auction.user.model.CreditCard;
-import me.vrishab.auction.TestData;
 import me.vrishab.auction.utils.Data;
 import org.hamcrest.Matchers;
 import org.json.JSONObject;
@@ -17,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -31,6 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Integration test for Authorized User API endpoints")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Tag("integration")
+@ActiveProfiles("integration_test")
 public class UserControllerIntegrationTest {
 
     @Autowired
