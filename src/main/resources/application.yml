@@ -2,8 +2,11 @@ spring:
   application:
     name: auction
   datasource:
+    url: jdbc:h2:mem:auction
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
     generate-unique-name: false
-    name: auction
 #      show-sql: true
 
 api:
