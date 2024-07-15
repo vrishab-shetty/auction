@@ -19,7 +19,7 @@ import static me.vrishab.auction.utils.Data.*;
 
 @Component
 @Profile("integration_test")
-public class DBInitializer implements CommandLineRunner {
+public class TestDBInitializer implements CommandLineRunner {
 
     private final UserService userService;
 
@@ -27,7 +27,7 @@ public class DBInitializer implements CommandLineRunner {
 
     private final BillingDetailsRepository<BillingDetails, UUID> billingDetailsRepository;
 
-    public DBInitializer(UserService userService, AuctionService auctionService, BillingDetailsRepository<BillingDetails, UUID> billingDetailsRepository) {
+    public TestDBInitializer(UserService userService, AuctionService auctionService, BillingDetailsRepository<BillingDetails, UUID> billingDetailsRepository) {
         this.userService = userService;
         this.auctionService = auctionService;
         this.billingDetailsRepository = billingDetailsRepository;
