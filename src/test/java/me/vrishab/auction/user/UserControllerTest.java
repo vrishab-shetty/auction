@@ -1,12 +1,12 @@
 package me.vrishab.auction.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.vrishab.auction.TestData;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
 import me.vrishab.auction.user.dto.UserEditableDTO;
 import me.vrishab.auction.user.model.User;
-import me.vrishab.auction.TestData;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,6 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
@@ -33,7 +32,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
-@ActiveProfiles("test")
 class UserControllerTest {
 
     @MockBean
