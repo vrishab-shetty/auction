@@ -16,7 +16,8 @@ spring:
 
 api:
   endpoint:
-    base-url: /api/v1
+    base-url: /api/v4
+
 server:
   port: 80
 
