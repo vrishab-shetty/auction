@@ -40,7 +40,9 @@ public class Auction {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinTable(
             name = Constants.USER_AUCTION_TBL,
-            joinColumns = @JoinColumn(name = Constants.AUCTION_ID, unique = true),
+            joinColumns = @JoinColumn(
+                    name = Constants.AUCTION_ID, unique = true
+            ),
             inverseJoinColumns = @JoinColumn(name = Constants.USER_ID)
     )
     @Setter(AccessLevel.NONE)

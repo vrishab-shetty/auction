@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@SuppressWarnings("checkstyle:LineLength")
 @RestController
 @RequestMapping("${api.endpoint.base-url}")
 public class AuctionController {

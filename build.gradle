@@ -2,6 +2,7 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.5'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.sonarqube' version '4.0.0.2929'
 }
 
 group = 'me.vrishab'
@@ -33,6 +34,19 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     runtimeOnly 'com.h2database:h2'
+}
+
+sonarqube {
+    properties {
+        property 'sonar.host.url', 'http://localhost:9000'
+        property "sonar.login", "sqp_19a61ece80266e423abb313e4a328b887330c617"
+        property "sonar.projectKey", "auction"
+        property 'sonar.projectName', 'auction'
+        property 'sonar.java.source', 17
+        property 'sonar.junit.reportPaths', 'build/results'
+        property 'encoding', 'UTF-8'
+        property 'charSet', 'UTF-8'
+    }
 }
 
 tasks.named('test', Test) {

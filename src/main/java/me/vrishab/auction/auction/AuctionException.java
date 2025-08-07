@@ -7,7 +7,7 @@ import me.vrishab.auction.system.exception.ObjectUnauthorizedException;
 
 import java.util.UUID;
 
-public class AuctionException {
+public class AuctionException extends Exception{
 
     public static class AuctionNotFoundByIdException extends ObjectNotFoundException {
 
