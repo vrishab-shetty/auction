@@ -21,8 +21,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.ZSetOperations;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 
@@ -46,6 +50,15 @@ class AuctionServiceTest {
 
     @Mock
     ItemRepository itemRepo;
+
+    @Mock
+    RedisTemplate<String, String> redisTemplate;
+
+    @Mock
+    ValueOperations<String, String> valueOperations;
+
+    @Mock
+    ZSetOperations<String, String> zSetOperations;
 
     @InjectMocks
     AuctionService auctionService;
@@ -571,6 +584,10 @@ class AuctionServiceTest {
         auction.addAllItems(Set.of(item));
 
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        String itemIdString = "e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1";
+        BigDecimal bidAmount = BigDecimal.valueOf(150.00);
+        String lockKey = "lock:item:" + itemIdString;
+        String redisKey = "auction:item:bids:" + itemIdString;
 
         given(auctionRepo.findById(auctionId)).willReturn(Optional.of(auction));
         given(itemRepo.findById(itemId))
@@ -579,8 +596,22 @@ class AuctionServiceTest {
                 .willReturn(Optional.of(otherUser));
         given(this.itemRepo.save(item)).willReturn(item);
 
+        given(this.redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(this.redisTemplate.opsForZSet()).willReturn(zSetOperations);
+
+        given(valueOperations.setIfAbsent(eq(lockKey), anyString(), eq(Duration.ofSeconds(5))))
+                .willReturn(true);
+
+        given(zSetOperations.add(redisKey, userId.toString(), bidAmount.doubleValue()))
+                .willReturn(true);
+
+        given(zSetOperations.score(redisKey, userId.toString()))
+                .willReturn(bidAmount.doubleValue());
+
+        // Mock the successful lock release check (optional but good practice)
+        given(this.redisTemplate.opsForValue().get(lockKey)).willReturn("some-lock-id");
+
         // When
-        BigDecimal bidAmount = BigDecimal.valueOf(150.00);
         Item returnedItem = this.auctionService.bid("9a540a1e-b599-4cec-aeb1-6396eb8fa271",
                 "a6c9417c-d01a-40e9-a22d-7621fd31a8c1",
                 "e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1",
