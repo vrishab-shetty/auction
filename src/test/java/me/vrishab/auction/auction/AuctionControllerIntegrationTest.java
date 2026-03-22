@@ -20,9 +20,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -37,22 +43,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Testcontainers
 @DisplayName("Integration test for Authorized Auction user API endpoints")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Tag("integration")
 @ActiveProfiles("integration_test")
 public class AuctionControllerIntegrationTest {
 
+    @Container
+    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:7"))
+            .withExposedPorts(6379);
     @Autowired
     MockMvc mockMvc;
-
     @Autowired
     ObjectMapper objectMapper;
-
     @Value("${api.endpoint.base-url}")
     String baseUrl;
-
     String token;
+
+    @DynamicPropertySource
+    static void setDatasourceProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.redis.host", redis::getHost);
+        registry.add("spring.redis.port", () -> redis.getMappedPort(6379).toString());
+    }
 
     @BeforeEach
     void setUp() throws Exception {
@@ -111,7 +124,8 @@ public class AuctionControllerIntegrationTest {
     @Test
     void testPlaceBidSuccess() throws Exception {
 
-        ResultActions resultAction = this.mockMvc.perform(get(baseUrl + "/auctions"));
+        ResultActions resultAction = this.mockMvc.perform(get(baseUrl + "/auctions")
+                .header("Authorization", this.token));
         MvcResult mvcResult = resultAction.andDo(print()).andReturn();
         String contentAsString = mvcResult.getResponse().getContentAsString();
         JSONObject json = new JSONObject(contentAsString);

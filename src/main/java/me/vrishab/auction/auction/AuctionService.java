@@ -2,6 +2,7 @@ package me.vrishab.auction.auction;
 
 import jakarta.transaction.Transactional;
 import me.vrishab.auction.auction.AuctionException.*;
+import me.vrishab.auction.auction.exception.ConcurrentBidException;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemRepository;
@@ -10,9 +11,13 @@ import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserRepository;
 import me.vrishab.auction.user.model.User;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -20,17 +25,19 @@ import java.util.*;
 @Transactional
 public class AuctionService {
 
+    private static final String BIDS_KEY_PREFIX = "auction:item:bids:";
     private final AuctionRepository auctionRepo;
-
     private final UserRepository userRepo;
-
     private final ItemRepository itemRepo;
+    private final RedisTemplate<String, String> redisTemplate;
 
 
-    public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo, ItemRepository itemRepo) {
+    public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo,
+                          ItemRepository itemRepo, RedisTemplate<String, String> redisTemplate) {
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
+        this.redisTemplate = redisTemplate;
     }
 
     public Auction findById(String id) {
@@ -88,7 +95,6 @@ public class AuctionService {
     }
 
     public Item bid(String userId, String auctionId, String itemId, BigDecimal bidAmount) {
-
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction auction = auctionRepo.findById(auctionUUID)
                 .orElseThrow(() -> new AuctionNotFoundByIdException(auctionUUID));
@@ -104,10 +110,33 @@ public class AuctionService {
         checkAuctionInBidingPhase(auction);
         checkAuctionBidAmount(item, bidAmount);
 
-        item.setCurrentBid(bidAmount);
-        item.setBuyer(user);
+        // Distributed lock for concurrent bid handling
+        String lockKey = "lock:item:" + itemId;
+        String lockId = UUID.randomUUID().toString();
+        try {
+            // Try to acquire lock with 5 second timeout
+            boolean locked = Boolean.TRUE.equals(
+                    redisTemplate.opsForValue().setIfAbsent(lockKey, lockId, Duration.ofSeconds(5))
+            );
+            if (!locked) throw new ConcurrentBidException();
 
-        return this.itemRepo.save(item);
+            // Track bid in Redis sorted set
+            String redisKey = BIDS_KEY_PREFIX + itemId;
+            ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
+            zSetOps.add(redisKey, userId, bidAmount.doubleValue());
+
+            // Get current highest bid
+            Double highestBid = zSetOps.score(redisKey, userId);
+            item.setCurrentBid(BigDecimal.valueOf(highestBid));
+            item.setBuyer(user);
+
+            return this.itemRepo.save(item);
+        } finally {
+            // Release the lock if it was acquired by this thread
+            String luaScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+            redisTemplate.execute(new DefaultRedisScript<>(luaScript, Long.class),
+                    Collections.singletonList(lockKey), lockId);
+        }
     }
 
     private void checkAuctionBidAmount(Item item, BigDecimal bidAmount) {
