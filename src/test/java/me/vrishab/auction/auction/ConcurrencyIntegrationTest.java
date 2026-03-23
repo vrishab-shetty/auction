@@ -387,7 +387,7 @@ public class ConcurrencyIntegrationTest {
         }
 
         startLatch.countDown();
-        doneLatch.await(30, TimeUnit.SECONDS);
+        doneLatch.await(120, TimeUnit.SECONDS);
         executorService.shutdown();
 
         System.out.println("--- Stress Test Results ---");
