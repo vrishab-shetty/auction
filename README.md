@@ -63,6 +63,11 @@ The primary API endpoints are:
 
 (More detailed API documentation to be added)
 
+## Architecture & Design
+
+For deep dives into the system design, check out our documentation:
+* [Concurrency Mechanisms Guide](./docs/CONCURRENCY.md) - Learn how we handle distributed locking, race conditions, and data consistency during bidding.
+
 # Docker
 
 To build the Docker image for this project, use the following command:

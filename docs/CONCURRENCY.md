@@ -17,7 +17,11 @@ In a multi-user distributed system like an online auction platform, concurrent a
 The application adopts a **hybrid concurrency model** that pairs a lightweight distributed lock layer (using Redis) with database-level optimistic locking (using JPA `@Version`).
 
 **High-level design and workflow**
-1. **Acquire Distributed Lock (Pessimistic-like guard):** When a user attempts to bid on an item, the application first tries to acquire a lock specific to the item (`lock:item:{itemId}`) in Redis. If it cannot acquire the lock, the thread immediately throws a `ConcurrentBidException`, signaling that the resource is currently under high contention and the request should be aborted or retried by the client.
+
+*(Note: See `docs/images/mermaid-diagram.png` for a visual sequence diagram of this workflow)*
+
+1. **Acquire Distributed Lock (Pessimistic-like guard):**
+ When a user attempts to bid on an item, the application first tries to acquire a lock specific to the item (`lock:item:{itemId}`) in Redis. If it cannot acquire the lock, the thread immediately throws a `ConcurrentBidException`, signaling that the resource is currently under high contention and the request should be aborted or retried by the client.
 2. **Execute Database Transaction:** Once the lock is acquired, the application starts a database transaction. It fetches the `Item` state from the database, evaluates the business rules for bidding (e.g., bid amount validity, auction status), and modifies the `Item` entity.
 3. **Optimistic Locking Guard (Database-level):** When the application attempts to save the updated `Item` entity, JPA/Hibernate issues an update statement carrying a version check (`UPDATE Item SET ... WHERE id = ? AND version = ?`). If another transaction somehow bypassed the lock or updated the entity concurrently, the version mismatch triggers an `OptimisticLockException`, safely rolling back the operation.
 4. **Post-Commit Synchronization:** Upon successful commit of the database transaction, a registered `TransactionSynchronization` updates the external cache (a Redis Sorted Set representing bid scores).
