@@ -7,6 +7,7 @@ import me.vrishab.auction.security.AuthenticationRequiredException;
 import me.vrishab.auction.system.Result;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -54,6 +55,12 @@ public class ExceptionHandlerAdvice {
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public Result handleAuctionForbiddenUpdate(ObjectForbiddenException ex) {
         return new Result(false, ex.getMessage());
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Result handleOptimisticLockingFailureException(ObjectOptimisticLockingFailureException ex) {
+        return new Result(false, "The data was updated by another user. Please refresh and try again.");
     }
 
     // Validations
