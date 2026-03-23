@@ -24,6 +24,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.ZSetOperations;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -35,6 +38,8 @@ import static me.vrishab.auction.TestData.generateUsers;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -60,6 +65,9 @@ class AuctionServiceTest {
     @Mock
     ZSetOperations<String, String> zSetOperations;
 
+    @Mock
+    TransactionTemplate transactionTemplate;
+
     @InjectMocks
     AuctionService auctionService;
 
@@ -72,6 +80,7 @@ class AuctionServiceTest {
 
     @BeforeEach
     void setUp() {
+        TransactionSynchronizationManager.initSynchronization();
 
         Iterator<User> users = generateUsers().iterator();
 
@@ -83,8 +92,20 @@ class AuctionServiceTest {
 
     }
 
+    private void setupBidMocking() {
+        given(transactionTemplate.execute(any())).willAnswer(invocation -> {
+            TransactionCallback<?> callback = invocation.getArgument(0);
+            return callback.doInTransaction(null);
+        });
+
+        given(this.redisTemplate.opsForValue()).willReturn(valueOperations);
+        given(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .willReturn(true);
+    }
+
     @AfterEach
     void tearDown() {
+        TransactionSynchronizationManager.clear();
         this.auctions.clear();
     }
 
@@ -596,20 +617,11 @@ class AuctionServiceTest {
                 .willReturn(Optional.of(otherUser));
         given(this.itemRepo.save(item)).willReturn(item);
 
-        given(this.redisTemplate.opsForValue()).willReturn(valueOperations);
-        given(this.redisTemplate.opsForZSet()).willReturn(zSetOperations);
+        setupBidMocking();
+        lenient().when(this.redisTemplate.opsForZSet()).thenReturn(zSetOperations);
 
-        given(valueOperations.setIfAbsent(eq(lockKey), anyString(), eq(Duration.ofSeconds(5))))
-                .willReturn(true);
-
-        given(zSetOperations.add(redisKey, userId.toString(), bidAmount.doubleValue()))
-                .willReturn(true);
-
-        given(zSetOperations.score(redisKey, userId.toString()))
-                .willReturn(bidAmount.doubleValue());
-
-        // Mock the successful lock release check (optional but good practice)
-        given(this.redisTemplate.opsForValue().get(lockKey)).willReturn("some-lock-id");
+        lenient().when(zSetOperations.add(eq(redisKey), eq(userId.toString()), anyDouble()))
+                .thenReturn(true);
 
         // When
         Item returnedItem = this.auctionService.bid("9a540a1e-b599-4cec-aeb1-6396eb8fa271",
@@ -662,6 +674,8 @@ class AuctionServiceTest {
                 .willReturn(Optional.of(ownerUser));
         given(itemRepo.findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1")))
                 .willReturn(Optional.of(item));
+
+        setupBidMocking();
 
         // When
         Throwable thrown = catchThrowable(() ->
@@ -716,6 +730,8 @@ class AuctionServiceTest {
                 .willReturn(Optional.of(otherUser));
         given(itemRepo.findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"))).willReturn(Optional.of(item));
 
+        setupBidMocking();
+
         // When
         Throwable thrown = catchThrowable(() ->
                 this.auctionService.bid("9a540a1e-b599-4cec-aeb1-6396eb8fa271",
@@ -768,6 +784,8 @@ class AuctionServiceTest {
                 .willReturn(Optional.of(otherUser));
         given(itemRepo.findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1")))
                 .willReturn(Optional.of(item));
+
+        setupBidMocking();
 
         // When
         Throwable thrown = catchThrowable(() ->
