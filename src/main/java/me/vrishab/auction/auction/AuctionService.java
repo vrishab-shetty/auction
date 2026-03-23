@@ -1,6 +1,5 @@
 package me.vrishab.auction.auction;
 
-import jakarta.transaction.Transactional;
 import me.vrishab.auction.auction.AuctionException.*;
 import me.vrishab.auction.auction.exception.ConcurrentBidException;
 import me.vrishab.auction.item.Item;
@@ -15,6 +14,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.time.Duration;
@@ -22,7 +27,6 @@ import java.time.Instant;
 import java.util.*;
 
 @Service
-@Transactional
 public class AuctionService {
 
     private static final String BIDS_KEY_PREFIX = "auction:item:bids:";
@@ -30,22 +34,27 @@ public class AuctionService {
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
     private final RedisTemplate<String, String> redisTemplate;
+    private final TransactionTemplate transactionTemplate;
 
 
     public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo,
-                          ItemRepository itemRepo, RedisTemplate<String, String> redisTemplate) {
+                          ItemRepository itemRepo, RedisTemplate<String, String> redisTemplate,
+                          TransactionTemplate transactionTemplate) {
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
         this.redisTemplate = redisTemplate;
+        this.transactionTemplate = transactionTemplate;
     }
 
+    @Transactional(readOnly = true)
     public Auction findById(String id) {
         UUID auctionUUID = UUID.fromString(id);
         return this.auctionRepo.findById(auctionUUID)
                 .orElseThrow(() -> new AuctionNotFoundByIdException(auctionUUID));
     }
 
+    @Transactional(readOnly = true)
     public List<Auction> findAll(PageRequestParams pageSettings) {
         Pageable pageable = Pageable.unpaged();
         if (pageSettings != null && pageSettings.isValid())
@@ -54,6 +63,7 @@ public class AuctionService {
         return this.auctionRepo.findAll(pageable).toList();
     }
 
+    @Transactional
     public Auction add(String userId, Auction auction) {
         UUID userUUID = UUID.fromString(userId);
         User user = userRepo.findById(userUUID)
@@ -64,6 +74,7 @@ public class AuctionService {
         return auctionRepo.save(auction);
     }
 
+    @Transactional
     public Auction update(String userId, Auction update, String auctionId) {
 
         UUID auctionUUID = UUID.fromString(auctionId);
@@ -83,6 +94,7 @@ public class AuctionService {
         return this.auctionRepo.save(oldAuction);
     }
 
+    @Transactional
     public void delete(String userId, String auctionId) {
         UUID auctionUUID = UUID.fromString(auctionId);
         Auction oldAuction = auctionRepo.findById(auctionUUID)
@@ -95,44 +107,54 @@ public class AuctionService {
     }
 
     public Item bid(String userId, String auctionId, String itemId, BigDecimal bidAmount) {
-        UUID auctionUUID = UUID.fromString(auctionId);
-        Auction auction = auctionRepo.findById(auctionUUID)
-                .orElseThrow(() -> new AuctionNotFoundByIdException(auctionUUID));
-
-        UUID itemUUID = UUID.fromString(itemId);
-        Item item = itemRepo.findById(itemUUID)
-                .orElseThrow(() -> new ItemNotFoundByIdException(itemUUID));
-        if (!auction.getItems().contains(item)) {
-            throw new AuctionItemNotFoundException(auctionUUID, item.getId());
-        }
-
-        User user = unauthorizedUser(UUID.fromString(userId), auction);
-        checkAuctionInBidingPhase(auction);
-        checkAuctionBidAmount(item, bidAmount);
-
-        // Distributed lock for concurrent bid handling
         String lockKey = "lock:item:" + itemId;
         String lockId = UUID.randomUUID().toString();
+
         try {
-            // Try to acquire lock with 5 second timeout
+            // 1. Acquire Redis Lock (with 5 second timeout)
             boolean locked = Boolean.TRUE.equals(
                     redisTemplate.opsForValue().setIfAbsent(lockKey, lockId, Duration.ofSeconds(5))
             );
             if (!locked) throw new ConcurrentBidException();
 
-            // Track bid in Redis sorted set
-            String redisKey = BIDS_KEY_PREFIX + itemId;
-            ZSetOperations<String, String> zSetOps = redisTemplate.opsForZSet();
-            zSetOps.add(redisKey, userId, bidAmount.doubleValue());
+            // 2. Execute Database Transaction
+            return transactionTemplate.execute(status -> {
+                UUID auctionUUID = UUID.fromString(auctionId);
+                Auction auction = auctionRepo.findById(auctionUUID)
+                        .orElseThrow(() -> new AuctionNotFoundByIdException(auctionUUID));
 
-            // Get current highest bid
-            Double highestBid = zSetOps.score(redisKey, userId);
-            item.setCurrentBid(BigDecimal.valueOf(highestBid));
-            item.setBuyer(user);
+                UUID itemUUID = UUID.fromString(itemId);
+                Item item = itemRepo.findById(itemUUID)
+                        .orElseThrow(() -> new ItemNotFoundByIdException(itemUUID));
 
-            return this.itemRepo.save(item);
+                if (!auction.getItems().contains(item)) {
+                    throw new AuctionItemNotFoundException(auctionUUID, item.getId());
+                }
+
+                User user = getAndValidateBidder(UUID.fromString(userId), auction);
+                checkAuctionInBidingPhase(auction);
+                checkAuctionBidAmount(item, bidAmount);
+
+                // Update Item state
+                item.setCurrentBid(bidAmount);
+                item.setBuyer(user);
+                Item savedItem = this.itemRepo.save(item);
+
+                // 3. Register Redis Update Post-Commit
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        String redisKey = BIDS_KEY_PREFIX + itemId;
+                        // Use a scale to maintain precision for currency in double-based ZSet
+                        double score = bidAmount.setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue();
+                        redisTemplate.opsForZSet().add(redisKey, userId, score);
+                    }
+                });
+
+                return savedItem;
+            });
         } finally {
-            // Release the lock if it was acquired by this thread
+            // 4. Release Redis Lock
             String luaScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
             redisTemplate.execute(new DefaultRedisScript<>(luaScript, Long.class),
                     Collections.singletonList(lockKey), lockId);
@@ -140,11 +162,17 @@ public class AuctionService {
     }
 
     private void checkAuctionBidAmount(Item item, BigDecimal bidAmount) {
-
-        BigDecimal currentPrice = Optional.ofNullable(item.getCurrentBid())
-                .orElse(item.getInitialPrice());
-
-        if (bidAmount.compareTo(currentPrice) < 0) throw new InvalidBidAmountException();
+        if (item.getCurrentBid() == null) {
+            // First bid must be at least the initial price
+            if (bidAmount.compareTo(item.getInitialPrice()) < 0) {
+                throw new InvalidBidAmountException();
+            }
+        } else {
+            // Subsequent bids must be strictly higher than the current bid
+            if (bidAmount.compareTo(item.getCurrentBid()) <= 0) {
+                throw new InvalidBidAmountException();
+            }
+        }
     }
 
     private void checkAuctionInBidingPhase(Auction auction) {
@@ -192,7 +220,7 @@ public class AuctionService {
         }
     }
 
-    private User unauthorizedUser(UUID userUUID, Auction auction) {
+    private User getAndValidateBidder(UUID userUUID, Auction auction) {
         User user = userRepo.findById(userUUID)
                 .orElseThrow(() -> new ItemNotFoundByIdException(userUUID));
 

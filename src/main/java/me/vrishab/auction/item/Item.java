@@ -69,6 +69,9 @@ public class Item {
     )
     private User buyer;
 
+    @Version
+    private Long version;
+
     public String getBuyerEmail() {
         if (buyer == null) return null;
         return this.buyer.getEmail();
