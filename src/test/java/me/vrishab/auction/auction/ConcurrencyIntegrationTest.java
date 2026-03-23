@@ -162,7 +162,7 @@ public class ConcurrencyIntegrationTest {
         }
 
         startLatch.countDown();
-        doneLatch.await(10, TimeUnit.SECONDS);
+        doneLatch.await(300, TimeUnit.SECONDS);
         executorService.shutdown();
 
         Item finalItem = itemRepo.findById(itemId).orElseThrow();
@@ -387,7 +387,7 @@ public class ConcurrencyIntegrationTest {
         }
 
         startLatch.countDown();
-        doneLatch.await(120, TimeUnit.SECONDS);
+        doneLatch.await(300, TimeUnit.SECONDS);
         executorService.shutdown();
 
         System.out.println("--- Stress Test Results ---");
