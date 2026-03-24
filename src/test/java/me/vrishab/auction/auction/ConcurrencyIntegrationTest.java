@@ -375,10 +375,17 @@ public class ConcurrencyIntegrationTest {
                         successCount.incrementAndGet();
                     } else if (status == 409 || status == 503) {
                         conflictCount.incrementAndGet();
+                    } else if (status == 400) {
+                        // Due to the high number of concurrent threads and varying execution orders,
+                        // some threads may read a higher currentBid than their assigned bidAmount,
+                        // resulting in an InvalidBidAmountException which is mapped to a 400 status.
+                        conflictCount.incrementAndGet();
                     } else {
+                        System.out.println("Unexpected status: " + status);
                         errorCount.incrementAndGet();
                     }
                 } catch (Exception e) {
+                    e.printStackTrace();
                     errorCount.incrementAndGet();
                 } finally {
                     doneLatch.countDown();
