@@ -13,12 +13,15 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.annotations.BatchSize;
+
 import java.util.UUID;
 
 @Entity
 @Setter
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
+@BatchSize(size = 50)
 public class Auction {
 
     @Id
@@ -35,6 +38,7 @@ public class Auction {
             mappedBy = "auction")
     @Setter(AccessLevel.NONE)
     @Getter(AccessLevel.NONE)
+    @BatchSize(size = 50)
     private Set<Item> items = new HashSet<>();
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

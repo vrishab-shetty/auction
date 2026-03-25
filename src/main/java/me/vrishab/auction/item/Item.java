@@ -12,6 +12,8 @@ import me.vrishab.auction.utils.Constants;
 import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.annotations.BatchSize;
+
 import java.util.UUID;
 
 @Entity
@@ -19,6 +21,7 @@ import java.util.UUID;
 @Setter
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
+@BatchSize(size = 50)
 public class Item {
 
     @Id
@@ -37,6 +40,7 @@ public class Item {
             joinColumns = @JoinColumn(name = Constants.ITEM_ID, nullable = false)
     )
     @Column(name = Constants.IMAGE_URL)
+    @BatchSize(size = 50)
     private Set<String> imageUrls = new HashSet<>();
 
     private String legitimacyProof;
@@ -57,6 +61,7 @@ public class Item {
             inverseJoinColumns = @JoinColumn(name = Constants.USER_ID))
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @BatchSize(size = 50)
     private Set<User> likedBy = new HashSet<>();
 
     @Column(nullable = false)

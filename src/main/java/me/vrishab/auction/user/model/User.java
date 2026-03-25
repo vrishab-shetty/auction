@@ -7,6 +7,8 @@ import me.vrishab.auction.item.Item;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import org.hibernate.annotations.BatchSize;
+
 import java.util.UUID;
 
 @Entity
@@ -15,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
 @AllArgsConstructor
 @Table(name = "\"USER\"")
+@BatchSize(size = 50)
 public class User {
 
     @Id
@@ -39,6 +42,7 @@ public class User {
     @ManyToMany(mappedBy = "likedBy")
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
+    @BatchSize(size = 50)
     private Set<Item> wishlist = new HashSet<>();
 
     public Set<Item> getWishlist() {
