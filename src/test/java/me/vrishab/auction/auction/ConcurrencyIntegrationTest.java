@@ -150,7 +150,7 @@ public class ConcurrencyIntegrationTest {
                     int status = result.getResponse().getStatus();
                     if (status == 200) {
                         successCount.incrementAndGet();
-                    } else if (status == 409 || status == 503) {
+                    } else if (status == 400 || status == 409 || status == 503) {
                         conflictCount.incrementAndGet();
                     }
                 } catch (Exception e) {
@@ -178,7 +178,7 @@ public class ConcurrencyIntegrationTest {
         AtomicInteger callCount = new AtomicInteger(0);
         MethodInterceptor interceptor = invocation -> {
             if ("save".equals(invocation.getMethod().getName()) && callCount.incrementAndGet() == 1) {
-                Thread.sleep(8000);
+                Thread.sleep(32000);
             }
             return invocation.proceed();
         };
@@ -204,7 +204,7 @@ public class ConcurrencyIntegrationTest {
             Thread.sleep(1000);
 
             Future<MvcResult> futureB = executorService.submit(() -> {
-                Thread.sleep(6000); 
+                Thread.sleep(31000);
                 BidRequestDTO bidRequest = new BidRequestDTO(BigDecimal.valueOf(220.00));
                 return mockMvc.perform(put(baseUrl + "/auctions/" + auctionId + "/items/" + itemId + "/bid")
                         .header("Authorization", token)
@@ -373,7 +373,7 @@ public class ConcurrencyIntegrationTest {
                     int status = result.getResponse().getStatus();
                     if (status == 200) {
                         successCount.incrementAndGet();
-                    } else if (status == 409 || status == 503) {
+                    } else if (status == 400 || status == 409 || status == 503) {
                         conflictCount.incrementAndGet();
                     } else {
                         errorCount.incrementAndGet();

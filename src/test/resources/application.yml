@@ -18,3 +18,7 @@ spring:
 api:
   endpoint:
     base-url: /api/v1
+
+auction:
+  bidding:
+    lock-timeout-seconds: 30

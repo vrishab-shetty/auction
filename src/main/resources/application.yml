@@ -2,10 +2,10 @@ spring:
   application:
     name: auction
   datasource:
-    url: jdbc:postgresql://localhost:5432/auction
+    url: ${DB_URL}
     driver-class-name: org.postgresql.Driver
-    username: auction_user
-    password: USER@AUCT1ON
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: update
@@ -19,6 +19,10 @@ spring:
 api:
   endpoint:
     base-url: /api/v1
+
+auction:
+  bidding:
+    lock-timeout-seconds: 30
 
 server:
   port: 8080
