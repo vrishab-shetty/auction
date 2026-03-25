@@ -30,6 +30,7 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
 
     // --- Developer Tools & Annotation Processing ---
+    implementation 'io.github.cdimascio:dotenv-java:3.0.0'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
