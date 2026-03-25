@@ -15,6 +15,9 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_item_seller", columnList = "seller")
+})
 @Setter
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)

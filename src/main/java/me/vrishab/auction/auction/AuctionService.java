@@ -111,9 +111,9 @@ public class AuctionService {
         String lockId = UUID.randomUUID().toString();
 
         try {
-            // 1. Acquire Redis Lock (with 5 second timeout)
+            // 1. Acquire Redis Lock (with 30 second timeout to prevent premature lock expiry)
             boolean locked = Boolean.TRUE.equals(
-                    redisTemplate.opsForValue().setIfAbsent(lockKey, lockId, Duration.ofSeconds(5))
+                    redisTemplate.opsForValue().setIfAbsent(lockKey, lockId, Duration.ofSeconds(30))
             );
             if (!locked) throw new ConcurrentBidException();
 
