@@ -26,6 +26,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
+import org.springframework.beans.factory.annotation.Value;
+
 @Service
 public class AuctionService {
 
@@ -36,6 +38,8 @@ public class AuctionService {
     private final RedisTemplate<String, String> redisTemplate;
     private final TransactionTemplate transactionTemplate;
 
+    @Value("${auction.bidding.lock-timeout-seconds}")
+    private long lockTimeoutSeconds;
 
     public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo,
                           ItemRepository itemRepo, RedisTemplate<String, String> redisTemplate,
@@ -111,9 +115,9 @@ public class AuctionService {
         String lockId = UUID.randomUUID().toString();
 
         try {
-            // 1. Acquire Redis Lock (with 5 second timeout)
+            // 1. Acquire Redis Lock (with configurable timeout)
             boolean locked = Boolean.TRUE.equals(
-                    redisTemplate.opsForValue().setIfAbsent(lockKey, lockId, Duration.ofSeconds(5))
+                    redisTemplate.opsForValue().setIfAbsent(lockKey, lockId, Duration.ofSeconds(lockTimeoutSeconds))
             );
             if (!locked) throw new ConcurrentBidException();
 
