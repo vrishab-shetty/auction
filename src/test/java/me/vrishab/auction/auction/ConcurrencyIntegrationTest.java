@@ -178,7 +178,9 @@ public class ConcurrencyIntegrationTest {
         AtomicInteger callCount = new AtomicInteger(0);
         MethodInterceptor interceptor = invocation -> {
             if ("save".equals(invocation.getMethod().getName()) && callCount.incrementAndGet() == 1) {
-                Thread.sleep(8000);
+                // The Redis lock timeout is 30 seconds. We simulate a delay longer than 30s
+                // to trigger a lock timeout on thread A.
+                Thread.sleep(32000);
             }
             return invocation.proceed();
         };
@@ -204,7 +206,8 @@ public class ConcurrencyIntegrationTest {
             Thread.sleep(1000);
 
             Future<MvcResult> futureB = executorService.submit(() -> {
-                Thread.sleep(6000); 
+                // Wait until the Redis lock times out (30s) so this thread can grab the lock.
+                Thread.sleep(30500);
                 BidRequestDTO bidRequest = new BidRequestDTO(BigDecimal.valueOf(220.00));
                 return mockMvc.perform(put(baseUrl + "/auctions/" + auctionId + "/items/" + itemId + "/bid")
                         .header("Authorization", token)
