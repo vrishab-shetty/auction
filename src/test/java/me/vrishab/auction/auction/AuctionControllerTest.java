@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -106,13 +107,14 @@ class AuctionControllerTest {
 
         // Given
         given(auctionService.findAll(new PageRequestParams(null, null)))
-                .willReturn(this.auctions);
+                .willReturn(new PageImpl<>(this.auctions));
 
         // Then and When
         this.mockMvc.perform(get(baseUrl + "/auctions").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all Auctions"))
-                .andExpect(jsonPath("$.data", Matchers.hasSize(this.auctions.size())));
+                .andExpect(jsonPath("$.data.content", Matchers.hasSize(this.auctions.size())))
+                .andExpect(jsonPath("$.data.totalElements").value(this.auctions.size()));
     }
 
     @Test

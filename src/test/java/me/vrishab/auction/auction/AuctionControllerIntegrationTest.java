@@ -129,7 +129,7 @@ public class AuctionControllerIntegrationTest {
         MvcResult mvcResult = resultAction.andDo(print()).andReturn();
         String contentAsString = mvcResult.getResponse().getContentAsString();
         JSONObject json = new JSONObject(contentAsString);
-        JSONArray auctions = json.getJSONArray("data");
+        JSONArray auctions = json.getJSONObject("data").getJSONArray("content");
 
         String bidingAuctionId = null;
         String itemId = null;
