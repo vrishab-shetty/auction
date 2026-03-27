@@ -14,10 +14,13 @@ import me.vrishab.auction.item.dto.AuctionItemDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.Result;
+import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("${api.endpoint.base-url}")
@@ -54,14 +57,21 @@ public class AuctionController {
     public Result findAllAuctions(
             @ModelAttribute
             @Valid PageRequestParams pageParams) {
-        List<Auction> auctions = this.auctionService.findAll(pageParams);
+        Page<Auction> auctionPage = this.auctionService.findAll(pageParams);
 
-        List<AuctionDTO> dtos = auctions.stream().map(
+        List<AuctionDTO> dtos = auctionPage.getContent().stream().map(
                         this.auctionToAuctionDTOConverter::convert
                 )
                 .toList();
 
-        return new Result(true, "Find all Auctions", dtos);
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", dtos);
+        response.put("totalElements", auctionPage.getTotalElements());
+        response.put("totalPages", auctionPage.getTotalPages());
+        response.put("isFirst", auctionPage.isFirst());
+        response.put("isLast", auctionPage.isLast());
+
+        return new Result(true, "Find all Auctions", response);
     }
 
     @PostMapping("/auctions")

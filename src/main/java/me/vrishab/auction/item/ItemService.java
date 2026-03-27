@@ -5,10 +5,10 @@ import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemSpecification.ItemFilterParams;
 import me.vrishab.auction.system.PageRequestParams;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 import static me.vrishab.auction.item.ItemSpecification.filterSpecification;
@@ -32,15 +32,14 @@ public class ItemService {
                 );
     }
 
-    public List<Item> findAll(String query, String location, PageRequestParams pageParams) {
+    public Page<Item> findAll(String query, String location, PageRequestParams pageParams) {
         Pageable pageable = Pageable.unpaged();
 
         if (pageParams != null && pageParams.isValid())
             pageable = pageParams.createPageRequest();
 
         ItemFilterParams filter = new ItemFilterParams(query, location);
-        return this.itemRepo.findAll(filterSpecification(filter), pageable).toList();
+        return this.itemRepo.findAll(filterSpecification(filter), pageable);
     }
-
 
 }

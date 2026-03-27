@@ -13,6 +13,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -83,34 +86,37 @@ class ItemControllerTest {
 
         // Given
         given(itemService.findAll(null, null, new PageRequestParams(null, null)))
-                .willReturn(this.items);
+                .willReturn(new PageImpl<>(this.items));
 
         // When and Then
         this.mockMvc.perform(get(baseUrl + "/items").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all items"))
-                .andExpect(jsonPath("$.data").value(Matchers.hasSize(items.size())));
+                .andExpect(jsonPath("$.data.content").value(Matchers.hasSize(items.size())))
+                .andExpect(jsonPath("$.data.totalElements").value(items.size()));
     }
 
     @Test
     void testFindAllItemsPaginationSuccess() throws Exception {
 
         // Given
-        int page = 1, size = 4;
-        given(itemService.findAll(null, null, new PageRequestParams(page, size)))
+        int pageNum = 1, size = 4;
+        Pageable pageable = PageRequest.of(pageNum - 1, size);
+        given(itemService.findAll(null, null, new PageRequestParams(pageNum, size)))
                 .willReturn(
-                        items.subList(page * size, (page + 1) * size)
+                        new PageImpl<>(items.subList(0, size), pageable, items.size())
                 );
 
         // When and Then
         this.mockMvc.perform(get(baseUrl + "/items")
-                        .param("pageNum", String.valueOf(page))
+                        .param("pageNum", String.valueOf(pageNum))
                         .param("pageSize", String.valueOf(size))
                         .accept(MediaType.APPLICATION_JSON)
                 )
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all items"))
-                .andExpect(jsonPath("$.data").value(Matchers.hasSize(size)));
+                .andExpect(jsonPath("$.data.content").value(Matchers.hasSize(size)))
+                .andExpect(jsonPath("$.data.totalElements").value(items.size()));
     }
 
     @Test
@@ -121,7 +127,7 @@ class ItemControllerTest {
         List<Item> filterItems = items.stream().filter(item -> item.getName().contains(name)).toList();
         given(itemService.findAll(name, null, new PageRequestParams(null, null)))
                 .willReturn(
-                        filterItems
+                        new PageImpl<>(filterItems)
                 );
 
         // When and Then
@@ -131,8 +137,8 @@ class ItemControllerTest {
                 )
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all items"))
-                .andExpect(jsonPath("$.data").value(Matchers.hasSize(5)))
-                .andExpect(jsonPath("$.data[*].name").value(Matchers.everyItem(Matchers.containsString(name))));
+                .andExpect(jsonPath("$.data.content").value(Matchers.hasSize(5)))
+                .andExpect(jsonPath("$.data.content[*].name").value(Matchers.everyItem(Matchers.containsString(name))));
     }
 
     @Test
@@ -144,7 +150,7 @@ class ItemControllerTest {
         List<Item> filterItems = items.stream().filter(item -> item.getLocation().contains(location)).toList();
         given(itemService.findAll(null, location, new PageRequestParams(null, null)))
                 .willReturn(
-                        filterItems
+                        new PageImpl<>(filterItems)
                 );
 
         // When and Then
@@ -154,15 +160,15 @@ class ItemControllerTest {
                 )
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Find all items"))
-                .andExpect(jsonPath("$.data").value(Matchers.hasSize(3)))
-                .andExpect(jsonPath("$.data[*].location").value(Matchers.everyItem(Matchers.equalTo(location))));
+                .andExpect(jsonPath("$.data.content").value(Matchers.hasSize(3)))
+                .andExpect(jsonPath("$.data.content[*].location").value(Matchers.everyItem(Matchers.equalTo(location))));
 
     }
 
     @Test
     void testFindAllItemPaginationFailure() throws Exception {
         given(itemService.findAll(null, null, new PageRequestParams(null, null)))
-                .willReturn(this.items);
+                .willReturn(new PageImpl<>(this.items));
 
         // When and Then
         this.mockMvc.perform(get(baseUrl + "/items")

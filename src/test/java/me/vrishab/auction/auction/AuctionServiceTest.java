@@ -1,9 +1,5 @@
 package me.vrishab.auction.auction;
 
-import me.vrishab.auction.auction.AuctionException.AuctionForbiddenBidingPhaseException;
-import me.vrishab.auction.auction.AuctionException.AuctionItemNotFoundException;
-import me.vrishab.auction.auction.AuctionException.InvalidBidAmountException;
-import me.vrishab.auction.auction.AuctionException.UnauthorizedAuctionAccess;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
@@ -18,6 +14,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +32,7 @@ import java.util.*;
 
 import static me.vrishab.auction.TestData.generateAuctions;
 import static me.vrishab.auction.TestData.generateUsers;
+import static me.vrishab.auction.auction.AuctionException.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -156,10 +154,10 @@ class AuctionServiceTest {
                 );
 
         // When
-        List<Auction> returnedAuctions = auctionService.findAll(new PageRequestParams(null, null));
+        Page<Auction> returnedAuctionPage = auctionService.findAll(new PageRequestParams(null, null));
 
         // Then
-        assertThat(returnedAuctions).hasSize(9);
+        assertThat(returnedAuctionPage.getContent()).hasSize(9);
 
         verify(auctionRepo, times(1)).findAll(pageable);
     }
@@ -176,13 +174,13 @@ class AuctionServiceTest {
                 ));
 
         // When
-        List<Auction> returnedAuction = auctionService.findAll(new PageRequestParams(page, size));
+        Page<Auction> returnedAuctionPage = auctionService.findAll(new PageRequestParams(page, size));
 
         // Then
 
         assertAll(
-                () -> assertThat(returnedAuction.size()).isEqualTo(3),
-                () -> assertThat(returnedAuction.get(0).getId()).isEqualTo(UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c3"))
+                () -> assertThat(returnedAuctionPage.getContent().size()).isEqualTo(3),
+                () -> assertThat(returnedAuctionPage.getContent().get(0).getId()).isEqualTo(UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c3"))
         );
         verify(auctionRepo, times(1)).findAll(eq(pageable));
     }

@@ -11,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -103,10 +104,10 @@ class ItemServiceTest {
                 ));
 
         // When
-        List<Item> returnedItems = service.findAll(null, null, new PageRequestParams(null, null));
+        Page<Item> returnedItemPage = service.findAll(null, null, new PageRequestParams(null, null));
 
         // Then
-        assertThat(returnedItems.size()).isEqualTo(this.items.size());
+        assertThat(returnedItemPage.getContent().size()).isEqualTo(this.items.size());
         verify(repository, times(1)).findAll(Mockito.any(Specification.class), eq(Pageable.unpaged()));
     }
 
@@ -122,12 +123,12 @@ class ItemServiceTest {
                 ));
 
         // When
-        List<Item> returnedItemPage = service.findAll(null, null, new PageRequestParams(page, size));
+        Page<Item> returnedItemPage = service.findAll(null, null, new PageRequestParams(page, size));
 
         // Then
         assertAll(
-                () -> assertThat(returnedItemPage.size()).isEqualTo(3),
-                () -> assertThat(returnedItemPage.get(0).getId()).isEqualTo(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a3"))
+                () -> assertThat(returnedItemPage.getContent().size()).isEqualTo(3),
+                () -> assertThat(returnedItemPage.getContent().get(0).getId()).isEqualTo(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a3"))
         );
         verify(repository, times(1)).findAll(Mockito.any(Specification.class), eq(pageable));
     }
@@ -143,10 +144,10 @@ class ItemServiceTest {
         ));
 
         // When
-        List<Item> returnedItems = service.findAll(name, null, new PageRequestParams(null, null));
+        Page<Item> returnedItemPage = service.findAll(name, null, new PageRequestParams(null, null));
 
         // Then
-        assertThat(returnedItems).allMatch(item -> item.getName().contains(name));
+        assertThat(returnedItemPage.getContent()).allMatch(item -> item.getName().contains(name));
         verify(repository, times(1)).findAll(Mockito.any(Specification.class), eq(Pageable.unpaged()));
 
     }
@@ -169,12 +170,12 @@ class ItemServiceTest {
                 ));
 
         // When
-        List<Item> returnedItems = service.findAll(name, null, new PageRequestParams(page, size));
+        Page<Item> returnedItemPage = service.findAll(name, null, new PageRequestParams(page, size));
 
         // Then
         assertAll(
-                () -> assertThat(returnedItems.size()).isEqualTo(3),
-                () -> assertThat(returnedItems).allSatisfy(item -> assertThat(item.getName()).contains(name))
+                () -> assertThat(returnedItemPage.getContent().size()).isEqualTo(3),
+                () -> assertThat(returnedItemPage.getContent()).allSatisfy(item -> assertThat(item.getName()).contains(name))
         );
 
         verify(repository, times(1)).findAll(Mockito.any(Specification.class), eq(pageable));
@@ -193,12 +194,12 @@ class ItemServiceTest {
                 .willReturn(new PageImpl<>(filterItems, pageable, filterItems.size()));
 
         // When
-        List<Item> returnedItems = service.findAll(null, location, new PageRequestParams(null, null));
+        Page<Item> returnedItemPage = service.findAll(null, location, new PageRequestParams(null, null));
 
         // Then
         assertAll(
-                () -> assertThat(returnedItems.size()).isEqualTo(filterItems.size()),
-                () -> assertThat(returnedItems).allMatch(item -> item.getLocation().equals(location))
+                () -> assertThat(returnedItemPage.getContent().size()).isEqualTo(filterItems.size()),
+                () -> assertThat(returnedItemPage.getContent()).allMatch(item -> item.getLocation().equals(location))
         );
 
 
@@ -219,13 +220,13 @@ class ItemServiceTest {
                         pageable, filterItems.size()));
 
         // When
-        List<Item> returnedItems = service.findAll(null, location, new PageRequestParams(page, size));
+        Page<Item> returnedItemPage = service.findAll(null, location, new PageRequestParams(page, size));
 
         // Then
         assertAll(
-                () -> assertThat(returnedItems.size()).isEqualTo(3),
-                () -> assertThat(returnedItems.size()).isEqualTo(Math.min(size, filterItems.size())),
-                () -> assertThat(returnedItems).allMatch(item -> item.getLocation().equals(location))
+                () -> assertThat(returnedItemPage.getContent().size()).isEqualTo(3),
+                () -> assertThat(returnedItemPage.getContent().size()).isEqualTo(Math.min(size, filterItems.size())),
+                () -> assertThat(returnedItemPage.getContent()).allMatch(item -> item.getLocation().equals(location))
         );
 
 
@@ -247,14 +248,14 @@ class ItemServiceTest {
                         pageable, filterItems.size()));
 
         // When
-        List<Item> returnedItems = service.findAll(query, location, new PageRequestParams(page, size));
+        Page<Item> returnedItemPage = service.findAll(query, location, new PageRequestParams(page, size));
 
         // Then
         assertAll(
-                () -> assertThat(returnedItems.size()).isEqualTo(3),
-                () -> assertThat(returnedItems.size()).isEqualTo(Math.min(size, filterItems.size())),
-                () -> assertThat(returnedItems).allMatch(item -> item.getLocation().equals(location)),
-                () -> assertThat(returnedItems).allMatch(item -> item.getName().contains(query))
+                () -> assertThat(returnedItemPage.getContent().size()).isEqualTo(3),
+                () -> assertThat(returnedItemPage.getContent().size()).isEqualTo(Math.min(size, filterItems.size())),
+                () -> assertThat(returnedItemPage.getContent()).allMatch(item -> item.getLocation().equals(location)),
+                () -> assertThat(returnedItemPage.getContent()).allMatch(item -> item.getName().contains(query))
         );
 
 

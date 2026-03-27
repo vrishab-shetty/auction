@@ -9,13 +9,11 @@ import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserRepository;
 import me.vrishab.auction.user.model.User;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -59,12 +57,12 @@ public class AuctionService {
     }
 
     @Transactional(readOnly = true)
-    public List<Auction> findAll(PageRequestParams pageSettings) {
+    public Page<Auction> findAll(PageRequestParams pageSettings) {
         Pageable pageable = Pageable.unpaged();
         if (pageSettings != null && pageSettings.isValid())
             pageable = pageSettings.createPageRequest();
 
-        return this.auctionRepo.findAll(pageable).toList();
+        return this.auctionRepo.findAll(pageable);
     }
 
     @Transactional

@@ -6,10 +6,13 @@ import me.vrishab.auction.item.dto.ItemDTO;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.Result;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @Validated
@@ -39,10 +42,18 @@ public class ItemController {
             @RequestParam(required = false, name = "query") String name,
             @RequestParam(required = false, name = "location") String location
     ) {
-        List<Item> items = itemService.findAll(name, location, pageParams);
-        List<ItemDTO> itemDTOs = items.stream()
+        Page<Item> itemPage = itemService.findAll(name, location, pageParams);
+        List<ItemDTO> itemDTOs = itemPage.getContent().stream()
                 .map(this.itemToItemDTOConverter::convert).toList();
-        return new Result(true, "Find all items", itemDTOs);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", itemDTOs);
+        response.put("totalElements", itemPage.getTotalElements());
+        response.put("totalPages", itemPage.getTotalPages());
+        response.put("isFirst", itemPage.isFirst());
+        response.put("isLast", itemPage.isLast());
+
+        return new Result(true, "Find all items", response);
     }
 
 }
