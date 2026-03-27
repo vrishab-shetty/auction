@@ -2,6 +2,7 @@ package me.vrishab.auction.auction;
 
 import me.vrishab.auction.auction.AuctionException.*;
 import me.vrishab.auction.auction.exception.ConcurrentBidException;
+import me.vrishab.auction.auction.dto.AuctionUpdateEvent;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemRepository;
@@ -26,6 +27,8 @@ import java.util.*;
 
 import org.springframework.beans.factory.annotation.Value;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 @Service
 public class AuctionService {
 
@@ -35,18 +38,31 @@ public class AuctionService {
     private final ItemRepository itemRepo;
     private final RedisTemplate<String, String> redisTemplate;
     private final TransactionTemplate transactionTemplate;
+    private final AuctionEventPublisher eventPublisher;
+    private Instant lastCheckTime = Instant.now();
 
     @Value("${auction.bidding.lock-timeout-seconds}")
     private long lockTimeoutSeconds;
 
+    @Scheduled(fixedRate = 60000) // Check every minute
+    public void notifyAuctionClosures() {
+        Instant now = Instant.now();
+        List<Auction> closedAuctions = auctionRepo.findByEndTimeBetween(this.lastCheckTime, now);
+        for (Auction auction : closedAuctions) {
+            this.eventPublisher.publish(AuctionUpdateEvent.auctionClosed(auction.getId().toString()));
+        }
+        this.lastCheckTime = now;
+    }
+
     public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo,
                           ItemRepository itemRepo, RedisTemplate<String, String> redisTemplate,
-                          TransactionTemplate transactionTemplate) {
+                          TransactionTemplate transactionTemplate, AuctionEventPublisher eventPublisher) {
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
         this.redisTemplate = redisTemplate;
         this.transactionTemplate = transactionTemplate;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional(readOnly = true)
@@ -150,6 +166,9 @@ public class AuctionService {
                         // Use a scale to maintain precision for currency in double-based ZSet
                         double score = bidAmount.setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue();
                         redisTemplate.opsForZSet().add(redisKey, userId, score);
+
+                        // Broadcast update via SSE (via Redis Pub/Sub)
+                        eventPublisher.publish(AuctionUpdateEvent.bidPlaced(auctionId, itemId, bidAmount, userId));
                     }
                 });
 

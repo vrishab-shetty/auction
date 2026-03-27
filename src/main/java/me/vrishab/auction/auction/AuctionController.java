@@ -15,8 +15,10 @@ import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.Result;
 import org.springframework.data.domain.Page;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,14 +38,24 @@ public class AuctionController {
 
     private final AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter;
     private final ItemToAuctionItemDTO itemToAuctionItemDTO;
+    private final SseService sseService;
 
-    public AuctionController(AuctionService auctionService, AuthService authService, AuctionCreationDTOToAuctionConverter auctionCreationDTOToAuctionConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter, ItemToAuctionItemDTO itemToAuctionItemDTO) {
+    public AuctionController(AuctionService auctionService, AuthService authService, AuctionCreationDTOToAuctionConverter auctionCreationDTOToAuctionConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter, ItemToAuctionItemDTO itemToAuctionItemDTO, SseService sseService) {
         this.auctionService = auctionService;
         this.authService = authService;
         this.auctionCreationDTOToAuctionConverter = auctionCreationDTOToAuctionConverter;
         this.auctionToAuctionDTOConverter = auctionToAuctionDTOConverter;
         this.auctionUpdateDTOToAuctionConverter = auctionUpdateDTOToAuctionConverter;
         this.itemToAuctionItemDTO = itemToAuctionItemDTO;
+        this.sseService = sseService;
+    }
+
+    @GetMapping(value = "/auctions/{auctionId}/updates", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter streamUpdates(@PathVariable String auctionId, Authentication authentication) {
+        // Optional: you can use 'authentication' to check if the user has specific roles
+        // or to log who is connecting.
+        this.auctionService.findById(auctionId);
+        return this.sseService.createEmitter(auctionId);
     }
 
     @GetMapping("/auctions/{auctionId}")
