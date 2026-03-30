@@ -178,7 +178,7 @@ public class ConcurrencyIntegrationTest {
         AtomicInteger callCount = new AtomicInteger(0);
         MethodInterceptor interceptor = invocation -> {
             if ("save".equals(invocation.getMethod().getName()) && callCount.incrementAndGet() == 1) {
-                Thread.sleep(32000);
+                Thread.sleep(40000); // Increased from 32000
             }
             return invocation.proceed();
         };
@@ -204,7 +204,7 @@ public class ConcurrencyIntegrationTest {
             Thread.sleep(1000);
 
             Future<MvcResult> futureB = executorService.submit(() -> {
-                Thread.sleep(31000);
+                Thread.sleep(31000); // Wait for lock to expire (timeout is 30s)
                 BidRequestDTO bidRequest = new BidRequestDTO(BigDecimal.valueOf(220.00));
                 return mockMvc.perform(put(baseUrl + "/auctions/" + auctionId + "/items/" + itemId + "/bid")
                         .header("Authorization", token)
