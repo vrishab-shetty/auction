@@ -19,7 +19,6 @@ public class CustomBasicAuthenticationEntryPoint implements AuthenticationEntryP
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) {
-        response.addHeader("WWW-Authenticate", "Basic realm=\"Realm\"");
         this.resolver.resolveException(request, response, null, authException);
     }
 }
