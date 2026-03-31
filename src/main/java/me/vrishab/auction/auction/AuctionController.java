@@ -22,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import java.util.UUID;
+
 @RestController
 @RequestMapping("${api.endpoint.base-url}")
 public class AuctionController {
@@ -30,6 +33,8 @@ public class AuctionController {
 
     private final AuthService authService;
 
+    private final NotificationService notificationService;
+
     private final AuctionCreationDTOToAuctionConverter auctionCreationDTOToAuctionConverter;
 
     private final AuctionToAuctionDTOConverter auctionToAuctionDTOConverter;
@@ -37,13 +42,19 @@ public class AuctionController {
     private final AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter;
     private final ItemToAuctionItemDTO itemToAuctionItemDTO;
 
-    public AuctionController(AuctionService auctionService, AuthService authService, AuctionCreationDTOToAuctionConverter auctionCreationDTOToAuctionConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter, ItemToAuctionItemDTO itemToAuctionItemDTO) {
+    public AuctionController(AuctionService auctionService, AuthService authService, NotificationService notificationService, AuctionCreationDTOToAuctionConverter auctionCreationDTOToAuctionConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter, ItemToAuctionItemDTO itemToAuctionItemDTO) {
         this.auctionService = auctionService;
         this.authService = authService;
+        this.notificationService = notificationService;
         this.auctionCreationDTOToAuctionConverter = auctionCreationDTOToAuctionConverter;
         this.auctionToAuctionDTOConverter = auctionToAuctionDTOConverter;
         this.auctionUpdateDTOToAuctionConverter = auctionUpdateDTOToAuctionConverter;
         this.itemToAuctionItemDTO = itemToAuctionItemDTO;
+    }
+
+    @GetMapping("/auctions/{auctionId}/stream")
+    public SseEmitter streamAuctionUpdates(@PathVariable String auctionId) {
+        return this.notificationService.createEmitter(UUID.fromString(auctionId));
     }
 
     @GetMapping("/auctions/{auctionId}")

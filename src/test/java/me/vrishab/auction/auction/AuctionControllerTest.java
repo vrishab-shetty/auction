@@ -37,7 +37,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc(addFilters = false)
@@ -51,6 +51,8 @@ class AuctionControllerTest {
     private AuctionService auctionService;
     @MockBean
     private AuthService authService;
+    @MockBean
+    private NotificationService notificationService;
     private List<Auction> auctions;
     private User user;
     private User buyer;
@@ -400,5 +402,17 @@ class AuctionControllerTest {
                 .andExpect(jsonPath("$.data").isEmpty());
 
 
+    }
+
+    @Test
+    void testStreamAuctionUpdatesSuccess() throws Exception {
+        // Given
+        UUID auctionId = UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
+        given(notificationService.createEmitter(auctionId)).willReturn(new org.springframework.web.servlet.mvc.method.annotation.SseEmitter());
+
+        // Then and When
+        this.mockMvc.perform(get(baseUrl + "/auctions/" + auctionId + "/stream"))
+                .andExpect(status().isOk())
+                .andExpect(request().asyncStarted());
     }
 }

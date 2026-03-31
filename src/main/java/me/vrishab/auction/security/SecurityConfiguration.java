@@ -24,6 +24,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -62,6 +64,7 @@ public class SecurityConfiguration {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, OAuth2ResourceServerProperties oAuth2ResourceServerProperties) throws Exception {
         return http
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
+                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/auctions/*/stream").permitAll()
                         .requestMatchers(HttpMethod.GET, this.baseUrl + "/auctions/**").permitAll()
                         .requestMatchers(HttpMethod.GET, this.baseUrl + "/items/**").permitAll()
                         .requestMatchers(HttpMethod.GET, this.baseUrl + "/users/**").permitAll()
@@ -81,12 +84,20 @@ public class SecurityConfiguration {
                 .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(this.basicAuthenticationEntryPoint))
                 .oauth2ResourceServer(oauth2ResourceServer -> {
                             oauth2ResourceServer.jwt(Customizer.withDefaults());
+                            oauth2ResourceServer.bearerTokenResolver(bearerTokenResolver());
                             oauth2ResourceServer.authenticationEntryPoint(this.bearerTokenAuthenticationEntryPoint);
                             oauth2ResourceServer.accessDeniedHandler(this.bearerTokenAccessDeniedHandler);
                         }
                 )
                 .sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .build();
+    }
+
+    @Bean
+    public BearerTokenResolver bearerTokenResolver() {
+        DefaultBearerTokenResolver resolver = new DefaultBearerTokenResolver();
+        resolver.setAllowUriQueryParameter(true);
+        return resolver;
     }
 
     @Bean

@@ -1,5 +1,8 @@
 package me.vrishab.auction.auction;
 
+import me.vrishab.auction.auction.dto.AuctionUpdateEvent;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import me.vrishab.auction.auction.AuctionException.*;
 import me.vrishab.auction.auction.exception.ConcurrentBidException;
 import me.vrishab.auction.item.Item;
@@ -9,6 +12,8 @@ import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserRepository;
 import me.vrishab.auction.user.model.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -29,24 +34,27 @@ import org.springframework.beans.factory.annotation.Value;
 @Service
 public class AuctionService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuctionService.class);
     private static final String BIDS_KEY_PREFIX = "auction:item:bids:";
     private final AuctionRepository auctionRepo;
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
     private final RedisTemplate<String, String> redisTemplate;
     private final TransactionTemplate transactionTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${auction.bidding.lock-timeout-seconds}")
     private long lockTimeoutSeconds;
 
     public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo,
                           ItemRepository itemRepo, RedisTemplate<String, String> redisTemplate,
-                          TransactionTemplate transactionTemplate) {
+                          TransactionTemplate transactionTemplate, ObjectMapper objectMapper) {
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
         this.redisTemplate = redisTemplate;
         this.transactionTemplate = transactionTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -150,6 +158,20 @@ public class AuctionService {
                         // Use a scale to maintain precision for currency in double-based ZSet
                         double score = bidAmount.setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue();
                         redisTemplate.opsForZSet().add(redisKey, userId, score);
+
+                        // Publish bid update event for real-time feed
+                        AuctionUpdateEvent event = new AuctionUpdateEvent(
+                                auctionUUID,
+                                itemUUID,
+                                bidAmount,
+                                user.getName()
+                        );
+                        try {
+                            String message = objectMapper.writeValueAsString(event);
+                            redisTemplate.convertAndSend("bid-updates", message);
+                        } catch (JsonProcessingException e) {
+                            logger.error("Failed to serialize AuctionUpdateEvent", e);
+                        }
                     }
                 });
 
