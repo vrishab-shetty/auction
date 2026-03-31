@@ -3,12 +3,14 @@ package me.vrishab.auction.system.configuration;
 import me.vrishab.auction.auction.NotificationService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
 @Configuration
+@Profile("!test & !integration_test") // Exclude from unit tests to avoid connection errors if Redis isn't running
 public class RedisPubSubConfig {
 
     public static final String BID_UPDATES_CHANNEL = "bid-updates";
