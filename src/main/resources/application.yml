@@ -24,6 +24,8 @@ api:
 auction:
   bidding:
     lock-timeout-seconds: 30
+  cors:
+    allowed-origin: ${ALLOWED_ORIGIN}
 
 server:
   port: 8080
