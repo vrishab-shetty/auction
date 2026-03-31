@@ -10,9 +10,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AccountStatusException;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.server.resource.InvalidBearerTokenException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
@@ -93,10 +91,10 @@ public class ExceptionHandlerAdvice {
     }
 
     // Authentication and Authorization
-    @ExceptionHandler({UsernameNotFoundException.class, BadCredentialsException.class})
+    @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public Result handleAuthenticationException(Exception ex) {
-        return new Result(false, "username or password is incorrect", ex.getMessage());
+    public Result handleAuthenticationException(AuthenticationException ex) {
+        return new Result(false, "Authentication failed: " + ex.getMessage());
     }
 
     @ExceptionHandler(AccountStatusException.class)
@@ -117,7 +115,7 @@ public class ExceptionHandlerAdvice {
         return new Result(false, "No permission", ex.getMessage());
     }
 
-    @ExceptionHandler({AuthenticationRequiredException.class, InsufficientAuthenticationException.class})
+    @ExceptionHandler(AuthenticationRequiredException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleBasicAuthenticationException(Exception ex) {
         return new Result(false, ex.getMessage());
