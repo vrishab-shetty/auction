@@ -32,7 +32,7 @@ public class FindItemFilteringAndPagingTest extends SpringDataJpaApplicationTest
         assertAll(
                 () -> assertThat(itemPage.getSize()).isEqualTo(3),
                 () -> assertThat(itemPage.getTotalElements()).isEqualTo(5),
-                () -> assertThat(itemPage.get()).allMatch(item -> item.getName().contains(query))
+                () -> assertThat(itemPage.getContent()).allMatch(item -> item.getName().contains(query))
         );
         assertAll(
                 () -> assertThat(itemPageSort.getSize()).isEqualTo(3),
@@ -56,7 +56,7 @@ public class FindItemFilteringAndPagingTest extends SpringDataJpaApplicationTest
         );
         assertAll(
                 () -> assertThat(itemPage.getTotalElements()).isEqualTo(3),
-                () -> assertThat(itemPage.get()).allMatch(item -> item.getLocation().equals(location))
+                () -> assertThat(itemPage.getContent()).allMatch(item -> item.getLocation().equals(location))
         );
     }
 
@@ -74,8 +74,8 @@ public class FindItemFilteringAndPagingTest extends SpringDataJpaApplicationTest
         );
         assertAll(
                 () -> assertThat(itemPage.getTotalElements()).isEqualTo(4),
-                () -> assertThat(itemPage.get()).allMatch(item -> item.getLocation().equals(location)),
-                () -> assertThat(itemPage.get()).allMatch(item -> item.getName().contains(query))
+                () -> assertThat(itemPage.getContent()).allMatch(item -> item.getLocation().equals(location)),
+                () -> assertThat(itemPage.getContent()).allMatch(item -> item.getName().contains(query))
         );
     }
 }
