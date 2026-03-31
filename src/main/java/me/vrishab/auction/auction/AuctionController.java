@@ -17,6 +17,7 @@ import me.vrishab.auction.system.Result;
 import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,14 +37,22 @@ public class AuctionController {
 
     private final AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter;
     private final ItemToAuctionItemDTO itemToAuctionItemDTO;
+    private final NotificationService notificationService;
 
-    public AuctionController(AuctionService auctionService, AuthService authService, AuctionCreationDTOToAuctionConverter auctionCreationDTOToAuctionConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter, ItemToAuctionItemDTO itemToAuctionItemDTO) {
+    public AuctionController(AuctionService auctionService, AuthService authService, AuctionCreationDTOToAuctionConverter auctionCreationDTOToAuctionConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, AuctionUpdateDTOToAuctionConverter auctionUpdateDTOToAuctionConverter, ItemToAuctionItemDTO itemToAuctionItemDTO, NotificationService notificationService) {
         this.auctionService = auctionService;
         this.authService = authService;
         this.auctionCreationDTOToAuctionConverter = auctionCreationDTOToAuctionConverter;
         this.auctionToAuctionDTOConverter = auctionToAuctionDTOConverter;
         this.auctionUpdateDTOToAuctionConverter = auctionUpdateDTOToAuctionConverter;
         this.itemToAuctionItemDTO = itemToAuctionItemDTO;
+        this.notificationService = notificationService;
+    }
+
+    @GetMapping("/auctions/{auctionId}/stream")
+    public SseEmitter streamAuctionUpdates(@PathVariable String auctionId) {
+        // We do not return Result here; we return the raw SseEmitter
+        return notificationService.createEmitter(auctionId);
     }
 
     @GetMapping("/auctions/{auctionId}")

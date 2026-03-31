@@ -24,6 +24,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import me.vrishab.auction.auction.dto.BidUpdateMessage;
+import me.vrishab.auction.system.configuration.RedisPubSubConfig;
 import org.springframework.beans.factory.annotation.Value;
 
 @Service
@@ -35,18 +39,20 @@ public class AuctionService {
     private final ItemRepository itemRepo;
     private final RedisTemplate<String, String> redisTemplate;
     private final TransactionTemplate transactionTemplate;
+    private final ObjectMapper objectMapper;
 
     @Value("${auction.bidding.lock-timeout-seconds}")
     private long lockTimeoutSeconds;
 
     public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo,
                           ItemRepository itemRepo, RedisTemplate<String, String> redisTemplate,
-                          TransactionTemplate transactionTemplate) {
+                          TransactionTemplate transactionTemplate, ObjectMapper objectMapper) {
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
         this.redisTemplate = redisTemplate;
         this.transactionTemplate = transactionTemplate;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
@@ -150,6 +156,14 @@ public class AuctionService {
                         // Use a scale to maintain precision for currency in double-based ZSet
                         double score = bidAmount.setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue();
                         redisTemplate.opsForZSet().add(redisKey, userId, score);
+
+                        try {
+                            BidUpdateMessage message = new BidUpdateMessage(auctionUUID, itemUUID, bidAmount, savedItem.getBuyer().getEmail());
+                            String jsonMessage = objectMapper.writeValueAsString(message);
+                            redisTemplate.convertAndSend(RedisPubSubConfig.BID_UPDATES_CHANNEL, jsonMessage);
+                        } catch (JsonProcessingException e) {
+                            System.err.println("Failed to serialize BidUpdateMessage: " + e.getMessage());
+                        }
                     }
                 });
 

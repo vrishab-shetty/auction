@@ -24,6 +24,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -59,9 +61,17 @@ public class SecurityConfiguration {
     }
 
     @Bean
+    public BearerTokenResolver bearerTokenResolver() {
+        DefaultBearerTokenResolver resolver = new DefaultBearerTokenResolver();
+        resolver.setAllowUriQueryParameter(true);
+        return resolver;
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, OAuth2ResourceServerProperties oAuth2ResourceServerProperties) throws Exception {
         return http
                 .authorizeHttpRequests(authorizeHttpRequests -> authorizeHttpRequests
+                        .requestMatchers(HttpMethod.GET, this.baseUrl + "/auctions/*/stream").authenticated()
                         .requestMatchers(HttpMethod.GET, this.baseUrl + "/auctions/**").permitAll()
                         .requestMatchers(HttpMethod.GET, this.baseUrl + "/items/**").permitAll()
                         .requestMatchers(HttpMethod.GET, this.baseUrl + "/users/**").permitAll()
@@ -80,6 +90,7 @@ public class SecurityConfiguration {
                 .cors(Customizer.withDefaults())
                 .httpBasic(httpBasic -> httpBasic.authenticationEntryPoint(this.basicAuthenticationEntryPoint))
                 .oauth2ResourceServer(oauth2ResourceServer -> {
+                            oauth2ResourceServer.bearerTokenResolver(bearerTokenResolver());
                             oauth2ResourceServer.jwt(Customizer.withDefaults());
                             oauth2ResourceServer.authenticationEntryPoint(this.bearerTokenAuthenticationEntryPoint);
                             oauth2ResourceServer.accessDeniedHandler(this.bearerTokenAccessDeniedHandler);
