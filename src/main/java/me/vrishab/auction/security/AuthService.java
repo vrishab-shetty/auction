@@ -46,7 +46,7 @@ public class AuthService {
 
     public String getUserInfo(Authentication auth) {
         if (!(auth instanceof JwtAuthenticationToken)) {
-            throw new AuthenticationRequiredException(AuthenticationRequiredException.AuthType.BEARER_TOKEN);
+            throw new AuthenticationRequiredException(AuthType.BEARER_TOKEN);
         }
 
         Jwt jwtToken = ((JwtAuthenticationToken) auth).getToken();

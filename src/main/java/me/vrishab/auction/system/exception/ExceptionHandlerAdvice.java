@@ -3,7 +3,9 @@ package me.vrishab.auction.system.exception;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
+import me.vrishab.auction.auction.exception.ConcurrentBidException;
 import me.vrishab.auction.security.AuthenticationRequiredException;
+import me.vrishab.auction.system.ErrorCode;
 import me.vrishab.auction.system.Result;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -34,31 +36,37 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(ObjectNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result handleObjectNotFoundException(ObjectNotFoundException ex) {
-        return new Result(false, ex.getMessage());
+        return new Result(false, ex.getMessage(), ErrorCode.NOT_FOUND);
     }
 
     @ExceptionHandler(ObjectBadRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleObjectBadRequestException(ObjectBadRequestException ex) {
-        return new Result(false, ex.getMessage());
+        return new Result(false, ex.getMessage(), ErrorCode.BAD_REQUEST);
     }
 
     @ExceptionHandler(ObjectUnauthorizedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result handleObjectUnauthorizedException(ObjectUnauthorizedException ex) {
-        return new Result(false, ex.getMessage());
+        return new Result(false, ex.getMessage(), ErrorCode.UNAUTHORIZED);
     }
 
     @ExceptionHandler(ObjectForbiddenException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public Result handleAuctionForbiddenUpdate(ObjectForbiddenException ex) {
-        return new Result(false, ex.getMessage());
+        return new Result(false, ex.getMessage(), ErrorCode.FORBIDDEN);
     }
 
     @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     public Result handleOptimisticLockingFailureException(ObjectOptimisticLockingFailureException ex) {
-        return new Result(false, "The data was updated by another user. Please refresh and try again.");
+        return new Result(false, "The data was updated by another user. Please refresh and try again.", ErrorCode.OPTIMISTIC_LOCKING_FAILURE);
+    }
+
+    @ExceptionHandler(ConcurrentBidException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public Result handleConcurrentBidException(ConcurrentBidException ex) {
+        return new Result(false, ex.getMessage(), ErrorCode.CONCURRENT_BID_ERROR);
     }
 
     // Validations
@@ -73,7 +81,7 @@ public class ExceptionHandlerAdvice {
             String errorMessage = violation.getMessage();
             errors.put(fieldName, errorMessage);
         }
-        return new Result(false, "Provided arguments are invalid, see data for details", errors);
+        return new Result(false, "Provided arguments are invalid, see data for details", ErrorCode.INVALID_ARGUMENTS, errors);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -87,45 +95,45 @@ public class ExceptionHandlerAdvice {
             map.put(key, val);
         });
 
-        return new Result(false, "Provided arguments are invalid, see data for details", map);
+        return new Result(false, "Provided arguments are invalid, see data for details", ErrorCode.INVALID_ARGUMENTS, map);
     }
 
     // Authentication and Authorization
     @ExceptionHandler(AuthenticationException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result handleAuthenticationException(AuthenticationException ex) {
-        return new Result(false, "Authentication failed: " + ex.getMessage());
+        return new Result(false, "Authentication failed: " + ex.getMessage(), ErrorCode.AUTHENTICATION_FAILED);
     }
 
     @ExceptionHandler(AccountStatusException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result handleAccountStatusException(AccountStatusException ex) {
-        return new Result(false, "User account is disabled", ex.getMessage());
+        return new Result(false, "User account is disabled", ErrorCode.ACCOUNT_DISABLED, ex.getMessage());
     }
 
     @ExceptionHandler(InvalidBearerTokenException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     public Result handleInvalidTokenException(InvalidBearerTokenException ex) {
-        return new Result(false, "The access token provided is expired, revoked, or invalid", ex.getMessage());
+        return new Result(false, "The access token provided is expired, revoked, or invalid", ErrorCode.INVALID_TOKEN, ex.getMessage());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public Result handleInvalidTokenException(AccessDeniedException ex) {
-        return new Result(false, "No permission", ex.getMessage());
+        return new Result(false, "No permission", ErrorCode.FORBIDDEN, ex.getMessage());
     }
 
     @ExceptionHandler(AuthenticationRequiredException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Result handleBasicAuthenticationException(Exception ex) {
-        return new Result(false, ex.getMessage());
+    public Result handleBasicAuthenticationException(AuthenticationRequiredException ex) {
+        return new Result(false, ex.getMessage(), ErrorCode.AUTHENTICATION_REQUIRED);
     }
 
     // HTTP Request Handlers
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleBadRequestBodyException(HttpMessageNotReadableException ex) {
-        return new Result(false, ex.getMessage().split(":")[0]);
+        return new Result(false, ex.getMessage().split(":")[0], ErrorCode.BAD_REQUEST);
     }
 
     @ExceptionHandler({NoResourceFoundException.class, HttpRequestMethodNotSupportedException.class})
@@ -133,14 +141,14 @@ public class ExceptionHandlerAdvice {
     public Result handleNoResourceFoundException(Exception ex) {
         log.error(ex.getMessage(), ex);
 
-        return new Result(false, ex.getMessage());
+        return new Result(false, ex.getMessage(), ErrorCode.NOT_FOUND);
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public Result handleException(Exception ex) {
         log.error(ex.getMessage(), ex);
-        return new Result(false, "A server error occurs:\n" + ex.getMessage());
+        return new Result(false, "A server error occurs:\n" + ex.getMessage(), ErrorCode.SERVER_ERROR);
     }
 
 
