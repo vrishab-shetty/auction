@@ -1,7 +1,7 @@
 package me.vrishab.auction.security;
 
 import lombok.extern.slf4j.Slf4j;
-import me.vrishab.auction.security.AuthenticationRequiredException.AuthType;
+import me.vrishab.auction.security.AuthType;
 import me.vrishab.auction.system.Result;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;

@@ -8,8 +8,4 @@ public class AuthenticationRequiredException extends RuntimeException {
                         + " Authentication is required"
         );
     }
-
-    public enum AuthType {
-        BASIC, BEARER_TOKEN
-    }
 }

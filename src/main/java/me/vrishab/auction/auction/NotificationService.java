@@ -3,6 +3,7 @@ package me.vrishab.auction.auction;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import me.vrishab.auction.auction.dto.AuctionUpdateEvent;
+import me.vrishab.auction.auction.dto.NotificationEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -37,7 +38,9 @@ public class NotificationService {
         emitter.onError((e) -> removeEmitter(auctionId, emitter));
 
         try {
-            emitter.send(SseEmitter.event().name("INIT").data("Connected to auction feed"));
+            emitter.send(SseEmitter.event()
+                    .name("INIT")
+                    .data(new NotificationEvent<>("INIT", "Connected to auction feed")));
         } catch (IOException e) {
             removeEmitter(auctionId, emitter);
         }
@@ -67,12 +70,13 @@ public class NotificationService {
     private void broadcast(AuctionUpdateEvent event) {
         List<SseEmitter> auctionEmitters = this.emitters.get(event.auctionId());
         if (auctionEmitters != null) {
+            NotificationEvent<AuctionUpdateEvent> notification = new NotificationEvent<>("BID_UPDATE", event);
             for (SseEmitter emitter : auctionEmitters) {
                 try {
                     emitter.send(SseEmitter.event()
                             .name("BID_UPDATE")
                             .id(UUID.randomUUID().toString())
-                            .data(event));
+                            .data(notification));
                 } catch (IOException e) {
                     removeEmitter(event.auctionId(), emitter);
                 }
@@ -82,10 +86,13 @@ public class NotificationService {
 
     @Scheduled(fixedRate = 30000) // 30 seconds heartbeat
     public void sendHeartbeat() {
+        NotificationEvent<String> heartbeat = new NotificationEvent<>("HEARTBEAT", "ping");
         this.emitters.forEach((auctionId, emittersList) -> {
             emittersList.forEach(emitter -> {
                 try {
-                    emitter.send(SseEmitter.event().name("HEARTBEAT").data("ping"));
+                    emitter.send(SseEmitter.event()
+                            .name("HEARTBEAT")
+                            .data(heartbeat));
                 } catch (IOException e) {
                     removeEmitter(auctionId, emitter);
                 }
