@@ -8,13 +8,11 @@ import me.vrishab.auction.item.converter.ItemToAuctionItemDTO;
 import me.vrishab.auction.item.dto.AuctionItemDTO;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.Result;
+import me.vrishab.auction.user.converter.BillingDetailsToBillingDetailsDTOConverter;
 import me.vrishab.auction.user.converter.UserEditableToUserConverter;
 import me.vrishab.auction.user.converter.UserToUserDTOConverter;
 import me.vrishab.auction.user.converter.UserUpdateDTOToUserConverter;
-import me.vrishab.auction.user.dto.ChangePasswordDTO;
-import me.vrishab.auction.user.dto.UserDTO;
-import me.vrishab.auction.user.dto.UserEditableDTO;
-import me.vrishab.auction.user.dto.UserUpdateDTO;
+import me.vrishab.auction.user.dto.*;
 import me.vrishab.auction.user.model.BillingDetails;
 import me.vrishab.auction.user.model.User;
 import org.springframework.security.core.Authentication;
@@ -33,15 +31,17 @@ public class UserController {
     private final UserUpdateDTOToUserConverter userUpdateDTOToUserConverter;
     private final AuctionToAuctionDTOConverter auctionToAuctionDTOConverter;
     private final ItemToAuctionItemDTO itemToAuctionItemDTO;
+    private final BillingDetailsToBillingDetailsDTOConverter billingDetailsToBillingDetailsDTOConverter;
     private final AuthService authService;
 
-    public UserController(UserService userService, UserToUserDTOConverter userToUserDTOConverter, UserEditableToUserConverter userEditableToUserConverter, UserUpdateDTOToUserConverter userUpdateDTOToUserConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, ItemToAuctionItemDTO itemToAuctionItemDTO, AuthService authService) {
+    public UserController(UserService userService, UserToUserDTOConverter userToUserDTOConverter, UserEditableToUserConverter userEditableToUserConverter, UserUpdateDTOToUserConverter userUpdateDTOToUserConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, ItemToAuctionItemDTO itemToAuctionItemDTO, BillingDetailsToBillingDetailsDTOConverter billingDetailsToBillingDetailsDTOConverter, AuthService authService) {
         this.userService = userService;
         this.userToUserDTOConverter = userToUserDTOConverter;
         this.userEditableToUserConverter = userEditableToUserConverter;
         this.userUpdateDTOToUserConverter = userUpdateDTOToUserConverter;
         this.auctionToAuctionDTOConverter = auctionToAuctionDTOConverter;
         this.itemToAuctionItemDTO = itemToAuctionItemDTO;
+        this.billingDetailsToBillingDetailsDTOConverter = billingDetailsToBillingDetailsDTOConverter;
         this.authService = authService;
     }
 
@@ -138,6 +138,9 @@ public class UserController {
     public Result getBillingDetails(Authentication auth) {
         String userId = authService.getUserInfo(auth);
 
-        return new Result(true, "Get Billing Details", this.userService.getBillingDetails(userId));
+        List<BillingDetailsDTO> billingDetailsDTOS = this.userService.getBillingDetails(userId)
+                .stream().map(this.billingDetailsToBillingDetailsDTOConverter::convert).toList();
+
+        return new Result(true, "Get Billing Details", billingDetailsDTOS);
     }
 }

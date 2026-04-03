@@ -12,8 +12,8 @@ import me.vrishab.auction.user.model.User;
         property = "type"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = CreditCard.class, name = "creditCard"),
-        @JsonSubTypes.Type(value = BankAccount.class, name = "bankAccount")
+        @JsonSubTypes.Type(value = CreditCard.class, name = "CARD"),
+        @JsonSubTypes.Type(value = BankAccount.class, name = "BANK_ACCOUNT")
 })
 public abstract class BillingDetailsMixin {
     @JsonIgnore

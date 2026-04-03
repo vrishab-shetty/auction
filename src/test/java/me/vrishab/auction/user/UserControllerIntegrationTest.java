@@ -225,10 +225,12 @@ public class UserControllerIntegrationTest {
         this.mockMvc.perform(get(this.baseUrl + "/user/self/billingDetails")
                         .header("Authorization", this.token)
                         .accept(MediaType.APPLICATION_JSON))
+                .andDo(print())
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Get Billing Details"))
                 .andExpect(jsonPath("$.data", Matchers.hasSize(2)))
-                .andExpect(jsonPath("$.data[*].cardNumber", Matchers.hasItems(creditCard.getCardNumber())));
+                .andExpect(jsonPath("$.data[*].cardNumber", Matchers.hasItems(creditCard.getCardNumber())))
+                .andExpect(jsonPath("$.data[*].type", Matchers.hasItem("CARD")));
     }
 
 }
