@@ -9,6 +9,8 @@ import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.user.UserException.UserEmailAlreadyExistException;
 import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
+import me.vrishab.auction.user.UserException.BillingDetailsNotFoundByIdException;
+import me.vrishab.auction.user.UserException.UnauthorizedBillingDetailsAccessException;
 import me.vrishab.auction.user.model.BankAccount;
 import me.vrishab.auction.user.model.BillingDetails;
 import me.vrishab.auction.user.model.CreditCard;
@@ -155,6 +157,19 @@ public class UserService implements UserDetailsService {
         } else {
             throw new IllegalArgumentException("Unknown billing details type");
         }
+    }
+
+    public void removeBillingDetails(String userId, String billingDetailsId) {
+        User user = getUser(userId);
+        UUID billingId = UUID.fromString(billingDetailsId);
+        BillingDetails billingDetails = this.billingDetailsRepo.findById(billingId)
+                .orElseThrow(() -> new BillingDetailsNotFoundByIdException(billingId));
+
+        if (!billingDetails.getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedBillingDetailsAccessException();
+        }
+
+        this.billingDetailsRepo.delete(billingDetails);
     }
 
     public List<BillingDetails> getBillingDetails(String userId) {

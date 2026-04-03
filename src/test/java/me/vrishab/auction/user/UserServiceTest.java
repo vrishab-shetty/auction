@@ -6,6 +6,7 @@ import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
 import me.vrishab.auction.user.model.Address;
 import me.vrishab.auction.user.model.BillingDetails;
+import me.vrishab.auction.user.model.CreditCard;
 import me.vrishab.auction.user.model.USZipcode;
 import me.vrishab.auction.user.model.User;
 import org.junit.jupiter.api.AfterEach;
@@ -208,6 +209,46 @@ class UserServiceTest {
         // Then
         assertThat(thrown).isInstanceOf(UserException.IncorrectPasswordException.class);
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void testRemoveBillingDetailsSuccess() {
+        // Given
+        User user = this.users.get(1);
+        UUID billingId = UUID.randomUUID();
+        BillingDetails billingDetails = new CreditCard("Owner", "cardNumber", "06", "2026");
+        billingDetails.setId(billingId);
+        billingDetails.setUser(user);
+
+        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(billingRepo.findById(billingId)).willReturn(Optional.of(billingDetails));
+
+        // When
+        service.removeBillingDetails(user.getId().toString(), billingId.toString());
+
+        // Then
+        verify(billingRepo, times(1)).delete(billingDetails);
+    }
+
+    @Test
+    void testRemoveBillingDetailsUnauthorized() {
+        // Given
+        User user = this.users.get(1);
+        User otherUser = this.users.get(2);
+        UUID billingId = UUID.randomUUID();
+        BillingDetails billingDetails = new CreditCard("Other Owner", "cardNumber", "06", "2026");
+        billingDetails.setId(billingId);
+        billingDetails.setUser(otherUser);
+
+        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(billingRepo.findById(billingId)).willReturn(Optional.of(billingDetails));
+
+        // When
+        Throwable thrown = catchThrowable(() -> service.removeBillingDetails(user.getId().toString(), billingId.toString()));
+
+        // Then
+        assertThat(thrown).isInstanceOf(UserException.UnauthorizedBillingDetailsAccessException.class);
+        verify(billingRepo, never()).delete(any());
     }
 
     @Test

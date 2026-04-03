@@ -1,6 +1,7 @@
 package me.vrishab.auction.user;
 
 import me.vrishab.auction.system.exception.ObjectBadRequestException;
+import me.vrishab.auction.system.exception.ObjectForbiddenException;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 
 import java.util.UUID;
@@ -37,6 +38,18 @@ public class UserException {
     public static class IncorrectPasswordException extends ObjectBadRequestException {
         public IncorrectPasswordException() {
             super("The current password provided is incorrect.");
+        }
+    }
+
+    public static class BillingDetailsNotFoundByIdException extends ObjectNotFoundException {
+        public BillingDetailsNotFoundByIdException(UUID id) {
+            super("Could not find billing details with Id " + id);
+        }
+    }
+
+    public static class UnauthorizedBillingDetailsAccessException extends ObjectForbiddenException {
+        public UnauthorizedBillingDetailsAccessException() {
+            super("You are not allowed to access this billing detail");
         }
     }
 
