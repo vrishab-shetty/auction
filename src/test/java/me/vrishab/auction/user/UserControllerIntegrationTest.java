@@ -233,4 +233,41 @@ public class UserControllerIntegrationTest {
                 .andExpect(jsonPath("$.data[*].type", Matchers.hasItem("CARD")));
     }
 
+    @Test
+    @DisplayName("Check deleteBillingDetails operation")
+    void testDeleteBillingDetails() throws Exception {
+        CreditCard creditCard = Data.getCreditCard(1);
+        String jsonString = this.objectMapper.writeValueAsString(creditCard);
+
+        // Add
+        this.mockMvc.perform(put(this.baseUrl + "/user/self/billingDetails")
+                        .header("Authorization", this.token)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonString))
+                .andExpect(jsonPath("$.flag").value(true));
+
+        // Get to find ID
+        MvcResult mvcResult = this.mockMvc.perform(get(this.baseUrl + "/user/self/billingDetails")
+                        .header("Authorization", this.token)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andReturn();
+        String content = mvcResult.getResponse().getContentAsString();
+        JSONObject jsonObject = new JSONObject(content);
+        String id = jsonObject.getJSONArray("data").getJSONObject(1).getString("id"); 
+
+        // Delete
+        this.mockMvc.perform(delete(this.baseUrl + "/user/self/billingDetails/" + id)
+                        .header("Authorization", this.token)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Delete Billing Details"));
+
+        // Verify
+        this.mockMvc.perform(get(this.baseUrl + "/user/self/billingDetails")
+                        .header("Authorization", this.token)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.data", Matchers.hasSize(1)));
+    }
+
 }

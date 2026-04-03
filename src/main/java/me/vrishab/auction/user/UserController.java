@@ -134,6 +134,13 @@ public class UserController {
         return new Result(true, "Add Billing Details");
     }
 
+    @DeleteMapping("/user/self/billingDetails/{id}")
+    public Result deleteBillingDetails(Authentication auth, @PathVariable String id) {
+        String userId = authService.getUserInfo(auth);
+        this.userService.removeBillingDetails(userId, id);
+        return new Result(true, "Delete Billing Details");
+    }
+
     @GetMapping("/user/self/billingDetails")
     public Result getBillingDetails(Authentication auth) {
         String userId = authService.getUserInfo(auth);
