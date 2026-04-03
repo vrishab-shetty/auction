@@ -10,8 +10,11 @@ import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.system.Result;
 import me.vrishab.auction.user.converter.UserEditableToUserConverter;
 import me.vrishab.auction.user.converter.UserToUserDTOConverter;
+import me.vrishab.auction.user.converter.UserUpdateDTOToUserConverter;
+import me.vrishab.auction.user.dto.ChangePasswordDTO;
 import me.vrishab.auction.user.dto.UserDTO;
 import me.vrishab.auction.user.dto.UserEditableDTO;
+import me.vrishab.auction.user.dto.UserUpdateDTO;
 import me.vrishab.auction.user.model.BillingDetails;
 import me.vrishab.auction.user.model.User;
 import org.springframework.security.core.Authentication;
@@ -27,14 +30,16 @@ public class UserController {
     private final UserService userService;
     private final UserToUserDTOConverter userToUserDTOConverter;
     private final UserEditableToUserConverter userEditableToUserConverter;
+    private final UserUpdateDTOToUserConverter userUpdateDTOToUserConverter;
     private final AuctionToAuctionDTOConverter auctionToAuctionDTOConverter;
     private final ItemToAuctionItemDTO itemToAuctionItemDTO;
     private final AuthService authService;
 
-    public UserController(UserService userService, UserToUserDTOConverter userToUserDTOConverter, UserEditableToUserConverter userEditableToUserConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, ItemToAuctionItemDTO itemToAuctionItemDTO, AuthService authService) {
+    public UserController(UserService userService, UserToUserDTOConverter userToUserDTOConverter, UserEditableToUserConverter userEditableToUserConverter, UserUpdateDTOToUserConverter userUpdateDTOToUserConverter, AuctionToAuctionDTOConverter auctionToAuctionDTOConverter, ItemToAuctionItemDTO itemToAuctionItemDTO, AuthService authService) {
         this.userService = userService;
         this.userToUserDTOConverter = userToUserDTOConverter;
         this.userEditableToUserConverter = userEditableToUserConverter;
+        this.userUpdateDTOToUserConverter = userUpdateDTOToUserConverter;
         this.auctionToAuctionDTOConverter = auctionToAuctionDTOConverter;
         this.itemToAuctionItemDTO = itemToAuctionItemDTO;
         this.authService = authService;
@@ -63,14 +68,23 @@ public class UserController {
     }
 
     @PutMapping("/user/self")
-    public Result updateUser(Authentication auth, @Valid @RequestBody UserEditableDTO updateDTO) {
+    public Result updateUser(Authentication auth, @Valid @RequestBody UserUpdateDTO updateDTO) {
         String userId = authService.getUserInfo(auth);
 
-        User update = this.userEditableToUserConverter.convert(updateDTO);
+        User update = this.userUpdateDTOToUserConverter.convert(updateDTO);
         User updatedUser = this.userService.update(userId, update);
         UserDTO updatedUserDto = this.userToUserDTOConverter.convert(updatedUser);
 
         return new Result(true, "Update a user", updatedUserDto);
+    }
+
+    @PutMapping("/user/self/password")
+    public Result changePassword(Authentication auth, @Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
+        String userId = authService.getUserInfo(auth);
+
+        this.userService.changePassword(userId, changePasswordDTO.currentPassword(), changePasswordDTO.newPassword());
+
+        return new Result(true, "Change password");
     }
 
     @DeleteMapping("/user/self")

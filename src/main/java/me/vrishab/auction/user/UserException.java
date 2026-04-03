@@ -34,4 +34,10 @@ public class UserException {
         }
     }
 
+    public static class IncorrectPasswordException extends ObjectBadRequestException {
+        public IncorrectPasswordException() {
+            super("The current password provided is incorrect.");
+        }
+    }
+
 }

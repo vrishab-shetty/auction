@@ -145,9 +145,7 @@ class UserServiceTest {
         User update = new User();
         update.setId(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
         update.setName("New Name");
-        update.setPassword("newpassword");
         update.setDescription("New Description");
-        update.setEmail("name@domain.tld");
         update.setContact("1234567890");
         update.setHomeAddress(
                 new Address(
@@ -160,7 +158,6 @@ class UserServiceTest {
         update.setEnabled(true);
 
         given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(oldUser));
-        given(encoder.encode(update.getPassword())).willReturn("$2a$10$w0.OcE5rFi5iXGm/cQjMeOH4ht9SxWoOn8Lao9veuQkZJrxoMQQOm");
         given(repository.save(oldUser)).willReturn(update);
 
         // When
@@ -176,6 +173,41 @@ class UserServiceTest {
         );
         verify(repository, times(1)).save(oldUser);
         verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+    }
+
+    @Test
+    void testChangePasswordSuccess() {
+        // Given
+        User user = this.users.get(1);
+        user.setPassword("oldpassword");
+
+        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(encoder.matches("oldpassword", "oldpassword")).willReturn(true);
+        given(encoder.encode("newpassword")).willReturn("hashednewpassword");
+
+        // When
+        service.changePassword(user.getId().toString(), "oldpassword", "newpassword");
+
+        // Then
+        assertThat(user.getPassword()).isEqualTo("hashednewpassword");
+        verify(repository, times(1)).save(user);
+    }
+
+    @Test
+    void testChangePasswordIncorrectCurrentPassword() {
+        // Given
+        User user = this.users.get(1);
+        user.setPassword("oldpassword");
+
+        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(encoder.matches("wrongpassword", "oldpassword")).willReturn(false);
+
+        // When
+        Throwable thrown = catchThrowable(() -> service.changePassword(user.getId().toString(), "wrongpassword", "newpassword"));
+
+        // Then
+        assertThat(thrown).isInstanceOf(UserException.IncorrectPasswordException.class);
+        verify(repository, never()).save(any());
     }
 
     @Test

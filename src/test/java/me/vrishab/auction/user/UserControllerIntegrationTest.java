@@ -1,7 +1,9 @@
 package me.vrishab.auction.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.vrishab.auction.user.dto.ChangePasswordDTO;
 import me.vrishab.auction.user.dto.UserEditableDTO;
+import me.vrishab.auction.user.dto.UserUpdateDTO;
 import me.vrishab.auction.user.model.CreditCard;
 import me.vrishab.auction.utils.Data;
 import org.hamcrest.Matchers;
@@ -116,11 +118,9 @@ public class UserControllerIntegrationTest {
     @DisplayName("Check updateUser operation")
     void testUpdateUserSuccess() throws Exception {
 
-        UserEditableDTO userEditableDTO = new UserEditableDTO(
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(
                 "New Name",
-                "Password",
                 "New Description",
-                "name@domain.tld",
                 "1234567890",
                 "00000",
                 "New Street",
@@ -129,7 +129,7 @@ public class UserControllerIntegrationTest {
         );
 
 
-        String json = this.objectMapper.writeValueAsString(userEditableDTO);
+        String json = this.objectMapper.writeValueAsString(userUpdateDTO);
 
         this.mockMvc.perform(put(this.baseUrl + "/user/self")
                         .header("Authorization", this.token)
@@ -148,6 +148,27 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("Check changePassword operation")
+    void testChangePasswordSuccess() throws Exception {
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("password", "newpassword");
+        String json = this.objectMapper.writeValueAsString(changePasswordDTO);
+
+        this.mockMvc.perform(put(this.baseUrl + "/user/self/password")
+                        .header("Authorization", this.token)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Change password"));
+
+        // Verify login works with new password
+        this.mockMvc.perform(post(this.baseUrl + "/users/login")
+                        .with(httpBasic("name1@domain.tld", "newpassword")))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("User Info and Json Web Token"));
+    }
+
+    @Test
     @DisplayName("Check deleteUser operation")
     void testDeleteUserSuccess() throws Exception {
 
@@ -162,11 +183,9 @@ public class UserControllerIntegrationTest {
     @Test
     @DisplayName("Check invalid zipcode")
     void testInvalidZipCode() throws Exception {
-        UserEditableDTO userEditableDTO = new UserEditableDTO(
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(
                 "New Name",
-                "Password",
                 "New Description",
-                "name@domain.tld",
                 "1234567890",
                 "00-23",
                 "New Street",
@@ -175,7 +194,7 @@ public class UserControllerIntegrationTest {
         );
 
 
-        String json = this.objectMapper.writeValueAsString(userEditableDTO);
+        String json = this.objectMapper.writeValueAsString(userUpdateDTO);
 
         this.mockMvc.perform(put(this.baseUrl + "/user/self")
                         .header("Authorization", this.token)
