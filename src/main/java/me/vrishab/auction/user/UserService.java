@@ -66,21 +66,27 @@ public class UserService implements UserDetailsService {
         UUID id = UUID.fromString(userId);
         return this.userRepo.findById(id)
                 .map(oldUser -> {
-
-                    if (!oldUser.getEmail().equals(update.getEmail())) {
-                        checkEmail(update.getEmail());
-                    }
-
                     oldUser.setName(update.getName());
-                    oldUser.setPassword(this.passwordEncoder.encode(update.getPassword()));
                     oldUser.setDescription(update.getDescription());
-                    oldUser.setEmail(update.getEmail());
                     oldUser.setContact(update.getContact());
                     oldUser.setEnabled(update.getEnabled());
                     oldUser.setHomeAddress(update.getHomeAddress());
                     return this.userRepo.save(oldUser);
                 })
                 .orElseThrow(() -> new UserNotFoundByIdException(id));
+    }
+
+    public void changePassword(String userId, String currentPassword, String newPassword) {
+        UUID id = UUID.fromString(userId);
+        User user = this.userRepo.findById(id)
+                .orElseThrow(() -> new UserNotFoundByIdException(id));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new UserException.IncorrectPasswordException();
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        this.userRepo.save(user);
     }
 
     public void delete(String userId) {

@@ -5,7 +5,9 @@ import me.vrishab.auction.TestData;
 import me.vrishab.auction.security.AuthService;
 import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
+import me.vrishab.auction.user.dto.ChangePasswordDTO;
 import me.vrishab.auction.user.dto.UserEditableDTO;
+import me.vrishab.auction.user.dto.UserUpdateDTO;
 import me.vrishab.auction.user.model.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -175,11 +177,9 @@ class UserControllerTest {
 
         // Given
         User user = this.users.get(1);
-        UserEditableDTO userEditableDTO = new UserEditableDTO(
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(
                 user.getName(),
-                user.getPassword(),
                 user.getDescription(),
-                user.getEmail(),
                 user.getContact(),
                 user.getHomeZipCode(),
                 user.getHomeStreet(),
@@ -187,7 +187,7 @@ class UserControllerTest {
                 user.getHomeCountry()
         );
 
-        String json = this.objectMapper.writeValueAsString(userEditableDTO);
+        String json = this.objectMapper.writeValueAsString(userUpdateDTO);
 
         given(this.service.update(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), Mockito.any(User.class))).willReturn(user);
         given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
@@ -211,11 +211,9 @@ class UserControllerTest {
     @Test
     void testUpdateUserNotFound() throws Exception {
         User user = this.users.get(1);
-        UserEditableDTO userEditableDTO = new UserEditableDTO(
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(
                 user.getName(),
-                user.getPassword(),
                 user.getDescription(),
-                user.getEmail(),
                 user.getContact(),
                 user.getHomeZipCode(),
                 user.getHomeStreet(),
@@ -223,7 +221,7 @@ class UserControllerTest {
                 user.getHomeCountry()
         );
 
-        String json = this.objectMapper.writeValueAsString(userEditableDTO);
+        String json = this.objectMapper.writeValueAsString(userUpdateDTO);
 
 
         given(this.service.update(eq("9a540a1e-b599-4cec-aeb1-6396eb8fa271"), Mockito.any(User.class)))
@@ -238,6 +236,43 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.flag").value(false))
                 .andExpect(jsonPath("$.message").value("Could not find user with Id 9a540a1e-b599-4cec-aeb1-6396eb8fa271"))
                 .andExpect(jsonPath("$.data").isEmpty());
+    }
+
+    @Test
+    void testChangePasswordSuccess() throws Exception {
+        // Given
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("oldpassword", "newpassword");
+        String json = this.objectMapper.writeValueAsString(changePasswordDTO);
+
+        given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        doNothing().when(this.service).changePassword("9a540a1e-b599-4cec-aeb1-6396eb8fa271", "oldpassword", "newpassword");
+
+        // When and then
+        this.mockMvc.perform(put(baseUrl + "/user/self/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.message").value("Change password"));
+    }
+
+    @Test
+    void testChangePasswordIncorrectPassword() throws Exception {
+        // Given
+        ChangePasswordDTO changePasswordDTO = new ChangePasswordDTO("wrongpassword", "newpassword");
+        String json = this.objectMapper.writeValueAsString(changePasswordDTO);
+
+        given(this.authService.getUserInfo(Mockito.any())).willReturn("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        doThrow(new UserException.IncorrectPasswordException())
+                .when(this.service).changePassword("9a540a1e-b599-4cec-aeb1-6396eb8fa271", "wrongpassword", "newpassword");
+
+        // When and then
+        this.mockMvc.perform(put(baseUrl + "/user/self/password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.flag").value(false))
+                .andExpect(jsonPath("$.message").value("The current password provided is incorrect."));
     }
 
     @Test
