@@ -108,7 +108,7 @@ class AuctionControllerTest {
     void testFindAllAuctionsSuccess() throws Exception {
 
         // Given
-        given(auctionService.findAll(new PageRequestParams(null, null)))
+        given(auctionService.findAll(new PageRequestParams(null, null), false))
                 .willReturn(new PageImpl<>(this.auctions));
 
         // Then and When
