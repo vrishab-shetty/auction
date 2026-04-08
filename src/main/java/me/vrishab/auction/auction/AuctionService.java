@@ -65,10 +65,14 @@ public class AuctionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Auction> findAll(PageRequestParams pageSettings) {
+    public Page<Auction> findAll(PageRequestParams pageSettings, boolean active) {
         Pageable pageable = Pageable.unpaged();
         if (pageSettings != null && pageSettings.isValid())
             pageable = pageSettings.createPageRequest();
+
+        if (active) {
+            return this.auctionRepo.findAll(AuctionSpecification.isActive(), pageable);
+        }
 
         return this.auctionRepo.findAll(pageable);
     }

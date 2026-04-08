@@ -42,4 +42,13 @@ public class ItemService {
         return this.itemRepo.findAll(filterSpecification(filter), pageable);
     }
 
+    public Page<Item> findPopularItems(PageRequestParams pageParams) {
+        Pageable pageable = Pageable.unpaged();
+
+        if (pageParams != null && pageParams.isValid())
+            pageable = pageParams.createPageRequest();
+
+        return this.itemRepo.findAllOrderByPopularity(pageable);
+    }
+
 }
