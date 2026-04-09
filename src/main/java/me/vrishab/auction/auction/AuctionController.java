@@ -68,7 +68,7 @@ public class AuctionController {
     public Result findAllAuctions(
             @ModelAttribute
             @Valid PageRequestParams pageParams,
-            @RequestParam(defaultValue = "false") boolean active) {
+            @RequestParam(required = false) Boolean active) {
         Page<Auction> auctionPage = this.auctionService.findAll(pageParams, active);
 
         List<AuctionDTO> dtos = auctionPage.getContent().stream().map(

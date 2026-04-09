@@ -154,7 +154,7 @@ class AuctionServiceTest {
                 );
 
         // When
-        Page<Auction> returnedAuctionPage = auctionService.findAll(new PageRequestParams(null, null), false);
+        Page<Auction> returnedAuctionPage = auctionService.findAll(new PageRequestParams(null, null), null);
 
         // Then
         assertThat(returnedAuctionPage.getContent()).hasSize(9);
@@ -174,7 +174,7 @@ class AuctionServiceTest {
                 ));
 
         // When
-        Page<Auction> returnedAuctionPage = auctionService.findAll(new PageRequestParams(page, size), false);
+        Page<Auction> returnedAuctionPage = auctionService.findAll(new PageRequestParams(page, size), null);
 
         // Then
 

@@ -112,7 +112,7 @@ public class DashboardFeaturesIntegrationTest {
     @Test
     @DisplayName("Verify active auctions filtering")
     void testActiveAuctionsFiltering() throws Exception {
-        // Find all (active=false by default)
+        // Find all (active not provided)
         mockMvc.perform(get(baseUrl + "/auctions")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -127,6 +127,15 @@ public class DashboardFeaturesIntegrationTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.data.content", hasSize(1)))
                 .andExpect(jsonPath("$.data.content[0].name").value("Active Auction"));
+
+        // Find inactive only
+        mockMvc.perform(get(baseUrl + "/auctions")
+                        .param("active", "false")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.data.content", hasSize(2)))
+                .andExpect(jsonPath("$.data.content[*].name", containsInAnyOrder("Future Auction", "Past Auction")));
     }
 
     @Test
