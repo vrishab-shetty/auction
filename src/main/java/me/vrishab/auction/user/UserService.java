@@ -114,11 +114,9 @@ public class UserService implements UserDetailsService {
         User user = getUser(userId);
 
         UUID itemUUID = UUID.fromString(itemId);
-        UUID userUUID = UUID.fromString(userId);
         Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ItemNotFoundByIdException(itemUUID));
         user.addFavouriteItem(item);
 
-        this.userRepo.addItemToWishlist(userUUID, itemUUID);
         return user.getWishlist().stream().toList();
     }
 
@@ -126,11 +124,8 @@ public class UserService implements UserDetailsService {
         User user = getUser(userId);
 
         UUID itemUUID = UUID.fromString(itemId);
-        UUID userUUID = UUID.fromString(userId);
         Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ItemNotFoundByIdException(itemUUID));
         user.removeFavouriteItem(item);
-
-        this.userRepo.removeItemFromWishlist(userUUID, itemUUID);
 
         return user.getWishlist().stream().toList();
     }
