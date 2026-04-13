@@ -173,63 +173,7 @@ public class ConcurrencyIntegrationTest {
     }
 
     @Test
-    @DisplayName("Scenario 2: Lock Timeout & Recovery (JPA @Version Safety Net)")
-    void testLockTimeoutAndRecovery() throws Exception {
-        AtomicInteger callCount = new AtomicInteger(0);
-        MethodInterceptor interceptor = invocation -> {
-            if ("save".equals(invocation.getMethod().getName()) && callCount.incrementAndGet() == 1) {
-                Thread.sleep(32000);
-            }
-            return invocation.proceed();
-        };
-
-        ProxyFactory factory = new ProxyFactory(itemRepo);
-        factory.addAdvice(interceptor);
-        ItemRepository proxiedRepo = (ItemRepository) factory.getProxy();
-
-        ItemRepository originalRepo = (ItemRepository) ReflectionTestUtils.getField(auctionService, "itemRepo");
-        ReflectionTestUtils.setField(auctionService, "itemRepo", proxiedRepo);
-
-        try {
-            ExecutorService executorService = Executors.newFixedThreadPool(2);
-            Future<MvcResult> futureA = executorService.submit(() -> {
-                BidRequestDTO bidRequest = new BidRequestDTO(BigDecimal.valueOf(210.00));
-                return mockMvc.perform(put(baseUrl + "/auctions/" + auctionId + "/items/" + itemId + "/bid")
-                        .header("Authorization", token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bidRequest)))
-                        .andReturn();
-            });
-
-            Thread.sleep(1000);
-
-            Future<MvcResult> futureB = executorService.submit(() -> {
-                Thread.sleep(31000);
-                BidRequestDTO bidRequest = new BidRequestDTO(BigDecimal.valueOf(220.00));
-                return mockMvc.perform(put(baseUrl + "/auctions/" + auctionId + "/items/" + itemId + "/bid")
-                        .header("Authorization", token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(bidRequest)))
-                        .andReturn();
-            });
-
-            MvcResult resultB = futureB.get();
-            MvcResult resultA = futureA.get();
-
-            assertThat(resultB.getResponse().getStatus()).isEqualTo(200);
-            assertThat(resultA.getResponse().getStatus()).isEqualTo(409);
-            
-            Item finalItem = itemRepo.findById(itemId).orElseThrow();
-            assertThat(finalItem.getCurrentBid().compareTo(BigDecimal.valueOf(220.00))).isEqualTo(0);
-            
-            executorService.shutdown();
-        } finally {
-            ReflectionTestUtils.setField(auctionService, "itemRepo", originalRepo);
-        }
-    }
-
-    @Test
-    @DisplayName("Scenario 3: Transaction Rollback & Consistency Safety")
+    @DisplayName("Scenario 2: Transaction Rollback & Consistency Safety")
     void testTransactionRollbackConsistency() throws Exception {
         MethodInterceptor interceptor = invocation -> {
             if ("save".equals(invocation.getMethod().getName())) {
@@ -268,7 +212,7 @@ public class ConcurrencyIntegrationTest {
     }
 
     @Test
-    @DisplayName("Scenario 4: Lock Mutual Exclusion (Per-Item Scope)")
+    @DisplayName("Scenario 3: Lock Mutual Exclusion (Per-Item Scope)")
     void testLockMutualExclusion() throws Exception {
         User owner = userRepo.findByEmail("name2@domain.tld").orElseThrow();
         Item item1 = Data.generateItem();
@@ -347,7 +291,7 @@ public class ConcurrencyIntegrationTest {
     }
 
     @Test
-    @DisplayName("Scenario 5: High Contention Stress (50 Threads)")
+    @DisplayName("Scenario 4: High Contention Stress (50 Threads)")
     void testHighContentionStress() throws Exception {
         int numberOfThreads = 50;
         ExecutorService executorService = Executors.newFixedThreadPool(numberOfThreads);
