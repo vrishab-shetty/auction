@@ -37,13 +37,13 @@ class ItemServiceTest {
     @Mock
     private ItemRepository repository;
 
-    @InjectMocks
     private ItemService service;
 
     private List<Item> items;
 
     @BeforeEach
     void setUp() {
+        this.service = new ItemService(repository, 15);
         this.items = TestData.generateItems(TestData.generateUser(), null);
     }
 
@@ -260,6 +260,22 @@ class ItemServiceTest {
 
 
         verify(repository, times(1)).findAll(Mockito.any(Specification.class), eq(pageable));
+    }
+
+    @Test
+    void testFindPopularItemsCappedByLimit() {
+        // Given
+        int limit = 15;
+        Pageable pageable = PageRequest.of(0, limit);
+        given(repository.findAllOrderByPopularity(pageable))
+                .willReturn(new PageImpl<>(items.subList(0, Math.min(items.size(), limit))));
+
+        // When
+        Page<Item> returnedItemPage = service.findPopularItems(new PageRequestParams(null, null));
+
+        // Then
+        assertThat(returnedItemPage.getContent().size()).isLessThanOrEqualTo(limit);
+        verify(repository, times(1)).findAllOrderByPopularity(pageable);
     }
 
 }
