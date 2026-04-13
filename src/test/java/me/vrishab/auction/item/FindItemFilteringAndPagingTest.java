@@ -78,4 +78,29 @@ public class FindItemFilteringAndPagingTest extends SpringDataJpaApplicationTest
                 () -> assertThat(itemPage.get()).allMatch(item -> item.getName().contains(query))
         );
     }
+
+    @Test
+    void testFilterItemImprovedSearch() {
+        // 1. Case-insensitive name search
+        String queryUpper = "SPECIAL";
+        ItemFilterParams filter1 = new ItemFilterParams(queryUpper, null);
+        Page<Item> page1 = itemRepo.findAll(filterSpecification(filter1), PageRequest.of(0, 10));
+        assertThat(page1.getTotalElements()).isEqualTo(5);
+        assertThat(page1.getContent()).allMatch(item -> item.getName().toLowerCase().contains("special"));
+
+        // 2. Search in description
+        String queryDesc = "Description 1";
+        ItemFilterParams filter2 = new ItemFilterParams(queryDesc, null);
+        Page<Item> page2 = itemRepo.findAll(filterSpecification(filter2), PageRequest.of(0, 10));
+        // There is "Description 1" for item 1
+        assertThat(page2.getTotalElements()).isGreaterThanOrEqualTo(1);
+        assertThat(page2.getContent()).anyMatch(item -> item.getDescription().contains(queryDesc));
+
+        // 3. Case-insensitive location search
+        String locationLower = "ma";
+        ItemFilterParams filter3 = new ItemFilterParams(null, locationLower);
+        Page<Item> page3 = itemRepo.findAll(filterSpecification(filter3), PageRequest.of(0, 10));
+        assertThat(page3.getTotalElements()).isEqualTo(3);
+        assertThat(page3.getContent()).allMatch(item -> item.getLocation().equalsIgnoreCase("MA"));
+    }
 }
