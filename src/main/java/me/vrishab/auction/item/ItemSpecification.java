@@ -14,15 +14,19 @@ public class ItemSpecification {
         return (root, query, criteriaBuilder) -> {
             final List<Predicate> predicates = new ArrayList<>();
 
-            if (filter.name() != null) {
-                String pattern = "%" + filter.name() + "%";
-                final Predicate name = criteriaBuilder.like(root.get("name"), pattern);
-                predicates.add(name);
+            if (filter.name() != null && !filter.name().isBlank()) {
+                String pattern = "%" + filter.name().toLowerCase() + "%";
+                final Predicate nameLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern);
+                final Predicate descriptionLike = criteriaBuilder.like(criteriaBuilder.lower(root.get("description")), pattern);
+                predicates.add(criteriaBuilder.or(nameLike, descriptionLike));
             }
 
 
-            if (filter.location() != null) {
-                final Predicate location = criteriaBuilder.equal(root.get("location"), filter.location());
+            if (filter.location() != null && !filter.location().isBlank()) {
+                final Predicate location = criteriaBuilder.equal(
+                        criteriaBuilder.lower(root.get("location")),
+                        filter.location().toLowerCase()
+                );
                 predicates.add(location);
             }
 
