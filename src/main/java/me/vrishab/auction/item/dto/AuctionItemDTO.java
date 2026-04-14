@@ -1,6 +1,7 @@
 package me.vrishab.auction.item.dto;
 
 import lombok.NonNull;
+import me.vrishab.auction.user.dto.UserSummaryDTO;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -30,6 +31,6 @@ public record AuctionItemDTO(
 
         String extras,
 
-        String buyer
+        UserSummaryDTO buyer
 ) {
 }

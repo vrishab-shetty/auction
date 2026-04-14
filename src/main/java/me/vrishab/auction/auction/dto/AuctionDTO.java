@@ -2,6 +2,7 @@ package me.vrishab.auction.auction.dto;
 
 import lombok.NonNull;
 import me.vrishab.auction.item.dto.AuctionItemDTO;
+import me.vrishab.auction.user.dto.UserSummaryDTO;
 
 import java.time.Instant;
 import java.util.List;
@@ -24,6 +25,6 @@ public record AuctionDTO(
         List<AuctionItemDTO> items,
 
         @NonNull
-        String user
+        UserSummaryDTO seller
 ) {
 }

@@ -5,6 +5,7 @@ import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.UserRepository;
+import me.vrishab.auction.user.converter.UserToUserSummaryDTOConverter;
 import me.vrishab.auction.user.model.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,6 +66,9 @@ class AuctionServiceTest {
 
     @Mock
     TransactionTemplate transactionTemplate;
+
+    @Mock
+    UserToUserSummaryDTOConverter userToUserSummaryDTOConverter;
 
     @InjectMocks
     AuctionService auctionService;
