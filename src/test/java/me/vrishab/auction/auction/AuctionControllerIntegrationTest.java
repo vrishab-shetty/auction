@@ -116,7 +116,7 @@ public class AuctionControllerIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Add an Auction"))
                 .andExpect(jsonPath("$.data.name").value(auction.getName()))
                 .andExpect(jsonPath("$.data.items", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$.data.user").value("name1@domain.tld"));
+                .andExpect(jsonPath("$.data.seller.email").value("name1@domain.tld"));
     }
 
 
@@ -135,7 +135,7 @@ public class AuctionControllerIntegrationTest {
         String itemId = null;
         for (int i = 0; i < auctions.length(); i++) {
             JSONObject auction = auctions.getJSONObject(i);
-            if (!auction.getString("user").equals("name1@domain.tld")) {
+            if (!auction.getJSONObject("seller").getString("email").equals("name1@domain.tld")) {
                 bidingAuctionId = auction.getString("id");
                 itemId = auction.getJSONArray("items").getJSONObject(0).getString("id");
                 break;
@@ -158,6 +158,6 @@ public class AuctionControllerIntegrationTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Place a Bid"))
                 .andExpect(jsonPath("$.data.currentBid").value("150.0"))
-                .andExpect(jsonPath("$.data.buyer").value("name1@domain.tld"));
+                .andExpect(jsonPath("$.data.buyer.email").value("name1@domain.tld"));
     }
 }

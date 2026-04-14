@@ -11,6 +11,7 @@ import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.user.UserException.UserNotFoundByIdException;
 import me.vrishab.auction.user.UserRepository;
+import me.vrishab.auction.user.converter.UserToUserSummaryDTOConverter;
 import me.vrishab.auction.user.model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,19 +43,22 @@ public class AuctionService {
     private final RedisTemplate<String, String> redisTemplate;
     private final TransactionTemplate transactionTemplate;
     private final ObjectMapper objectMapper;
+    private final UserToUserSummaryDTOConverter userToUserSummaryDTOConverter;
 
     @Value("${auction.bidding.lock-timeout-seconds}")
     private long lockTimeoutSeconds;
 
     public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo,
                           ItemRepository itemRepo, RedisTemplate<String, String> redisTemplate,
-                          TransactionTemplate transactionTemplate, ObjectMapper objectMapper) {
+                          TransactionTemplate transactionTemplate, ObjectMapper objectMapper,
+                          UserToUserSummaryDTOConverter userToUserSummaryDTOConverter) {
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
         this.redisTemplate = redisTemplate;
         this.transactionTemplate = transactionTemplate;
         this.objectMapper = objectMapper;
+        this.userToUserSummaryDTOConverter = userToUserSummaryDTOConverter;
     }
 
     @Transactional(readOnly = true)
@@ -172,7 +176,7 @@ public class AuctionService {
                                 auctionUUID,
                                 itemUUID,
                                 bidAmount,
-                                user.getName()
+                                userToUserSummaryDTOConverter.convert(user)
                         );
                         try {
                             String message = objectMapper.writeValueAsString(event);

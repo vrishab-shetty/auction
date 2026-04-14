@@ -4,6 +4,7 @@ import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.auction.dto.AuctionDTO;
 import me.vrishab.auction.item.converter.ItemToAuctionItemDTO;
 import me.vrishab.auction.item.dto.AuctionItemDTO;
+import me.vrishab.auction.user.converter.UserToUserSummaryDTOConverter;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -13,9 +14,11 @@ import java.util.List;
 public class AuctionToAuctionDTOConverter implements Converter<Auction, AuctionDTO> {
 
     private final ItemToAuctionItemDTO auctionItemToAuctionItemDTO;
+    private final UserToUserSummaryDTOConverter userToUserSummaryDTOConverter;
 
-    public AuctionToAuctionDTOConverter(ItemToAuctionItemDTO auctionItemToAuctionItemDTO) {
+    public AuctionToAuctionDTOConverter(ItemToAuctionItemDTO auctionItemToAuctionItemDTO, UserToUserSummaryDTOConverter userToUserSummaryDTOConverter) {
         this.auctionItemToAuctionItemDTO = auctionItemToAuctionItemDTO;
+        this.userToUserSummaryDTOConverter = userToUserSummaryDTOConverter;
     }
 
     @Override
@@ -31,7 +34,7 @@ public class AuctionToAuctionDTOConverter implements Converter<Auction, AuctionD
                 source.getStartTime(),
                 source.getEndTime(),
                 itemDTOs,
-                source.getOwnerEmail()
+                userToUserSummaryDTOConverter.convert(source.getUser())
         );
     }
 }

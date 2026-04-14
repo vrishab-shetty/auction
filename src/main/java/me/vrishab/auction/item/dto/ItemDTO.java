@@ -1,6 +1,7 @@
 package me.vrishab.auction.item.dto;
 
 import lombok.NonNull;
+import me.vrishab.auction.user.dto.UserSummaryDTO;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -30,11 +31,13 @@ public record ItemDTO(
 
         String extras,
 
-        String buyer,
+        UserSummaryDTO buyer,
 
-        String seller,
+        UserSummaryDTO seller,
 
-        Long popularity
+        Long popularity,
+
+        UUID auctionId
 ) {
 
 }

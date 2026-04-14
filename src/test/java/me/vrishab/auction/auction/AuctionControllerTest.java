@@ -156,7 +156,7 @@ class AuctionControllerTest {
                 .andExpect(jsonPath("$.message").value("Add an Auction"))
                 .andExpect(jsonPath("$.data.name").value("Auction 0"))
                 .andExpect(jsonPath("$.data.items", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$.data.user").value(this.user.getEmail()));
+                .andExpect(jsonPath("$.data.seller.email").value(this.user.getEmail()));
     }
 
     @Test
@@ -195,7 +195,7 @@ class AuctionControllerTest {
                 .andExpect(jsonPath("$.message").value("Update an Auction"))
                 .andExpect(jsonPath("$.data.name").value("Auction 0"))
                 .andExpect(jsonPath("$.data.items", Matchers.hasSize(1)))
-                .andExpect(jsonPath("$.data.user").value(this.user.getEmail()));
+                .andExpect(jsonPath("$.data.seller.email").value(this.user.getEmail()));
     }
 
     @Test
@@ -339,7 +339,7 @@ class AuctionControllerTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Place a Bid"))
                 .andExpect(jsonPath("$.data.currentBid").value("150.0"))
-                .andExpect(jsonPath("$.data.buyer").value(this.buyer.getEmail()));
+                .andExpect(jsonPath("$.data.buyer.email").value(this.buyer.getEmail()));
 
 
     }
