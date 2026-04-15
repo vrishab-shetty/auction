@@ -23,6 +23,7 @@ public class ItemToAuctionItemDTO implements Converter<Item, AuctionItemDTO> {
                 source.getName(),
                 source.getDescription(),
                 source.getLocation(),
+                source.getInitialPrice(),
                 source.getCurrentBid(),
                 source.getImageUrls(),
                 userToUserSummaryDTOConverter.convert(source.getBuyer())
