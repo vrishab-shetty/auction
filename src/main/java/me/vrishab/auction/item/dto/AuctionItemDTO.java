@@ -20,16 +20,9 @@ public record AuctionItemDTO(
         @NonNull
         String location,
 
-        @NonNull
-        BigDecimal initialPrice,
-
         BigDecimal currentBid,
 
         Set<String> imageUrls,
-
-        String legitimacyProof,
-
-        String extras,
 
         UserSummaryDTO buyer
 ) {
