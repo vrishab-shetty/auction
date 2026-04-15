@@ -20,6 +20,9 @@ public record AuctionItemDTO(
         @NonNull
         String location,
 
+        @NonNull
+        BigDecimal startingBid,
+
         BigDecimal currentBid,
 
         Set<String> imageUrls,
