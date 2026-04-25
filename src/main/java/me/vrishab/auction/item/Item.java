@@ -59,11 +59,7 @@ public class Item {
     private Set<User> likedBy = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = Constants.ITEM_BUYER_TBL,
-            joinColumns = @JoinColumn(name = Constants.ITEM_ID),
-            inverseJoinColumns = @JoinColumn(nullable = false)
-    )
+    @JoinColumn(name = "buyer_id")
     private User buyer;
 
     @Version

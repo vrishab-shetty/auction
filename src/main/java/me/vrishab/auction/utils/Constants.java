@@ -8,7 +8,5 @@ public class Constants {
     public final static String IMAGE_URL = "IMAGE_URL";
     public final static String WISHLIST_TBL = "WISHLIST";
     public final static String USER_ID = "USER_ID";
-    public final static String ITEM_BUYER_TBL = "ITEM_BUYER";
-    public final static String USER_AUCTION_TBL = "USER_AUCTION";
 
 }
