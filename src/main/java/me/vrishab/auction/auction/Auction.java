@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+
 @Entity
 @Setter
 @Getter
@@ -40,6 +41,13 @@ public class Auction {
     @JoinColumn(name = "user_id", nullable = false)
     @Setter(AccessLevel.NONE)
     private User user;
+
+    public AuctionStatus getStatus() {
+        Instant now = Instant.now();
+        if (now.isBefore(startTime)) return AuctionStatus.SCHEDULED;
+        if (now.isAfter(endTime)) return AuctionStatus.ENDED;
+        return AuctionStatus.ACTIVE;
+    }
 
     public String getOwnerEmail() {
         return user.getEmail();
