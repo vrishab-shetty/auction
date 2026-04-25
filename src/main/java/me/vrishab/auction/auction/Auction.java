@@ -7,7 +7,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.user.model.User;
-import me.vrishab.auction.utils.Constants;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -38,11 +37,7 @@ public class Auction {
     private Set<Item> items = new HashSet<>();
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinTable(
-            name = Constants.USER_AUCTION_TBL,
-            joinColumns = @JoinColumn(name = Constants.AUCTION_ID, unique = true),
-            inverseJoinColumns = @JoinColumn(name = Constants.USER_ID)
-    )
+    @JoinColumn(name = "user_id", nullable = false)
     @Setter(AccessLevel.NONE)
     private User user;
 
