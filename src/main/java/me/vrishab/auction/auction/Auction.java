@@ -43,7 +43,7 @@ public class Auction {
             joinColumns = @JoinColumn(name = Constants.AUCTION_ID, unique = true),
             inverseJoinColumns = @JoinColumn(name = Constants.USER_ID)
     )
-    @Setter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE) // custom setUser() below maintains item.seller invariant
     private User user;
 
     public String getOwnerEmail() {

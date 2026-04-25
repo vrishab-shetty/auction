@@ -26,6 +26,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -37,6 +38,8 @@ public class AuctionService {
 
     private static final Logger logger = LoggerFactory.getLogger(AuctionService.class);
     private static final String BIDS_KEY_PREFIX = "auction:item:bids:";
+    private static final String REDIS_UNLOCK_SCRIPT =
+            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
     private final AuctionRepository auctionRepo;
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
@@ -168,7 +171,7 @@ public class AuctionService {
                     public void afterCommit() {
                         String redisKey = BIDS_KEY_PREFIX + itemId;
                         // Use a scale to maintain precision for currency in double-based ZSet
-                        double score = bidAmount.setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue();
+                        double score = bidAmount.setScale(4, RoundingMode.HALF_UP).doubleValue();
                         redisTemplate.opsForZSet().add(redisKey, userId, score);
 
                         // Publish bid update event for real-time feed
@@ -191,8 +194,7 @@ public class AuctionService {
             });
         } finally {
             // 4. Release Redis Lock
-            String luaScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-            redisTemplate.execute(new DefaultRedisScript<>(luaScript, Long.class),
+            redisTemplate.execute(new DefaultRedisScript<>(REDIS_UNLOCK_SCRIPT, Long.class),
                     Collections.singletonList(lockKey), lockId);
         }
     }
@@ -249,7 +251,7 @@ public class AuctionService {
 
     private void authorizedUser(UUID userUUID, Auction auction) {
         User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new ItemNotFoundByIdException(userUUID));
+                .orElseThrow(() -> new UserNotFoundByIdException(userUUID));
 
         if (!user.getEmail().equals(auction.getOwnerEmail())) {
             throw new UnauthorizedAuctionAccess(false);
@@ -258,7 +260,7 @@ public class AuctionService {
 
     private User getAndValidateBidder(UUID userUUID, Auction auction) {
         User user = userRepo.findById(userUUID)
-                .orElseThrow(() -> new ItemNotFoundByIdException(userUUID));
+                .orElseThrow(() -> new UserNotFoundByIdException(userUUID));
 
         if (user.getEmail().equals(auction.getOwnerEmail())) {
             throw new UnauthorizedAuctionAccess(true);

@@ -133,7 +133,7 @@ public class ExceptionHandlerAdvice {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result handleBadRequestBodyException(HttpMessageNotReadableException ex) {
-        return new Result(false, ex.getMessage().split(":")[0], ErrorCode.BAD_REQUEST);
+        return new Result(false, ex.getMessage().split(":", 2)[0], ErrorCode.BAD_REQUEST);
     }
 
     @ExceptionHandler({NoResourceFoundException.class, HttpRequestMethodNotSupportedException.class})
