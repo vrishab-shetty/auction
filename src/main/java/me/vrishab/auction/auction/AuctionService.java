@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import me.vrishab.auction.auction.AuctionException.*;
 import me.vrishab.auction.auction.exception.ConcurrentBidException;
+import me.vrishab.auction.bid.Bid;
+import me.vrishab.auction.bid.BidRepository;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemRepository;
@@ -43,6 +45,7 @@ public class AuctionService {
     private final AuctionRepository auctionRepo;
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
+    private final BidRepository bidRepo;
     private final RedisTemplate<String, String> redisTemplate;
     private final TransactionTemplate transactionTemplate;
     private final ObjectMapper objectMapper;
@@ -52,12 +55,14 @@ public class AuctionService {
     private long lockTimeoutSeconds;
 
     public AuctionService(AuctionRepository auctionRepo, UserRepository userRepo,
-                          ItemRepository itemRepo, RedisTemplate<String, String> redisTemplate,
+                          ItemRepository itemRepo, BidRepository bidRepo,
+                          RedisTemplate<String, String> redisTemplate,
                           TransactionTemplate transactionTemplate, ObjectMapper objectMapper,
                           UserToUserSummaryDTOConverter userToUserSummaryDTOConverter) {
         this.auctionRepo = auctionRepo;
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
+        this.bidRepo = bidRepo;
         this.redisTemplate = redisTemplate;
         this.transactionTemplate = transactionTemplate;
         this.objectMapper = objectMapper;
@@ -164,6 +169,9 @@ public class AuctionService {
                 item.setCurrentBid(bidAmount);
                 item.setBuyer(user);
                 Item savedItem = this.itemRepo.save(item);
+
+                // Persist bid history in the same transaction — PostgreSQL is source of truth.
+                this.bidRepo.save(new Bid(savedItem, user, bidAmount));
 
                 // 3. Register Redis Update Post-Commit
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {

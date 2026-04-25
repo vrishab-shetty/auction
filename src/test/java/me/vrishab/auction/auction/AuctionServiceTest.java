@@ -1,5 +1,6 @@
 package me.vrishab.auction.auction;
 
+import me.vrishab.auction.bid.BidRepository;
 import me.vrishab.auction.item.Item;
 import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.system.PageRequestParams;
@@ -54,6 +55,9 @@ class AuctionServiceTest {
 
     @Mock
     ItemRepository itemRepo;
+
+    @Mock
+    BidRepository bidRepo;
 
     @Mock
     RedisTemplate<String, String> redisTemplate;
