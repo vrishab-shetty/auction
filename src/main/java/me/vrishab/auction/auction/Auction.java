@@ -43,7 +43,7 @@ public class Auction {
             joinColumns = @JoinColumn(name = Constants.AUCTION_ID, unique = true),
             inverseJoinColumns = @JoinColumn(name = Constants.USER_ID)
     )
-    @Setter(AccessLevel.NONE) // custom setUser() below maintains item.seller invariant
+    @Setter(AccessLevel.NONE)
     private User user;
 
     public String getOwnerEmail() {
@@ -57,10 +57,7 @@ public class Auction {
 
     public void addAllItems(Set<Item> items) {
         this.items.addAll(items);
-        this.items.forEach(item -> {
-            item.setAuction(this);
-            if (user != null) item.setSeller(user.getEmail());
-        });
+        this.items.forEach(item -> item.setAuction(this));
     }
 
     public Set<Item> getItems() {
@@ -69,6 +66,5 @@ public class Auction {
 
     public void setUser(User user) {
         this.user = user;
-        this.items.forEach(item -> item.setSeller(this.user.getEmail()));
     }
 }
