@@ -1,6 +1,7 @@
 package me.vrishab.auction.auction.dto;
 
 import lombok.NonNull;
+import me.vrishab.auction.auction.AuctionStatus;
 import me.vrishab.auction.item.dto.AuctionItemDTO;
 import me.vrishab.auction.user.dto.UserSummaryDTO;
 
@@ -20,6 +21,9 @@ public record AuctionDTO(
 
         @NonNull
         Instant endTime,
+
+        @NonNull
+        AuctionStatus status,
 
         @NonNull
         List<AuctionItemDTO> items,

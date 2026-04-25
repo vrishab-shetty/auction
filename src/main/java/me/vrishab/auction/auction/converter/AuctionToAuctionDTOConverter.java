@@ -33,6 +33,7 @@ public class AuctionToAuctionDTOConverter implements Converter<Auction, AuctionD
                 source.getName(),
                 source.getStartTime(),
                 source.getEndTime(),
+                source.getStatus(),
                 itemDTOs,
                 userToUserSummaryDTOConverter.convert(source.getUser())
         );
