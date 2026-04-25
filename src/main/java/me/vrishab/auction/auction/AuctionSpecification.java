@@ -16,14 +16,14 @@ public class AuctionSpecification {
         };
     }
 
-    public static Specification<Auction> isInactive() {
-        return (root, query, criteriaBuilder) -> {
-            Instant now = Instant.now();
-            return criteriaBuilder.or(
-                    criteriaBuilder.greaterThan(root.get("startTime"), now),
-                    criteriaBuilder.lessThan(root.get("endTime"), now)
-            );
-        };
+    public static Specification<Auction> isScheduled() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.greaterThan(root.get("startTime"), Instant.now());
+    }
+
+    public static Specification<Auction> isEnded() {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.lessThan(root.get("endTime"), Instant.now());
     }
 
 }

@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,6 @@ import org.springframework.transaction.support.TransactionTemplate;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.*;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -77,17 +77,18 @@ public class AuctionService {
     }
 
     @Transactional(readOnly = true)
-    public Page<Auction> findAll(PageRequestParams pageSettings, Boolean active) {
+    public Page<Auction> findAll(PageRequestParams pageSettings, AuctionStatus status) {
         Pageable pageable = Pageable.unpaged();
         if (pageSettings != null && pageSettings.isValid())
             pageable = pageSettings.createPageRequest();
 
-        if (active != null) {
-            if (active) {
-                return this.auctionRepo.findAll(AuctionSpecification.isActive(), pageable);
-            } else {
-                return this.auctionRepo.findAll(AuctionSpecification.isInactive(), pageable);
-            }
+        if (status != null) {
+            Specification<Auction> spec = switch (status) {
+                case ACTIVE -> AuctionSpecification.isActive();
+                case SCHEDULED -> AuctionSpecification.isScheduled();
+                case ENDED -> AuctionSpecification.isEnded();
+            };
+            return this.auctionRepo.findAll(spec, pageable);
         }
 
         return this.auctionRepo.findAll(pageable);
@@ -222,11 +223,7 @@ public class AuctionService {
     }
 
     private void checkAuctionInBidingPhase(Auction auction) {
-        Instant now = Instant.now();
-        boolean isAuctionStarted = auction.getStartTime().isBefore(now);
-        boolean isAuctionEnded = auction.getEndTime().isBefore(now);
-
-        if (!isAuctionStarted || isAuctionEnded) {
+        if (auction.getStatus() != AuctionStatus.ACTIVE) {
             throw new AuctionForbiddenBidingPhaseException(auction.getId());
         }
     }
@@ -278,7 +275,7 @@ public class AuctionService {
     }
 
     private void checkAuctionNotStarted(Auction auction) {
-        if (auction.getStartTime().isBefore(Instant.now())) {
+        if (auction.getStatus() != AuctionStatus.SCHEDULED) {
             throw new AuctionForbiddenUpdateException(auction.getId());
         }
     }

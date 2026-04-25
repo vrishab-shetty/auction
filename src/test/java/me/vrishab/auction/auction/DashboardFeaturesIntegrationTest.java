@@ -119,21 +119,30 @@ public class DashboardFeaturesIntegrationTest {
 
         // Find active only
         mockMvc.perform(get(baseUrl + "/auctions")
-                        .param("active", "true")
+                        .param("status", "ACTIVE")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.data.content", hasSize(1)))
                 .andExpect(jsonPath("$.data.content[0].name").value("Active Auction"));
 
-        // Find inactive only
+        // Find scheduled only
         mockMvc.perform(get(baseUrl + "/auctions")
-                        .param("active", "false")
+                        .param("status", "SCHEDULED")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.flag").value(true))
-                .andExpect(jsonPath("$.data.content", hasSize(2)))
-                .andExpect(jsonPath("$.data.content[*].name", containsInAnyOrder("Future Auction", "Past Auction")));
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].name").value("Future Auction"));
+
+        // Find ended only
+        mockMvc.perform(get(baseUrl + "/auctions")
+                        .param("status", "ENDED")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.flag").value(true))
+                .andExpect(jsonPath("$.data.content", hasSize(1)))
+                .andExpect(jsonPath("$.data.content[0].name").value("Past Auction"));
     }
 
     @Test
