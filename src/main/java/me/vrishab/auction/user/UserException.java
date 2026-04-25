@@ -18,7 +18,7 @@ public class UserException {
 
     public static class UserNotFoundByUsernameException extends ObjectNotFoundException {
         public UserNotFoundByUsernameException(String username) {
-            super("Could find user with username " + username);
+            super("Could not find user with username " + username);
         }
     }
 
