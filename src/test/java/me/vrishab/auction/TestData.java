@@ -24,7 +24,6 @@ public class TestData {
             item.setDescription("Description " + i);
             item.setLocation(i % 3 == 1 ? "MA" : "CA");
             item.setLegitimacyProof("Proof");
-            item.setSeller(seller.getEmail());
             item.setBuyer(buyer);
 
             items.add(item);

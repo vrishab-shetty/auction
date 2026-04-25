@@ -258,7 +258,6 @@ class AuctionServiceTest {
         oldItem.setImageUrls(Set.of("<images>"));
         oldItem.setLegitimacyProof("Proof");
         oldItem.setInitialPrice(BigDecimal.valueOf(100.00));
-        oldItem.setSeller("name0@domain.tld");
 
         Auction oldAuction = new Auction();
 
@@ -344,7 +343,6 @@ class AuctionServiceTest {
         oldItem.setLocation("MA");
         oldItem.setImageUrls(Set.of("<images>"));
         oldItem.setLegitimacyProof("Proof");
-        oldItem.setSeller("name0@domain.tld");
         oldItem.setInitialPrice(BigDecimal.valueOf(100.00));
 
         Auction oldAuction = new Auction();
@@ -418,7 +416,6 @@ class AuctionServiceTest {
         oldItem.setImageUrls(Set.of("<images>"));
         oldItem.setLegitimacyProof("Proof");
         oldItem.setInitialPrice(BigDecimal.valueOf(100.00));
-        oldItem.setSeller("name0@domain.tld");
 
         Auction oldAuction = new Auction();
 
@@ -472,7 +469,6 @@ class AuctionServiceTest {
         otherItem.setImageUrls(Set.of("<images>"));
         otherItem.setExtras(null);
         otherItem.setLegitimacyProof("Proof");
-        otherItem.setSeller(otherUser.getEmail());
         given(itemRepo.findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a2"))).willReturn(Optional.of(otherItem));
 
         // When
@@ -501,7 +497,6 @@ class AuctionServiceTest {
         item.setImageUrls(Set.of("<images>"));
         item.setLegitimacyProof("Proof");
         item.setInitialPrice(BigDecimal.valueOf(100.00));
-        item.setSeller("name0@domain.tld");
 
         Auction auction = new Auction();
 
@@ -549,7 +544,6 @@ class AuctionServiceTest {
         item.setImageUrls(Set.of("<images>"));
         item.setLegitimacyProof("Proof");
         item.setInitialPrice(BigDecimal.valueOf(100.00));
-        item.setSeller("name0@domain.tld");
 
         Auction auction = new Auction();
 
@@ -597,7 +591,6 @@ class AuctionServiceTest {
         item.setImageUrls(Set.of("<images>"));
         item.setLegitimacyProof("Proof");
         item.setInitialPrice(BigDecimal.valueOf(100.00));
-        item.setSeller("name0@domain.tld");
 
         Auction auction = new Auction();
 
@@ -660,7 +653,6 @@ class AuctionServiceTest {
         item.setImageUrls(Set.of("<images>"));
         item.setLegitimacyProof("Proof");
         item.setInitialPrice(BigDecimal.valueOf(100.00));
-        item.setSeller("name0@domain.tld");
 
         Auction auction = new Auction();
 
@@ -715,7 +707,6 @@ class AuctionServiceTest {
         item.setImageUrls(Set.of("<images>"));
         item.setLegitimacyProof("Proof");
         item.setInitialPrice(BigDecimal.valueOf(100.00));
-        item.setSeller("name0@domain.tld");
 
         Auction auction = new Auction();
 
@@ -770,7 +761,6 @@ class AuctionServiceTest {
         item.setImageUrls(Set.of("<images>"));
         item.setLegitimacyProof("Proof");
         item.setInitialPrice(BigDecimal.valueOf(100.00));
-        item.setSeller("name0@domain.tld");
 
         Auction auction = new Auction();
 

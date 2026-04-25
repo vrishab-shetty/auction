@@ -92,7 +92,6 @@ public class DashboardFeaturesIntegrationTest {
         item1.setDescription("Description");
         item1.setLocation("Boston");
         item1.setInitialPrice(BigDecimal.valueOf(100));
-        item1.setSeller(testUser.getEmail());
         item1.setAuction(activeAuction);
         item1 = itemRepository.save(item1);
 
@@ -104,7 +103,6 @@ public class DashboardFeaturesIntegrationTest {
         item2.setDescription("Description");
         item2.setLocation("New York");
         item2.setInitialPrice(BigDecimal.valueOf(50));
-        item2.setSeller(testUser.getEmail());
         item2.setAuction(activeAuction);
         itemRepository.save(item2);
     }

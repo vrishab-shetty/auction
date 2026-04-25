@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.UUID;
 
 @Entity
-@Table(indexes = @Index(columnList = "seller"))
 @Setter
 @Getter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)
@@ -59,9 +58,6 @@ public class Item {
     @Setter(AccessLevel.NONE)
     private Set<User> likedBy = new HashSet<>();
 
-    @Column(nullable = false)
-    private String seller;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinTable(
             name = Constants.ITEM_BUYER_TBL,
@@ -72,6 +68,10 @@ public class Item {
 
     @Version
     private Long version = 0L;
+
+    public String getSeller() {
+        return auction.getUser().getEmail();
+    }
 
     public String getBuyerEmail() {
         if (buyer == null) return null;

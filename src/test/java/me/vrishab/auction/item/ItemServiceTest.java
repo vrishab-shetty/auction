@@ -71,8 +71,7 @@ class ItemServiceTest {
                 () -> assertThat(returnedItem.getLocation()).isEqualTo("CA"),
                 () -> assertThat(returnedItem.getImageUrls()).isEqualTo(Set.of("<images>")),
                 () -> assertThat(returnedItem.getExtras()).isEqualTo(null),
-                () -> assertThat(returnedItem.getLegitimacyProof()).isEqualTo("Proof"),
-                () -> assertThat(returnedItem.getSeller()).isEqualTo("name@domain.tld")
+                () -> assertThat(returnedItem.getLegitimacyProof()).isEqualTo("Proof")
         );
 
 
