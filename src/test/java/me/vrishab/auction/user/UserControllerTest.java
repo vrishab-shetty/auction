@@ -86,7 +86,7 @@ class UserControllerTest {
         // When and Then
         this.mockMvc.perform(get(baseUrl + "/users/name3@domain.tld").accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(false))
-                .andExpect(jsonPath("$.message").value("Could find user with username name3@domain.tld"))
+                .andExpect(jsonPath("$.message").value("Could not find user with username name3@domain.tld"))
                 .andExpect(jsonPath("$.data").isEmpty());
     }
 
