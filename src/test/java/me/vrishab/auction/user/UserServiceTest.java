@@ -85,7 +85,7 @@ class UserServiceTest {
         Throwable thrown = catchThrowable(() -> service.findByUsername("name1@domain.tld"));
 
         // Then
-        assertThat(thrown).isInstanceOf(UserNotFoundByUsernameException.class).hasMessage("Could find user with username name1@domain.tld");
+        assertThat(thrown).isInstanceOf(UserNotFoundByUsernameException.class).hasMessage("Could not find user with username name1@domain.tld");
 
         verify(repository, times(1)).findByEmail("name1@domain.tld");
     }
