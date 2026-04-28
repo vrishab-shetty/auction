@@ -2,11 +2,7 @@ package me.vrishab.auction.user.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import me.vrishab.auction.item.Item;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -35,25 +31,6 @@ public class User {
     private String contact;
 
     private Address homeAddress;
-
-    @ManyToMany(mappedBy = "likedBy")
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    private Set<Item> wishlist = new HashSet<>();
-
-    public Set<Item> getWishlist() {
-        return Collections.unmodifiableSet(this.wishlist);
-    }
-
-    public void addFavouriteItem(@NonNull Item item) {
-        this.wishlist.add(item);
-        item.addLikedUser(this);
-    }
-
-    public void removeFavouriteItem(@NonNull Item item) {
-        this.wishlist.remove(item);
-        item.removeLikedUser(this);
-    }
 
     public String getHomeZipCode() {
         return this.homeAddress.getZipcode();

@@ -22,7 +22,5 @@ api:
 auction:
   bidding:
     lock-timeout-seconds: 30
-  items:
-    popular-limit: 15
   cors:
     allowed-origin: http://localhost:5173/

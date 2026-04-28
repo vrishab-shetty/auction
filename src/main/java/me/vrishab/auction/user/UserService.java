@@ -15,6 +15,8 @@ import me.vrishab.auction.user.model.BankAccount;
 import me.vrishab.auction.user.model.BillingDetails;
 import me.vrishab.auction.user.model.CreditCard;
 import me.vrishab.auction.user.model.User;
+import me.vrishab.auction.wishlist.Wishlist;
+import me.vrishab.auction.wishlist.WishlistRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,6 +33,7 @@ public class UserService implements UserDetailsService {
     private final UserRepository userRepo;
     private final ItemRepository itemRepo;
     private final AuctionRepository auctionRepo;
+    private final WishlistRepository wishlistRepo;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -38,10 +41,14 @@ public class UserService implements UserDetailsService {
     private final CreditCardRepository creditCardRepo;
     private final BankAccountRepository bankAccountRepo;
 
-    public UserService(UserRepository userRepo, ItemRepository itemRepo, AuctionRepository auctionRepo, PasswordEncoder passwordEncoder, BillingDetailsRepository<BillingDetails, UUID> billingDetailsRepo, CreditCardRepository creditCardRepo, BankAccountRepository bankAccountRepo) {
+    public UserService(UserRepository userRepo, ItemRepository itemRepo, AuctionRepository auctionRepo,
+                       WishlistRepository wishlistRepo, PasswordEncoder passwordEncoder,
+                       BillingDetailsRepository<BillingDetails, UUID> billingDetailsRepo,
+                       CreditCardRepository creditCardRepo, BankAccountRepository bankAccountRepo) {
         this.userRepo = userRepo;
         this.itemRepo = itemRepo;
         this.auctionRepo = auctionRepo;
+        this.wishlistRepo = wishlistRepo;
         this.passwordEncoder = passwordEncoder;
         this.billingDetailsRepo = billingDetailsRepo;
         this.creditCardRepo = creditCardRepo;
@@ -93,41 +100,32 @@ public class UserService implements UserDetailsService {
 
     public void delete(String userId) {
         User user = getUser(userId);
-
-        UUID userUUID = UUID.fromString(userId);
-//         Remove Wishlist link first then auction
-        this.userRepo.removeAllItemFromWishlist(userUUID);
+        this.wishlistRepo.deleteByUser(user);
+        this.wishlistRepo.deleteByItemSeller(user);
         this.billingDetailsRepo.deleteByUser(user);
         this.auctionRepo.deleteByUser(user);
-
         this.userRepo.deleteById(UUID.fromString(userId));
     }
 
     public List<Item> wishlist(String userId) {
         User user = getUser(userId);
-
-        return user.getWishlist().stream().toList();
+        return wishlistRepo.findItemsByUser(user);
     }
-
 
     public List<Item> addItem(String userId, String itemId) {
         User user = getUser(userId);
-
         UUID itemUUID = UUID.fromString(itemId);
         Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ItemNotFoundByIdException(itemUUID));
-        user.addFavouriteItem(item);
-
-        return user.getWishlist().stream().toList();
+        wishlistRepo.save(new Wishlist(user, item));
+        return wishlistRepo.findItemsByUser(user);
     }
 
     public List<Item> removeItem(String userId, String itemId) {
         User user = getUser(userId);
-
         UUID itemUUID = UUID.fromString(itemId);
         Item item = this.itemRepo.findById(itemUUID).orElseThrow(() -> new ItemNotFoundByIdException(itemUUID));
-        user.removeFavouriteItem(item);
-
-        return user.getWishlist().stream().toList();
+        wishlistRepo.deleteByUserAndItem(user, item);
+        return wishlistRepo.findItemsByUser(user);
     }
 
     private User getUser(String userId) {

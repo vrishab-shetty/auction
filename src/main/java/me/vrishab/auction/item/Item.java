@@ -50,14 +50,6 @@ public class Item {
     @JoinColumn(name = Constants.AUCTION_ID, nullable = false)
     private Auction auction;
 
-    @ManyToMany
-    @JoinTable(name = Constants.WISHLIST_TBL,
-            joinColumns = @JoinColumn(name = Constants.ITEM_ID),
-            inverseJoinColumns = @JoinColumn(name = Constants.USER_ID))
-    @Getter(AccessLevel.NONE)
-    @Setter(AccessLevel.NONE)
-    private Set<User> likedBy = new HashSet<>();
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "buyer_id")
     private User buyer;
@@ -72,17 +64,5 @@ public class Item {
     public String getBuyerEmail() {
         if (buyer == null) return null;
         return this.buyer.getEmail();
-    }
-
-    public void addLikedUser(User user) {
-        this.likedBy.add(user);
-    }
-
-    public void removeLikedUser(User user) {
-        this.likedBy.remove(user);
-    }
-
-    public Long getPopularity() {
-        return (long) likedBy.size();
     }
 }

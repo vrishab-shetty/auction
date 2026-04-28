@@ -9,6 +9,7 @@ import me.vrishab.auction.user.model.BillingDetails;
 import me.vrishab.auction.user.model.CreditCard;
 import me.vrishab.auction.user.model.USZipcode;
 import me.vrishab.auction.user.model.User;
+import me.vrishab.auction.wishlist.WishlistRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,6 +47,8 @@ class UserServiceTest {
     private BillingDetailsRepository<BillingDetails, UUID> billingRepo;
     @Mock
     private AuctionRepository auctionRepo;
+    @Mock
+    private WishlistRepository wishlistRepo;
 
     @BeforeEach
     void setUp() {
@@ -274,6 +277,8 @@ class UserServiceTest {
 
         given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(user));
         doNothing().when(repository).deleteById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        doNothing().when(wishlistRepo).deleteByUser(Mockito.any(User.class));
+        doNothing().when(wishlistRepo).deleteByItemSeller(Mockito.any(User.class));
         doNothing().when(billingRepo).deleteByUser(Mockito.any(User.class));
         doNothing().when(auctionRepo).deleteByUser(Mockito.any(User.class));
 
