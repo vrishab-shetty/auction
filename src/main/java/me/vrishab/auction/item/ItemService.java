@@ -5,15 +5,10 @@ import me.vrishab.auction.item.ItemException.ItemNotFoundByIdException;
 import me.vrishab.auction.item.ItemSpecification.ItemFilterParams;
 import me.vrishab.auction.system.PageRequestParams;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.UUID;
 
 import static me.vrishab.auction.item.ItemSpecification.filterSpecification;
@@ -23,12 +18,10 @@ import static me.vrishab.auction.item.ItemSpecification.filterSpecification;
 public class ItemService {
 
     private final ItemRepository itemRepo;
-    private final int popularLimit;
 
     @Autowired
-    public ItemService(ItemRepository itemRepo, @Value("${auction.items.popular-limit}") int popularLimit) {
+    public ItemService(ItemRepository itemRepo) {
         this.itemRepo = itemRepo;
-        this.popularLimit = popularLimit;
     }
 
     public Item findById(String itemId) {
@@ -47,26 +40,6 @@ public class ItemService {
 
         ItemFilterParams filter = new ItemFilterParams(query, location);
         return this.itemRepo.findAll(filterSpecification(filter), pageable);
-    }
-
-    public Page<Item> findPopularItems(PageRequestParams pageParams) {
-        Pageable pageable = PageRequest.of(0, popularLimit);
-
-        if (pageParams != null && pageParams.isValid())
-            pageable = pageParams.createPageRequest();
-
-        Page<Item> itemPage = this.itemRepo.findAllOrderByPopularity(pageable);
-
-        long total = Math.min(itemPage.getTotalElements(), popularLimit);
-        List<Item> content = itemPage.getContent();
-
-        if (pageable.getOffset() >= popularLimit) {
-            content = Collections.emptyList();
-        } else if (pageable.getOffset() + content.size() > popularLimit) {
-            content = content.subList(0, (int) (popularLimit - pageable.getOffset()));
-        }
-
-        return new PageImpl<>(content, pageable, total);
     }
 
 }

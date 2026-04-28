@@ -29,7 +29,6 @@ public class ItemToItemDTOConverter implements Converter<Item, ItemDTO> {
                 source.getExtras(),
                 userToUserSummaryDTOConverter.convert(source.getBuyer()),
                 userToUserSummaryDTOConverter.convert(source.getAuction() != null ? source.getAuction().getUser() : null),
-                source.getPopularity(),
                 source.getAuction() != null ? source.getAuction().getId() : null
         );
     }

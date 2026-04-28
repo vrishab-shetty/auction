@@ -1,9 +1,7 @@
 package me.vrishab.auction.item;
 
 import jakarta.validation.Valid;
-import me.vrishab.auction.item.converter.ItemToAuctionItemDTO;
 import me.vrishab.auction.item.converter.ItemToItemDTOConverter;
-import me.vrishab.auction.item.dto.AuctionItemDTO;
 import me.vrishab.auction.item.dto.ItemDTO;
 import me.vrishab.auction.system.PageRequestParams;
 import me.vrishab.auction.system.Result;
@@ -23,13 +21,11 @@ public class ItemController {
 
     private final ItemService itemService;
     private final ItemToItemDTOConverter itemToItemDTOConverter;
-    private final ItemToAuctionItemDTO itemToAuctionItemDTO;
 
     @Autowired
-    public ItemController(ItemService itemService, ItemToItemDTOConverter itemToItemDTOConverter, ItemToAuctionItemDTO itemToAuctionItemDTO) {
+    public ItemController(ItemService itemService, ItemToItemDTOConverter itemToItemDTOConverter) {
         this.itemService = itemService;
         this.itemToItemDTOConverter = itemToItemDTOConverter;
-        this.itemToAuctionItemDTO = itemToAuctionItemDTO;
     }
 
     @GetMapping("/items/{itemId}")
@@ -58,25 +54,6 @@ public class ItemController {
         response.put("isLast", itemPage.isLast());
 
         return new Result(true, "Find all items", response);
-    }
-
-    @GetMapping("/items/popular")
-    public Result findPopularItems(
-            @ModelAttribute
-            @Valid PageRequestParams pageParams
-    ) {
-        Page<Item> itemPage = itemService.findPopularItems(pageParams);
-        List<AuctionItemDTO> itemDTOs = itemPage.getContent().stream()
-                .map(this.itemToAuctionItemDTO::convert).toList();
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("content", itemDTOs);
-        response.put("totalElements", itemPage.getTotalElements());
-        response.put("totalPages", itemPage.getTotalPages());
-        response.put("isFirst", itemPage.isFirst());
-        response.put("isLast", itemPage.isLast());
-
-        return new Result(true, "Find popular items", response);
     }
 
 }

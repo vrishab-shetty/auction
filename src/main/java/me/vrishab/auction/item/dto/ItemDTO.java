@@ -35,8 +35,6 @@ public record ItemDTO(
 
         UserSummaryDTO seller,
 
-        Long popularity,
-
         UUID auctionId
 ) {
 

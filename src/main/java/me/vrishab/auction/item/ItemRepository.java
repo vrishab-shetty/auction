@@ -6,7 +6,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
@@ -19,10 +18,6 @@ public interface ItemRepository extends JpaRepository<Item, UUID>, JpaSpecificat
     @Override
     @EntityGraph(attributePaths = {"buyer", "auction.user"})
     Optional<Item> findById(UUID id);
-
-    @EntityGraph(attributePaths = {"buyer", "auction.user"})
-    @Query("SELECT i FROM Item i ORDER BY SIZE(i.likedBy) DESC, i.id ASC")
-    Page<Item> findAllOrderByPopularity(Pageable pageable);
 
     @Override
     @EntityGraph(attributePaths = {"buyer", "auction.user"})

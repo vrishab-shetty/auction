@@ -1,7 +1,5 @@
 package me.vrishab.auction.auction;
 
-import me.vrishab.auction.item.Item;
-import me.vrishab.auction.item.ItemRepository;
 import me.vrishab.auction.user.UserRepository;
 import me.vrishab.auction.user.model.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,7 +14,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,9 +34,6 @@ public class DashboardFeaturesIntegrationTest {
     private AuctionRepository auctionRepository;
 
     @Autowired
-    private ItemRepository itemRepository;
-
-    @Autowired
     private UserRepository userRepository;
 
     @Value("${api.endpoint.base-url}")
@@ -50,7 +44,6 @@ public class DashboardFeaturesIntegrationTest {
     @BeforeEach
     void setUp() {
         auctionRepository.deleteAll();
-        itemRepository.deleteAll();
         userRepository.deleteAll();
 
         testUser = new User();
@@ -68,7 +61,7 @@ public class DashboardFeaturesIntegrationTest {
         activeAuction.setStartTime(Instant.now().minus(1, ChronoUnit.HOURS));
         activeAuction.setEndTime(Instant.now().plus(1, ChronoUnit.HOURS));
         activeAuction.setUser(testUser);
-        activeAuction = auctionRepository.save(activeAuction);
+        auctionRepository.save(activeAuction);
 
         // Future Auction
         Auction futureAuction = new Auction();
@@ -85,26 +78,6 @@ public class DashboardFeaturesIntegrationTest {
         pastAuction.setEndTime(Instant.now().minus(1, ChronoUnit.HOURS));
         pastAuction.setUser(testUser);
         auctionRepository.save(pastAuction);
-
-        // Items for Popularity
-        Item item1 = new Item();
-        item1.setName("Popular Item");
-        item1.setDescription("Description");
-        item1.setLocation("Boston");
-        item1.setInitialPrice(BigDecimal.valueOf(100));
-        item1.setAuction(activeAuction);
-        item1 = itemRepository.save(item1);
-
-        testUser.addFavouriteItem(item1);
-        testUser = userRepository.save(testUser);
-
-        Item item2 = new Item();
-        item2.setName("Unpopular Item");
-        item2.setDescription("Description");
-        item2.setLocation("New York");
-        item2.setInitialPrice(BigDecimal.valueOf(50));
-        item2.setAuction(activeAuction);
-        itemRepository.save(item2);
     }
 
     @Test
@@ -143,17 +116,5 @@ public class DashboardFeaturesIntegrationTest {
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.data.content", hasSize(1)))
                 .andExpect(jsonPath("$.data.content[0].name").value("Past Auction"));
-    }
-
-    @Test
-    @DisplayName("Verify popular items sorted by likes")
-    void testPopularItemsSorting() throws Exception {
-        mockMvc.perform(get(baseUrl + "/items/popular")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.flag").value(true))
-                .andExpect(jsonPath("$.data.content", hasSize(2)))
-                .andExpect(jsonPath("$.data.content[0].name").value("Popular Item"))
-                .andExpect(jsonPath("$.data.content[1].name").value("Unpopular Item"));
     }
 }
