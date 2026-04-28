@@ -53,4 +53,10 @@ public class UserException {
         }
     }
 
+    public static class UserHasActiveAuctionsException extends ObjectBadRequestException {
+        public UserHasActiveAuctionsException(UUID id) {
+            super("Cannot delete user " + id + " while they have active or scheduled auctions");
+        }
+    }
+
 }

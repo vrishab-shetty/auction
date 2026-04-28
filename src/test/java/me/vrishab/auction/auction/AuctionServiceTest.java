@@ -223,7 +223,7 @@ class AuctionServiceTest {
 
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270");
 
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(ownerUser));
 
         // When
@@ -241,7 +241,7 @@ class AuctionServiceTest {
         );
 
         verify(auctionRepo, times(1)).save(newAuction);
-        verify(userRepo, times(1)).findById(userId);
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(userId);
     }
 
     @Test
@@ -298,7 +298,7 @@ class AuctionServiceTest {
 
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270");
 
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(ownerUser));
 
         given(auctionRepo.findById(auctionId))
@@ -323,7 +323,7 @@ class AuctionServiceTest {
                 () -> assertThat(updatedAuction.getItems()).allMatch(item -> item.getSeller().equals(ownerUser.getEmail()))
         );
 
-        verify(userRepo, times(1)).findById(userId);
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(userId);
         verify(auctionRepo, times(1)).findById(auctionId);
 
     }
@@ -385,7 +385,7 @@ class AuctionServiceTest {
 
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270");
 
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(otherUser));
 
         given(auctionRepo.findById(auctionId))
@@ -397,7 +397,7 @@ class AuctionServiceTest {
 
         assertThat(thrown).isInstanceOf(UnauthorizedAuctionAccess.class).hasMessage("The user not an owner of the auction");
 
-        verify(userRepo, times(1)).findById(userId);
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(userId);
         verify(auctionRepo, times(1)).findById(auctionId);
     }
 
@@ -455,7 +455,7 @@ class AuctionServiceTest {
 
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270");
 
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(ownerUser));
 
         given(auctionRepo.findById(auctionId))
@@ -477,7 +477,7 @@ class AuctionServiceTest {
 
         assertThat(thrown).isInstanceOf(AuctionItemNotFoundException.class).hasMessage("The Item with Id e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a2 is not in the auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
 
-        verify(userRepo, times(1)).findById(userId);
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(userId);
         verify(auctionRepo, times(1)).findById(auctionId);
     }
 
@@ -514,7 +514,7 @@ class AuctionServiceTest {
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270");
 
         given(auctionRepo.findById(auctionId)).willReturn(Optional.of(auction));
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(ownerUser));
         doNothing().when(this.auctionRepo).deleteById(auctionId);
 
@@ -522,7 +522,7 @@ class AuctionServiceTest {
         auctionService.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa270", "a6c9417c-d01a-40e9-a22d-7621fd31a8c1");
 
         // Then
-        verify(userRepo, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270"));
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270"));
         verify(auctionRepo, times(1)).findById(auctionId);
         verify(auctionRepo, times(1)).deleteById(UUID.fromString("a6c9417c-d01a-40e9-a22d-7621fd31a8c1"));
 
@@ -560,7 +560,7 @@ class AuctionServiceTest {
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270");
 
         given(auctionRepo.findById(auctionId)).willReturn(Optional.of(auction));
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(otherUser));
 
         // When
@@ -571,7 +571,7 @@ class AuctionServiceTest {
 
         assertThat(thrown).isInstanceOf(UnauthorizedAuctionAccess.class).hasMessage("The user not an owner of the auction");
 
-        verify(userRepo, times(1)).findById(userId);
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(userId);
         verify(auctionRepo, times(1)).findById(auctionId);
 
     }
@@ -612,7 +612,7 @@ class AuctionServiceTest {
         given(auctionRepo.findById(auctionId)).willReturn(Optional.of(auction));
         given(itemRepo.findById(itemId))
                 .willReturn(Optional.of(item));
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(otherUser));
         given(this.itemRepo.save(item)).willReturn(item);
 
@@ -633,7 +633,7 @@ class AuctionServiceTest {
         assertAll(
                 () -> assertThat(returnedItem.getCurrentBid()).isEqualTo(bidAmount)
         );
-        verify(userRepo, times(1)).findById(userId);
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(userId);
         verify(auctionRepo, times(1)).findById(auctionId);
         verify(itemRepo, times(1)).findById(itemId);
         verify(itemRepo, times(1)).save(item);
@@ -668,7 +668,7 @@ class AuctionServiceTest {
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa270");
 
         given(auctionRepo.findById(auctionId)).willReturn(Optional.of(auction));
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(ownerUser));
         given(itemRepo.findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1")))
                 .willReturn(Optional.of(item));
@@ -689,7 +689,7 @@ class AuctionServiceTest {
                 .isInstanceOf(UnauthorizedAuctionAccess.class)
                 .hasMessage("The user is an owner of the auction");
 
-        verify(userRepo, times(1)).findById(userId);
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(userId);
         verify(auctionRepo, times(1)).findById(auctionId);
     }
 
@@ -723,7 +723,7 @@ class AuctionServiceTest {
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
 
         given(auctionRepo.findById(auctionId)).willReturn(Optional.of(auction));
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(otherUser));
         given(itemRepo.findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1"))).willReturn(Optional.of(item));
 
@@ -743,7 +743,7 @@ class AuctionServiceTest {
                 .isInstanceOf(AuctionForbiddenBidingPhaseException.class)
                 .hasMessage("Auction with Id a6c9417c-d01a-40e9-a22d-7621fd31a8c1 is not in Biding Phase");
 
-        verify(userRepo, times(1)).findById(userId);
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(userId);
         verify(auctionRepo, times(1)).findById(auctionId);
     }
 
@@ -776,7 +776,7 @@ class AuctionServiceTest {
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
 
         given(auctionRepo.findById(auctionId)).willReturn(Optional.of(auction));
-        given(userRepo.findById(userId))
+        given(userRepo.findByIdAndIsDeletedFalse(userId))
                 .willReturn(Optional.of(otherUser));
         given(itemRepo.findById(UUID.fromString("e2b2dd83-0e5d-4d73-b5cc-744f3fdc49a1")))
                 .willReturn(Optional.of(item));
@@ -797,7 +797,7 @@ class AuctionServiceTest {
                 .isInstanceOf(InvalidBidAmountException.class)
                 .hasMessage("Bid amount must be higher than the current bid");
 
-        verify(userRepo, times(1)).findById(userId);
+        verify(userRepo, times(1)).findByIdAndIsDeletedFalse(userId);
         verify(auctionRepo, times(1)).findById(auctionId);
     }
 
