@@ -28,6 +28,7 @@ public interface WishlistRepository extends JpaRepository<Wishlist, UUID> {
             "LEFT JOIN FETCH i.buyer " +
             "LEFT JOIN FETCH i.auction a " +
             "LEFT JOIN FETCH a.user " +
+            "LEFT JOIN FETCH i.imageUrls " +
             "WHERE w.user = :user")
     List<Item> findItemsByUser(@Param("user") User user);
 }

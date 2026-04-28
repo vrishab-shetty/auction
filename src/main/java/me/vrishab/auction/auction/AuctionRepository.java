@@ -16,21 +16,21 @@ import java.util.UUID;
 
 @Repository
 public interface AuctionRepository extends JpaRepository<Auction, UUID>, JpaSpecificationExecutor<Auction> {
-    @EntityGraph(attributePaths = {"user"})
+    @EntityGraph(attributePaths = {"user", "items", "items.buyer", "items.imageUrls"})
     List<Auction> findByUser(User user);
 
     @Override
-    @EntityGraph(attributePaths = {"user"})
+    @EntityGraph(attributePaths = {"user", "items", "items.buyer", "items.imageUrls"})
     Optional<Auction> findById(UUID id);
 
     void deleteByUser(User user);
 
     @Override
-    @EntityGraph(attributePaths = {"user"})
+    @EntityGraph(attributePaths = {"user", "items", "items.buyer", "items.imageUrls"})
     Page<Auction> findAll(Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = {"user"})
+    @EntityGraph(attributePaths = {"user", "items", "items.buyer", "items.imageUrls"})
     @NonNull
     Page<Auction> findAll(@NonNull Specification<Auction> spec, @NonNull Pageable pageable);
 }

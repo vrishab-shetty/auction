@@ -2,7 +2,6 @@ package me.vrishab.auction.user.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import lombok.AccessLevel;
@@ -13,7 +12,6 @@ import lombok.Setter;
 import java.math.BigDecimal;
 
 @Entity
-@PrimaryKeyJoinColumn(name = "BANKACCOUNT_ID")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PUBLIC, force = true)

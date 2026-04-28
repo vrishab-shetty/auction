@@ -16,11 +16,11 @@ import java.util.UUID;
 public interface ItemRepository extends JpaRepository<Item, UUID>, JpaSpecificationExecutor<Item> {
 
     @Override
-    @EntityGraph(attributePaths = {"buyer", "auction.user"})
+    @EntityGraph(attributePaths = {"buyer", "auction.user", "imageUrls"})
     Optional<Item> findById(UUID id);
 
     @Override
-    @EntityGraph(attributePaths = {"buyer", "auction.user"})
+    @EntityGraph(attributePaths = {"buyer", "auction.user", "imageUrls"})
     Page<Item> findAll(@Nullable Specification<Item> spec, Pageable pageable);
 
 }
