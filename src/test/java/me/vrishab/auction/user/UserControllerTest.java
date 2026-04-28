@@ -91,20 +91,6 @@ class UserControllerTest {
     }
 
     @Test
-    void testFindAllUserSuccess() throws Exception {
-
-        // Given
-        given(service.findAll()).willReturn(users);
-
-        // When and Then
-        this.mockMvc.perform(get(baseUrl + "/users").accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.flag").value(true))
-                .andExpect(jsonPath("$.message").value("Find all users"))
-                .andExpect(jsonPath("$.data.size()").value(10));
-
-    }
-
-    @Test
     void testAddUserSuccess() throws Exception {
 
         // Given

@@ -97,7 +97,7 @@ public class AuctionService {
     @Transactional
     public Auction add(String userId, Auction auction) {
         UUID userUUID = UUID.fromString(userId);
-        User user = userRepo.findById(userUUID)
+        User user = userRepo.findByIdAndIsDeletedFalse(userUUID)
                 .orElseThrow(() -> new UserNotFoundByIdException(userUUID));
 
         auction.setUser(user);
@@ -255,7 +255,7 @@ public class AuctionService {
     }
 
     private void authorizedUser(UUID userUUID, Auction auction) {
-        User user = userRepo.findById(userUUID)
+        User user = userRepo.findByIdAndIsDeletedFalse(userUUID)
                 .orElseThrow(() -> new UserNotFoundByIdException(userUUID));
 
         if (!user.getEmail().equals(auction.getOwnerEmail())) {
@@ -264,7 +264,7 @@ public class AuctionService {
     }
 
     private User getAndValidateBidder(UUID userUUID, Auction auction) {
-        User user = userRepo.findById(userUUID)
+        User user = userRepo.findByIdAndIsDeletedFalse(userUUID)
                 .orElseThrow(() -> new UserNotFoundByIdException(userUUID));
 
         if (user.getEmail().equals(auction.getOwnerEmail())) {

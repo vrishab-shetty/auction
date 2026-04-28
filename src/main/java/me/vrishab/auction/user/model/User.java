@@ -2,6 +2,7 @@ package me.vrishab.auction.user.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.util.UUID;
 
@@ -31,6 +32,10 @@ public class User {
     private String contact;
 
     private Address homeAddress;
+
+    @Column(name = "is_deleted", nullable = false)
+    @ColumnDefault("false")
+    private Boolean isDeleted = false;
 
     public String getHomeZipCode() {
         return this.homeAddress.getZipcode();

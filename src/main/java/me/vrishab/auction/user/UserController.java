@@ -52,13 +52,6 @@ public class UserController {
         return new Result(true, "Find a user", userDTO);
     }
 
-    @GetMapping("/users")
-    public Result findAllUser() {
-        List<UserDTO> userDTOS = this.userService.findAll().
-                stream().map(userToUserDTOConverter::convert).toList();
-        return new Result(true, "Find all users", userDTOS);
-    }
-
     @PostMapping("/users")
     public Result addUser(@Valid @RequestBody UserEditableDTO newUserDTO) {
         User newUser = this.userEditableToUserConverter.convert(newUserDTO);
