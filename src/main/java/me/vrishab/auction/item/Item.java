@@ -30,7 +30,7 @@ public class Item {
 
     private String location;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(
             name = Constants.IMAGE_TBL,
             joinColumns = @JoinColumn(name = Constants.ITEM_ID, nullable = false)
