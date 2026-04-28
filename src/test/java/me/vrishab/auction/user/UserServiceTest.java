@@ -1,7 +1,9 @@
 package me.vrishab.auction.user;
 
 import me.vrishab.auction.TestData;
+import me.vrishab.auction.auction.Auction;
 import me.vrishab.auction.auction.AuctionRepository;
+import me.vrishab.auction.auction.AuctionStatus;
 import me.vrishab.auction.system.exception.ObjectNotFoundException;
 import me.vrishab.auction.user.UserException.UserNotFoundByUsernameException;
 import me.vrishab.auction.user.model.Address;
@@ -274,20 +276,76 @@ class UserServiceTest {
 
         // Given
         User user = this.users.get(1);
+        UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
 
-        given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(user));
-        doNothing().when(repository).deleteById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        given(repository.findById(userId)).willReturn(Optional.of(user));
+        given(auctionRepo.findByUser(user)).willReturn(List.of());
         doNothing().when(wishlistRepo).deleteByUser(Mockito.any(User.class));
         doNothing().when(wishlistRepo).deleteByItemSeller(Mockito.any(User.class));
         doNothing().when(billingRepo).deleteByUser(Mockito.any(User.class));
-        doNothing().when(auctionRepo).deleteByUser(Mockito.any(User.class));
 
         // When
-        service.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
+        service.delete(userId.toString());
 
         // Then
-        verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
-        verify(repository, times(1)).deleteById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        assertAll(
+                () -> assertThat(user.getEnabled()).isFalse(),
+                () -> assertThat(user.getName()).isEqualTo("Deleted User"),
+                () -> assertThat(user.getDescription()).isNull(),
+                () -> assertThat(user.getContact()).isNull(),
+                () -> assertThat(user.getPassword()).isNull(),
+                () -> assertThat(user.getEmail()).matches("^deleted-[0-9a-f-]+@auction\\.app$"),
+                () -> assertThat(user.getHomeAddress().getStreet()).isEqualTo("N/A"),
+                () -> assertThat(user.getHomeAddress().getCity()).isEqualTo("N/A")
+        );
+        verify(repository, times(1)).findById(userId);
+        verify(repository, times(1)).save(user);
+        verify(repository, never()).deleteById(Mockito.any(UUID.class));
+        verify(wishlistRepo, times(1)).deleteByUser(user);
+        verify(wishlistRepo, times(1)).deleteByItemSeller(user);
+        verify(billingRepo, times(1)).deleteByUser(user);
+        verify(auctionRepo, never()).deleteByUser(Mockito.any(User.class));
+    }
+
+    @Test
+    void testDeleteUserBlockedByActiveAuction() {
+
+        // Given
+        User user = this.users.get(1);
+        Auction activeAuction = Mockito.mock(Auction.class);
+        given(activeAuction.getStatus()).willReturn(AuctionStatus.ACTIVE);
+
+        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(auctionRepo.findByUser(user)).willReturn(List.of(activeAuction));
+
+        // When
+        Throwable thrown = catchThrowable(() -> service.delete(user.getId().toString()));
+
+        // Then
+        assertThat(thrown).isInstanceOf(UserException.UserHasActiveAuctionsException.class);
+        verify(repository, never()).save(Mockito.any(User.class));
+        verify(repository, never()).deleteById(Mockito.any(UUID.class));
+        verify(wishlistRepo, never()).deleteByUser(Mockito.any(User.class));
+        verify(billingRepo, never()).deleteByUser(Mockito.any(User.class));
+    }
+
+    @Test
+    void testDeleteUserBlockedByScheduledAuction() {
+
+        // Given
+        User user = this.users.get(1);
+        Auction scheduledAuction = Mockito.mock(Auction.class);
+        given(scheduledAuction.getStatus()).willReturn(AuctionStatus.SCHEDULED);
+
+        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(auctionRepo.findByUser(user)).willReturn(List.of(scheduledAuction));
+
+        // When
+        Throwable thrown = catchThrowable(() -> service.delete(user.getId().toString()));
+
+        // Then
+        assertThat(thrown).isInstanceOf(UserException.UserHasActiveAuctionsException.class);
+        verify(repository, never()).save(Mockito.any(User.class));
     }
 
     @Test
