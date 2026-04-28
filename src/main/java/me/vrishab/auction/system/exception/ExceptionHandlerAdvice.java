@@ -7,6 +7,7 @@ import me.vrishab.auction.auction.exception.ConcurrentBidException;
 import me.vrishab.auction.security.AuthenticationRequiredException;
 import me.vrishab.auction.system.ErrorCode;
 import me.vrishab.auction.system.Result;
+import me.vrishab.auction.user.UserException.UserHasActiveAuctionsException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -67,6 +68,12 @@ public class ExceptionHandlerAdvice {
     @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
     public Result handleConcurrentBidException(ConcurrentBidException ex) {
         return new Result(false, ex.getMessage(), ErrorCode.CONCURRENT_BID_ERROR);
+    }
+
+    @ExceptionHandler(UserHasActiveAuctionsException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result handleUserHasActiveAuctionsException(UserHasActiveAuctionsException ex) {
+        return new Result(false, ex.getMessage(), ErrorCode.USER_HAS_ACTIVE_AUCTIONS);
     }
 
     // Validations
