@@ -66,7 +66,7 @@ class UserServiceTest {
     void testFindByUsernameSuccess() {
 
         // Given
-        given(repository.findByEmail("name1@domain.tld")).willReturn(Optional.ofNullable(users.get(1)));
+        given(repository.findByEmailAndIsDeletedFalse("name1@domain.tld")).willReturn(Optional.ofNullable(users.get(1)));
 
         // When
         User returnedUser = service.findByUsername("name1@domain.tld");
@@ -77,14 +77,14 @@ class UserServiceTest {
                 () -> assertThat(returnedUser.getEmail()).isEqualTo("name1@domain.tld")
         );
 
-        verify(repository, times(1)).findByEmail("name1@domain.tld");
+        verify(repository, times(1)).findByEmailAndIsDeletedFalse("name1@domain.tld");
     }
 
     @Test
     void testFindByUsernameNotFound() {
 
         // Given
-        given(repository.findByEmail(Mockito.any(String.class))).willReturn(Optional.empty());
+        given(repository.findByEmailAndIsDeletedFalse(Mockito.any(String.class))).willReturn(Optional.empty());
 
         // When
         Throwable thrown = catchThrowable(() -> service.findByUsername("name1@domain.tld"));
@@ -92,23 +92,7 @@ class UserServiceTest {
         // Then
         assertThat(thrown).isInstanceOf(UserNotFoundByUsernameException.class).hasMessage("Could not find user with username name1@domain.tld");
 
-        verify(repository, times(1)).findByEmail("name1@domain.tld");
-    }
-
-    @Test
-    void testFindAllUserSuccess() {
-
-        // Given
-        given(repository.findAll()).willReturn(users);
-
-        // When
-        List<User> returnedUsers = service.findAll();
-
-        // Then
-        assertThat(returnedUsers.size()).isEqualTo(users.size());
-
-        verify(repository, times(1)).findAll();
-
+        verify(repository, times(1)).findByEmailAndIsDeletedFalse("name1@domain.tld");
     }
 
     @Test
@@ -163,7 +147,7 @@ class UserServiceTest {
         );
         update.setEnabled(true);
 
-        given(repository.findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(oldUser));
+        given(repository.findByIdAndIsDeletedFalse(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"))).willReturn(Optional.of(oldUser));
         given(repository.save(oldUser)).willReturn(update);
 
         // When
@@ -178,7 +162,7 @@ class UserServiceTest {
                 () -> assertThat(updatedUser.getHomeCountry()).isEqualTo("New Country")
         );
         verify(repository, times(1)).save(oldUser);
-        verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        verify(repository, times(1)).findByIdAndIsDeletedFalse(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
     }
 
     @Test
@@ -187,7 +171,7 @@ class UserServiceTest {
         User user = this.users.get(1);
         user.setPassword("oldpassword");
 
-        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(repository.findByIdAndIsDeletedFalse(user.getId())).willReturn(Optional.of(user));
         given(encoder.matches("oldpassword", "oldpassword")).willReturn(true);
         given(encoder.encode("newpassword")).willReturn("hashednewpassword");
 
@@ -205,7 +189,7 @@ class UserServiceTest {
         User user = this.users.get(1);
         user.setPassword("oldpassword");
 
-        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(repository.findByIdAndIsDeletedFalse(user.getId())).willReturn(Optional.of(user));
         given(encoder.matches("wrongpassword", "oldpassword")).willReturn(false);
 
         // When
@@ -225,7 +209,7 @@ class UserServiceTest {
         billingDetails.setId(billingId);
         billingDetails.setUser(user);
 
-        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(repository.findByIdAndIsDeletedFalse(user.getId())).willReturn(Optional.of(user));
         given(billingRepo.findById(billingId)).willReturn(Optional.of(billingDetails));
 
         // When
@@ -245,7 +229,7 @@ class UserServiceTest {
         billingDetails.setId(billingId);
         billingDetails.setUser(otherUser);
 
-        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(repository.findByIdAndIsDeletedFalse(user.getId())).willReturn(Optional.of(user));
         given(billingRepo.findById(billingId)).willReturn(Optional.of(billingDetails));
 
         // When
@@ -262,13 +246,13 @@ class UserServiceTest {
         // Given
         User update = this.users.get(1);
 
-        given(repository.findById(Mockito.any(UUID.class))).willReturn(Optional.empty());
+        given(repository.findByIdAndIsDeletedFalse(Mockito.any(UUID.class))).willReturn(Optional.empty());
 
         // When
         assertThrows(ObjectNotFoundException.class, () -> service.update("9a540a1e-b599-4cec-aeb1-6396eb8fa271", update));
 
         // Then
-        verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        verify(repository, times(1)).findByIdAndIsDeletedFalse(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
     }
 
     @Test
@@ -278,7 +262,7 @@ class UserServiceTest {
         User user = this.users.get(1);
         UUID userId = UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271");
 
-        given(repository.findById(userId)).willReturn(Optional.of(user));
+        given(repository.findByIdAndIsDeletedFalse(userId)).willReturn(Optional.of(user));
         given(auctionRepo.findByUser(user)).willReturn(List.of());
         doNothing().when(wishlistRepo).deleteByUser(Mockito.any(User.class));
         doNothing().when(wishlistRepo).deleteByItemSeller(Mockito.any(User.class));
@@ -289,6 +273,7 @@ class UserServiceTest {
 
         // Then
         assertAll(
+                () -> assertThat(user.getIsDeleted()).isTrue(),
                 () -> assertThat(user.getEnabled()).isFalse(),
                 () -> assertThat(user.getName()).isEqualTo("Deleted User"),
                 () -> assertThat(user.getDescription()).isNull(),
@@ -298,7 +283,7 @@ class UserServiceTest {
                 () -> assertThat(user.getHomeAddress().getStreet()).isEqualTo("N/A"),
                 () -> assertThat(user.getHomeAddress().getCity()).isEqualTo("N/A")
         );
-        verify(repository, times(1)).findById(userId);
+        verify(repository, times(1)).findByIdAndIsDeletedFalse(userId);
         verify(repository, times(1)).save(user);
         verify(repository, never()).deleteById(Mockito.any(UUID.class));
         verify(wishlistRepo, times(1)).deleteByUser(user);
@@ -315,7 +300,7 @@ class UserServiceTest {
         Auction activeAuction = Mockito.mock(Auction.class);
         given(activeAuction.getStatus()).willReturn(AuctionStatus.ACTIVE);
 
-        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(repository.findByIdAndIsDeletedFalse(user.getId())).willReturn(Optional.of(user));
         given(auctionRepo.findByUser(user)).willReturn(List.of(activeAuction));
 
         // When
@@ -337,7 +322,7 @@ class UserServiceTest {
         Auction scheduledAuction = Mockito.mock(Auction.class);
         given(scheduledAuction.getStatus()).willReturn(AuctionStatus.SCHEDULED);
 
-        given(repository.findById(user.getId())).willReturn(Optional.of(user));
+        given(repository.findByIdAndIsDeletedFalse(user.getId())).willReturn(Optional.of(user));
         given(auctionRepo.findByUser(user)).willReturn(List.of(scheduledAuction));
 
         // When
@@ -352,12 +337,12 @@ class UserServiceTest {
     void testDeleteUserNotFound() {
 
         // Given
-        given(repository.findById(Mockito.any(UUID.class))).willReturn(Optional.empty());
+        given(repository.findByIdAndIsDeletedFalse(Mockito.any(UUID.class))).willReturn(Optional.empty());
 
         // When
         assertThrows(ObjectNotFoundException.class, () -> service.delete("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
 
         // Then
-        verify(repository, times(1)).findById(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
+        verify(repository, times(1)).findByIdAndIsDeletedFalse(UUID.fromString("9a540a1e-b599-4cec-aeb1-6396eb8fa271"));
     }
 }

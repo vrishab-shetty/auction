@@ -63,12 +63,8 @@ public class UserService implements UserDetailsService {
     }
 
     public User findByUsername(String username) {
-        return userRepo.findByEmail(username).
+        return userRepo.findByEmailAndIsDeletedFalse(username).
                 orElseThrow(() -> new UserNotFoundByUsernameException(username));
-    }
-
-    public List<User> findAll() {
-        return userRepo.findAll();
     }
 
     public User save(User newUser) {
@@ -80,7 +76,7 @@ public class UserService implements UserDetailsService {
 
     public User update(String userId, User update) {
         UUID id = UUID.fromString(userId);
-        return this.userRepo.findById(id)
+        return this.userRepo.findByIdAndIsDeletedFalse(id)
                 .map(oldUser -> {
                     oldUser.setName(update.getName());
                     oldUser.setDescription(update.getDescription());
@@ -94,7 +90,7 @@ public class UserService implements UserDetailsService {
 
     public void changePassword(String userId, String currentPassword, String newPassword) {
         UUID id = UUID.fromString(userId);
-        User user = this.userRepo.findById(id)
+        User user = this.userRepo.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new UserNotFoundByIdException(id));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
@@ -129,6 +125,7 @@ public class UserService implements UserDetailsService {
     }
 
     private void anonymize(User user) {
+        user.setIsDeleted(true);
         user.setEnabled(false);
         user.setName(ANONYMIZED_NAME);
         user.setDescription(null);
@@ -169,7 +166,8 @@ public class UserService implements UserDetailsService {
 
     private User getUser(String userId) {
         UUID userUUID = UUID.fromString(userId);
-        return this.userRepo.findById(userUUID).orElseThrow(() -> new UserNotFoundByIdException(userUUID));
+        return this.userRepo.findByIdAndIsDeletedFalse(userUUID)
+                .orElseThrow(() -> new UserNotFoundByIdException(userUUID));
     }
 
     public List<Auction> auctions(String userId) {
@@ -213,7 +211,7 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
-        return this.userRepo.findByEmail(username)
+        return this.userRepo.findByEmailAndIsDeletedFalse(username)
                 .map(UserPrincipal::new)
                 .orElseThrow(() -> new UsernameNotFoundException("Could find user with username " + username));
     }

@@ -60,17 +60,6 @@ public class UserControllerIntegrationTest {
     }
 
     @Test
-    @DisplayName("Check findAll operation")
-    void testFindAllUserSuccess() throws Exception {
-        this.mockMvc.perform(get(this.baseUrl + "/users")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.flag").value(true))
-                .andExpect(jsonPath("$.message").value("Find all users"))
-                .andExpect(jsonPath("$.data", Matchers.hasSize(9)));
-    }
-
-
-    @Test
     @DisplayName("Check addUser operation")
     void testAddUserSuccess() throws Exception {
         UserEditableDTO userEditableDTO = new UserEditableDTO(
@@ -171,9 +160,32 @@ public class UserControllerIntegrationTest {
     @Test
     @DisplayName("Check deleteUser operation")
     void testDeleteUserSuccess() throws Exception {
+        // Register a fresh user with no auctions, then delete them.
+        // The seeded login user (name1) holds active auctions and is now blocked
+        // from deletion by UserHasActiveAuctionsException.
+        UserEditableDTO freshUser = new UserEditableDTO(
+                "fresh",
+                "freshpassword",
+                "Fresh user",
+                "fresh@domain.tld",
+                "1234567890",
+                "00000",
+                "Street",
+                "City",
+                "Country"
+        );
+        this.mockMvc.perform(post(this.baseUrl + "/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(this.objectMapper.writeValueAsString(freshUser)))
+                .andExpect(jsonPath("$.flag").value(true));
+
+        ResultActions loginAction = this.mockMvc.perform(post(this.baseUrl + "/users/login")
+                .with(httpBasic("fresh@domain.tld", "freshpassword")));
+        String loginBody = loginAction.andReturn().getResponse().getContentAsString();
+        String freshToken = "Bearer " + new JSONObject(loginBody).getJSONObject("data").getString("token");
 
         this.mockMvc.perform(delete(this.baseUrl + "/user/self")
-                        .header("Authorization", this.token)
+                        .header("Authorization", freshToken)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.flag").value(true))
                 .andExpect(jsonPath("$.message").value("Delete a user"))
